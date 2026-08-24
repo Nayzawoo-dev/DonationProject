@@ -66,6 +66,7 @@ public class DonationController : Controller
     }
 
     // POST: /Donation/Submit
+    [Authorize(Roles = "USER")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Submit(DonationSubmitViewModel model)

@@ -2,6 +2,7 @@ using DatabaseClass.Models;
 using Donation.Models;
 using Donation.Services;
 using Donation.ViewModels.Campaign;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
