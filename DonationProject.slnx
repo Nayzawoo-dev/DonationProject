@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Danation/Danation.csproj" />
+  <Project Path="DatabaseClass/DatabaseClass.csproj" />
+</Solution>
