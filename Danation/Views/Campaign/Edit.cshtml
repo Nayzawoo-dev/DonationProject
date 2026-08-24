@@ -1,0 +1,240 @@
+@model EditCampaignViewModel
+@{
+    ViewData["Title"] = "Edit Campaign — " + Model.Title;
+    Layout = "_Layout";
+    bool canEditDetails = Model.Status == "PENDING" || Model.Status == "OPEN";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a asp-controller="Campaign" asp-action="My" class="btn btn-sm btn-outline-secondary me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="fw-bold mb-0">Edit Campaign</h2>
+            <p class="text-muted small mb-0">@Model.Title
+                <span class="badge badge-@Model.Status.ToLower().Replace("_","-") ms-2">@Model.Status.Replace("_"," ")</span>
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Details Form -->
+        <div class="col-lg-8">
+            @if (canEditDetails)
+            {
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-pencil me-2 text-primary"></i>Campaign Details</h5>
+                    <form id="editCampaignForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <input type="hidden" name="Status" value="@Model.Status" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" name="Title" value="@Model.Title" class="form-control" maxlength="200" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Goal Amount (MMK) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">MMK</span>
+                                <input type="number" name="GoalAmount" value="@Model.GoalAmount" class="form-control"
+                                       min="1000" max="100000000" step="1000" required />
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <textarea name="Description" class="form-control" rows="7" maxlength="5000" required>@Model.Description</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="saveDetailsBtn">
+                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                        </button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning border-0">
+                    <i class="bi bi-lock-fill me-2"></i>Campaign details cannot be edited in <strong>@Model.Status.Replace("_"," ")</strong> status.
+                </div>
+            }
+
+            <!-- Campaign Images -->
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-images me-2 text-primary"></i>Campaign Images</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="addImageBtn" onclick="$('#imageFileInput').click()">
+                        <i class="bi bi-plus-circle me-1"></i>Add Image
+                    </button>
+                </div>
+                <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
+                <div class="mb-2">
+                    <input type="text" id="imageCaptionInput" class="form-control form-control-sm"
+                           placeholder="Caption (optional)" maxlength="500" />
+                </div>
+                <div id="imageGallery" class="row g-2">
+                    @foreach (var img in Model.Images)
+                    {
+                        <div class="col-4 col-md-3 position-relative image-item" data-id="@img.Id">
+                            <img src="@img.ImageUrl" class="gallery-thumb w-100" alt="@img.Caption" />
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-image-btn rounded-circle p-0"
+                                    style="width:24px;height:24px;line-height:1;" data-id="@img.Id" title="Delete image">
+                                <i class="bi bi-x" style="font-size:12px;"></i>
+                            </button>
+                        </div>
+                    }
+                    @if (Model.Images.Count == 0)
+                    {
+                        <div id="noImagesMsg" class="col-12 text-muted small">No images yet. Add campaign images above.</div>
+                    }
+                </div>
+                <div class="form-text mt-2">Max 5MB per image. JPG, PNG, WebP, GIF.</div>
+            </div>
+
+            <!-- Campaign Documents -->
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark me-2 text-primary"></i>Supporting Documents</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="$('#docFileInput').click()">
+                        <i class="bi bi-plus-circle me-1"></i>Add Document
+                    </button>
+                </div>
+                <input type="file" id="docFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
+                <div class="mb-2">
+                    <input type="text" id="docTypeInput" class="form-control form-control-sm"
+                           placeholder="Document type, e.g. Medical report, ID, Letter" maxlength="100" />
+                </div>
+                <div id="docList">
+                    @foreach (var doc in Model.Documents)
+                    {
+                        <div class="d-flex align-items-center gap-2 mb-2 doc-item" data-id="@doc.Id">
+                            <img src="@doc.ImageUrl" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" alt="" />
+                            <div class="flex-grow-1">
+                                <div class="small fw-medium">@(doc.DocumentType ?? "Document")</div>
+                                <div class="text-muted" style="font-size:11px;">@doc.CreatedAt.ToString("MMM d, yyyy")</div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="@doc.Id">
+                                <i class="bi bi-trash" style="font-size:12px;"></i>
+                            </button>
+                        </div>
+                    }
+                    @if (Model.Documents.Count == 0)
+                    {
+                        <div id="noDocsMsg" class="text-muted small">No documents yet.</div>
+                    }
+                </div>
+                <div class="form-text mt-2">Max 10MB per file. Images only (JPG, PNG, WebP, GIF).</div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="card p-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Quick Links</h6>
+                <div class="d-grid gap-2">
+                    <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@Model.Id"
+                       class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-eye me-1"></i>Preview Campaign
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var campaignId = @Model.Id;
+
+        // Save details AJAX
+        $('#editCampaignForm').on('submit', function (e) {
+            e.preventDefault();
+            var btn = $('#saveDetailsBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+            Danation.post('/Campaign/Edit/' + campaignId, $(this).serialize(),
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    btn.prop('disabled', false);
+                },
+                function () { btn.prop('disabled', false); }
+            );
+        });
+
+        // Upload image
+        $('#imageFileInput').on('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var formData = new FormData();
+            formData.append('campaignId', campaignId);
+            formData.append('file', file);
+            formData.append('caption', $('#imageCaptionInput').val());
+            $('#imageFileInput').val('');
+
+            Danation.upload('/Campaign/UploadImage', formData, function (res) {
+                $('#noImagesMsg').remove();
+                var d = res.data;
+                var html = '<div class="col-4 col-md-3 position-relative image-item" data-id="' + d.id + '">' +
+                    '<img src="' + Danation.escHtml(d.imageUrl) + '" class="gallery-thumb w-100" alt="" />' +
+                    '<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-image-btn rounded-circle p-0" ' +
+                    'style="width:24px;height:24px;line-height:1;" data-id="' + d.id + '" title="Delete image">' +
+                    '<i class="bi bi-x" style="font-size:12px;"></i></button></div>';
+                $('#imageGallery').append(html);
+                Notiflix.Notify.success('Image uploaded.');
+                $('#imageCaptionInput').val('');
+            });
+        });
+
+        // Delete image
+        $(document).on('click', '.delete-image-btn', function () {
+            var imageId = $(this).data('id');
+            var item = $(this).closest('.image-item');
+            Danation.confirmPost('Delete this image?', '/Campaign/DeleteImage',
+                { imageId: imageId },
+                function () {
+                    item.remove();
+                    Notiflix.Notify.success('Image deleted.');
+                }
+            );
+        });
+
+        // Upload document
+        $('#docFileInput').on('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var formData = new FormData();
+            formData.append('campaignId', campaignId);
+            formData.append('file', file);
+            formData.append('documentType', $('#docTypeInput').val());
+            $('#docFileInput').val('');
+
+            Danation.upload('/Campaign/UploadDocument', formData, function (res) {
+                $('#noDocsMsg').remove();
+                var d = res.data;
+                var html = '<div class="d-flex align-items-center gap-2 mb-2 doc-item" data-id="' + d.id + '">' +
+                    '<img src="' + Danation.escHtml(d.imageUrl) + '" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" alt="" />' +
+                    '<div class="flex-grow-1">' +
+                    '<div class="small fw-medium">' + Danation.escHtml(d.documentType || 'Document') + '</div>' +
+                    '</div>' +
+                    '<button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="' + d.id + '">' +
+                    '<i class="bi bi-trash" style="font-size:12px;"></i></button></div>';
+                $('#docList').append(html);
+                Notiflix.Notify.success('Document uploaded.');
+                $('#docTypeInput').val('');
+            });
+        });
+
+        // Delete document
+        $(document).on('click', '.delete-doc-btn', function () {
+            var docId = $(this).data('id');
+            var item = $(this).closest('.doc-item');
+            Danation.confirmPost('Delete this document?', '/Campaign/DeleteDocument',
+                { documentId: docId },
+                function () {
+                    item.remove();
+                    Notiflix.Notify.success('Document deleted.');
+                }
+            );
+        });
+    </script>
+}

@@ -1,0 +1,143 @@
+@model AdminCreateCompletionViewModel
+@{
+    ViewData["Title"] = "Create Completion — " + Model.CampaignTitle;
+    Layout = "_Layout";
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="mb-1 fs-4"><i class="bi bi-trophy me-2"></i>Create Campaign Completion</h1>
+                <p class="mb-0 opacity-75">@Model.CampaignTitle</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="alert alert-info border-0 mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Creating a completion record will set this campaign's status to <strong>COMPLETED</strong>.
+                The campaign owner and donors will be notified.
+            </div>
+
+            <div class="card p-4">
+                <h5 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-primary"></i>Completion Details</h5>
+
+                <form asp-action="CreateCompletion" asp-controller="Admin" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="CampaignId" value="@Model.CampaignId" />
+                    <input type="hidden" name="CampaignTitle" value="@Model.CampaignTitle" />
+
+                    <!-- Caption -->
+                    <div class="mb-4">
+                        <label class="form-label" for="captionInput">
+                            Completion Summary <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="Caption" id="captionInput" class="form-control" rows="6"
+                                  placeholder="Describe how the campaign funds were used and the outcome achieved. Include dates, amounts spent, and beneficiaries. (minimum 10 characters)"
+                                  maxlength="2000"></textarea>
+                        <span asp-validation-for="Caption" class="text-danger small"></span>
+                        <div class="form-text text-end"><span id="captionCount">@Model.Caption?.Length ?? 0</span>/2000</div>
+                    </div>
+
+                    <!-- Evidence Images -->
+                    <div class="mb-4">
+                        <label class="form-label">Evidence Images</label>
+                        <p class="text-muted small mb-2">
+                            Upload photos showing how funds were used (optional but recommended).
+                            Max 5MB per image.
+                        </p>
+
+                        <!-- Drop zone -->
+                        <div class="border-2 rounded-xl p-4 text-center mb-2"
+                             style="border-color:var(--border);border-style:dashed;cursor:pointer;"
+                             id="evidenceDropZone">
+                            <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
+                            <div class="fw-medium">Click to select images or drag & drop</div>
+                            <div class="text-muted small">JPG, PNG, WebP, GIF — Multiple files allowed</div>
+                        </div>
+                        <input type="file" id="evidenceFileInput" name="CompletionImages"
+                               accept="image/jpeg,image/png,image/webp,image/gif"
+                               multiple class="d-none" />
+                        <div id="evidencePreviews" class="row g-2 mt-2"></div>
+                    </div>
+
+                    <!-- Validation summary -->
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3"></div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4" id="submitCompletionBtn">
+                            <i class="bi bi-trophy me-2"></i>Create Completion Record
+                        </button>
+                        <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Caption counter
+        document.getElementById('captionInput').addEventListener('input', function () {
+            document.getElementById('captionCount').textContent = this.value.length;
+        });
+
+        // Drop zone trigger
+        document.getElementById('evidenceDropZone').addEventListener('click', function () {
+            document.getElementById('evidenceFileInput').click();
+        });
+
+        // Preview selected images
+        document.getElementById('evidenceFileInput').addEventListener('change', function () {
+            var previews = document.getElementById('evidencePreviews');
+            previews.innerHTML = '';
+            Array.from(this.files).forEach(function (file) {
+                if (file.size > 5 * 1024 * 1024) {
+                    Notiflix.Notify.warning(file.name + ' exceeds 5MB and will be skipped.');
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var col = document.createElement('div');
+                    col.className = 'col-4 col-md-3';
+                    col.innerHTML = '<img src="' + e.target.result + '" class="gallery-thumb w-100" alt="" />';
+                    previews.appendChild(col);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Drag & drop
+        var dz = document.getElementById('evidenceDropZone');
+        dz.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--primary)';
+        });
+        dz.addEventListener('dragleave', function () {
+            this.style.borderColor = 'var(--border)';
+        });
+        dz.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--border)';
+            document.getElementById('evidenceFileInput').files = e.dataTransfer.files;
+            document.getElementById('evidenceFileInput').dispatchEvent(new Event('change'));
+        });
+
+        // Prevent double-submit
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('submitCompletionBtn').disabled = true;
+            document.getElementById('submitCompletionBtn').innerHTML =
+                '<i class="bi bi-hourglass-split me-2"></i>Saving…';
+        });
+    </script>
+}

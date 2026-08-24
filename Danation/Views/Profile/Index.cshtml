@@ -1,0 +1,128 @@
+@model UserProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row g-4 justify-content-center">
+
+        <!-- Profile Card -->
+        <div class="col-lg-4">
+            <div class="card text-center p-4">
+                <div class="d-flex justify-content-center mb-3">
+                    @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                    {
+                        <img src="@Model.ProfileImage" class="profile-avatar" alt="@Model.FullName" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    }
+                </div>
+                <h4 class="fw-bold mb-1">@Model.FullName</h4>
+                <p class="text-muted small mb-1">@@@Model.Username</p>
+                <p class="text-muted small mb-1">@Model.Email</p>
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <p class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>@Model.Phone</p>
+                }
+                <div class="d-flex justify-content-center flex-wrap gap-2 my-3">
+                    <span class="badge @(Model.Role == "ADMIN" ? "bg-danger" : "badge-open")">@Model.Role</span>
+                    @if (Model.EmailVerified)
+                    {
+                        <span class="badge badge-approved"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                    }
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge badge-open">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-rejected">Inactive</span>
+                    }
+                </div>
+                <p class="text-muted small"><i class="bi bi-calendar3 me-1"></i>Member since @Model.CreatedAt.ToString("MMMM yyyy")</p>
+                <hr />
+                <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary w-100">
+                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-8">
+            @if (Model.Role != "ADMIN")
+            {
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="stat-card stat-blue">
+                            <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
+                            <div class="stat-value">@Model.TotalCampaigns</div>
+                            <div class="stat-label">Campaigns Created</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card stat-green">
+                            <div class="stat-icon"><i class="bi bi-heart"></i></div>
+                            <div class="stat-value">@Model.TotalDonations</div>
+                            <div class="stat-label">Donations Made</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mb-4 flex-wrap">
+                    <a asp-controller="Campaign" asp-action="My" class="btn btn-outline-primary">
+                        <i class="bi bi-megaphone me-1"></i>My Campaigns
+                    </a>
+                    <a asp-controller="Donation" asp-action="My" class="btn btn-outline-danger">
+                        <i class="bi bi-heart me-1"></i>My Donations
+                    </a>
+                </div>
+            }
+
+            <!-- Change Password -->
+            @if (Model.Role is not "ADMIN")
+            {
+                <div class="card p-4">
+                    <h5 class="fw-bold mb-3">Change Password</h5>
+                    <form id="changePasswordForm">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" name="CurrentPassword" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" name="NewPassword" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmNewPassword" name="ConfirmNewPassword" required />
+                        </div>
+                        <button type="submit" id="changePasswordBtn" class="btn btn-primary w-100">Change Password</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#changePasswordForm').on('submit', function(e) {
+            e.preventDefault();
+            var btn = $('#changePasswordBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+            Danation.post('/Profile/ChangePassword', $(this).serialize(),
+                function(res) {
+                    Notiflix.Notify.success(res.message);
+                    document.getElementById('changePasswordForm').reset();
+                    btn.prop('disabled', false);
+                },
+                function() { btn.prop('disabled', false); }
+            );
+        });
+    </script>
+}

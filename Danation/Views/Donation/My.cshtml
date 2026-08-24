@@ -1,0 +1,112 @@
+@model MyDonationsViewModel
+@{
+    ViewData["Title"] = "My Donations";
+    Layout = "_Layout";
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <h1 class="mb-1"><i class="bi bi-heart me-2"></i>My Donations</h1>
+        <p class="mb-0 opacity-75">@Model.Donations.Count donation@(Model.Donations.Count != 1 ? "s" : "") made</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    @if (Model.Donations.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="bi bi-heart"></i>
+            <h4>No Donations Yet</h4>
+            <p>Browse our open campaigns and make your first donation today!</p>
+            <a asp-controller="Campaign" asp-action="Index" class="btn btn-primary mt-2">
+                <i class="bi bi-grid-3x3-gap me-2"></i>Browse Campaigns
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var d in Model.Donations)
+            {
+                var statusClass = d.Status switch
+                {
+                    "APPROVED" => "badge-approved",
+                    "REJECTED" => "badge-rejected",
+                    _ => "badge-pending"
+                };
+                <div class="col-12">
+                    <div class="card p-3">
+                        <div class="row align-items-center g-3">
+                            <!-- Screenshot Thumbnail -->
+                            <div class="col-auto">
+                                <img src="@d.TransferScreenshot" class="rounded"
+                                     style="width:70px;height:70px;object-fit:cover;cursor:pointer;"
+                                     alt="Transfer Screenshot"
+                                     onclick="openScreenshot('@d.TransferScreenshot')"
+                                     title="View screenshot" />
+                            </div>
+
+                            <!-- Campaign Info -->
+                            <div class="col">
+                                <div class="fw-bold mb-1">
+                                    <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@d.CampaignId"
+                                       class="text-dark text-decoration-none">@d.CampaignTitle</a>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge @statusClass">@d.Status</span>
+                                    @if (d.Amount.HasValue && d.Status == "APPROVED")
+                                    {
+                                        <span class="fw-semibold text-success">@d.Amount.Value.ToString("N0") MMK</span>
+                                    }
+                                    else if (d.Status == "PENDING")
+                                    {
+                                        <span class="text-muted small">Amount pending verification</span>
+                                    }
+                                    <span class="text-muted small">
+                                        Campaign: <span class="badge badge-@d.CampaignStatus.ToLower().Replace("_","-")">@d.CampaignStatus.Replace("_"," ")</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Date & Verified By -->
+                            <div class="col-auto text-end text-muted small">
+                                <div><i class="bi bi-calendar3 me-1"></i>@d.CreatedAt.ToString("MMM d, yyyy")</div>
+                                @if (d.VerifiedAt.HasValue)
+                                {
+                                    <div class="mt-1">
+                                        <i class="bi bi-check-circle me-1 text-success"></i>
+                                        Verified @d.VerifiedAt.Value.ToString("MMM d") by @d.VerifiedByName
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Screenshot Modal -->
+<div class="modal fade" id="screenshotModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Transfer Screenshot</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="screenshotModalImg" src="" class="img-fluid rounded-xl screenshot-preview" alt="Screenshot" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openScreenshot(url) {
+            document.getElementById('screenshotModalImg').src = url;
+            new bootstrap.Modal(document.getElementById('screenshotModal')).show();
+        }
+    </script>
+}

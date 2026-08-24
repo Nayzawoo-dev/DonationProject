@@ -1,0 +1,209 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <h1 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h1>
+        <p class="mb-0 opacity-75">Overview of the Danation platform</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Stats Row 1 -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-blue">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div class="stat-value">@Model.TotalUsers</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-purple">
+                <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
+                <div class="stat-value">@Model.TotalCampaigns</div>
+                <div class="stat-label">Total Campaigns</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-orange">
+                <div class="stat-icon"><i class="bi bi-clock"></i></div>
+                <div class="stat-value">@Model.PendingCampaigns</div>
+                <div class="stat-label">Pending Campaigns</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">@Model.OpenCampaigns</div>
+                <div class="stat-label">Open Campaigns</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row 2 -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-cyan">
+                <div class="stat-icon"><i class="bi bi-trophy"></i></div>
+                <div class="stat-value">@Model.GoalReachedCampaigns</div>
+                <div class="stat-label">Goal Reached</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-teal">
+                <div class="stat-icon"><i class="bi bi-star"></i></div>
+                <div class="stat-value">@Model.CompletedCampaigns</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-pink">
+                <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value">@Model.PendingDonations</div>
+                <div class="stat-label">Pending Donations</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card stat-green">
+                <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
+                <div class="stat-value" style="font-size:1.4rem;">@Model.TotalApprovedAmount.ToString("N0")</div>
+                <div class="stat-label">Total Approved (MMK)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Pending Campaigns -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-megaphone me-2 text-primary"></i>Pending Campaigns</span>
+                    <a asp-controller="Admin" asp-action="Campaigns" asp-route-status="PENDING"
+                       class="text-decoration-none small fw-semibold">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentPendingCampaigns.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted small">
+                            <i class="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
+                            No pending campaigns
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var c in Model.RecentPendingCampaigns)
+                            {
+                                <div class="list-group-item px-3 py-2">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <div class="flex-grow-1 min-width-0">
+                                            <div class="fw-semibold text-truncate">@c.Title</div>
+                                            <div class="text-muted small">
+                                                by @c.OwnerName (@@@c.OwnerUsername) ·
+                                                Goal: @c.GoalAmount.ToString("N0") MMK ·
+                                                <i class="bi bi-images me-1"></i>@c.ImageCount
+                                                <i class="bi bi-file-earmark ms-1 me-1"></i>@c.DocumentCount
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
+                                               class="btn btn-sm btn-outline-primary py-0 px-2">Review</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Pending Donations -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-cash-stack me-2 text-primary"></i>Pending Donations</span>
+                    <a asp-controller="Admin" asp-action="Donations" asp-route-status="PENDING"
+                       class="text-decoration-none small fw-semibold">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.RecentPendingDonations.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted small">
+                            <i class="bi bi-check-circle-fill text-success fs-4 d-block mb-2"></i>
+                            No pending donations
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var d in Model.RecentPendingDonations)
+                            {
+                                <div class="list-group-item px-3 py-2">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <img src="@d.TransferScreenshot" class="rounded" width="40" height="40"
+                                             style="object-fit:cover;flex-shrink:0;cursor:pointer;"
+                                             onclick="openScreenshot('@d.TransferScreenshot')" alt="screenshot" />
+                                        <div class="flex-grow-1 min-width-0">
+                                            <div class="fw-semibold text-truncate">@d.DonorName</div>
+                                            <div class="text-muted small text-truncate">for: @d.CampaignTitle</div>
+                                        </div>
+                                        <a asp-controller="Admin" asp-action="Donations"
+                                           class="btn btn-sm btn-outline-primary py-0 px-2 flex-shrink-0">Review</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row g-3 mt-2">
+        <div class="col-12">
+            <div class="card p-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-megaphone me-1"></i>Manage Campaigns
+                    </a>
+                    <a asp-controller="Admin" asp-action="Donations" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-cash-stack me-1"></i>Manage Donations
+                    </a>
+                    <a asp-controller="Admin" asp-action="Users" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-people me-1"></i>Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div class="modal fade" id="screenshotModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Transfer Screenshot</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="screenshotModalImg" src="" class="img-fluid rounded-xl screenshot-preview" alt="" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openScreenshot(url) {
+            document.getElementById('screenshotModalImg').src = url;
+            new bootstrap.Modal(document.getElementById('screenshotModal')).show();
+        }
+    </script>
+}

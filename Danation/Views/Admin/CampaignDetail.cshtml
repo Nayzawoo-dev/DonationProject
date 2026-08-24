@@ -1,0 +1,250 @@
+@model CampaignDetailViewModel
+@{
+    ViewData["Title"] = "Campaign Review — " + Model.Title;
+    Layout = "_Layout";
+    var statusClass = Model.Status switch
+    {
+        "OPEN" => "badge-open",
+        "GOAL_REACHED" => "badge-goal",
+        "CLOSED" => "badge-closed",
+        "COMPLETED" => "badge-completed",
+        "REJECTED" => "badge-rejected",
+        _ => "badge-pending"
+    };
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="mb-1 fs-4">@Model.Title</h1>
+                <p class="mb-0 opacity-75">
+                    Campaign by @Model.OwnerName (@@@Model.OwnerUsername) ·
+                    <span class="badge @statusClass">@Model.Status.Replace("_"," ")</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Description -->
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-file-text me-2 text-primary"></i>Campaign Description</h5>
+                <div style="white-space:pre-line;line-height:1.8;">@Model.Description</div>
+            </div>
+
+            <!-- Campaign Images -->
+            @if (Model.Images.Count > 0)
+            {
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-images me-2 text-primary"></i>Campaign Images (@Model.Images.Count)</h5>
+                    <div class="row g-2">
+                        @foreach (var img in Model.Images)
+                        {
+                            <div class="col-4 col-md-3">
+                                <img src="@img.ImageUrl" class="gallery-thumb w-100"
+                                     alt="@img.Caption"
+                                     onclick="openLightbox('@img.ImageUrl')" />
+                                @if (!string.IsNullOrEmpty(img.Caption))
+                                {
+                                    <div class="text-muted" style="font-size:11px;margin-top:2px;">@img.Caption</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Supporting Documents -->
+            @if (Model.Documents.Count > 0)
+            {
+                <div class="card p-4 mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark me-2 text-primary"></i>Supporting Documents (@Model.Documents.Count)</h5>
+                    <div class="row g-3">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <div class="col-6 col-md-4">
+                                <div class="border rounded-xl overflow-hidden" style="cursor:pointer;"
+                                     onclick="openLightbox('@doc.ImageUrl')">
+                                    <img src="@doc.ImageUrl" class="w-100" alt=""
+                                         style="height:140px;object-fit:cover;" />
+                                    <div class="p-2">
+                                        <div class="small fw-medium">@(doc.DocumentType ?? "Document")</div>
+                                        <div class="text-muted" style="font-size:11px;">@doc.CreatedAt.ToString("MMM d, yyyy")</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning border-0 mb-4">
+                    <i class="bi bi-exclamation-triangle me-2"></i>No supporting documents uploaded for this campaign.
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Progress -->
+            <div class="card p-4 mb-3">
+                <div class="campaign-amount">@Model.RaisedAmount.ToString("N0") MMK</div>
+                <div class="campaign-goal mb-3">raised of @Model.GoalAmount.ToString("N0") MMK goal</div>
+                <div class="progress mb-2">
+                    <div class="progress-bar @(Model.ProgressPercent >= 100 ? "goal-reached" : "")"
+                         style="width:@Model.ProgressPercent%"></div>
+                </div>
+                <div class="text-muted small">@Model.ProgressPercent% funded</div>
+            </div>
+
+            <!-- Campaign Info -->
+            <div class="card p-3 mb-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Campaign Info</h6>
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-1"><span class="text-muted">Owner:</span> <span class="fw-medium">@Model.OwnerName (@@@Model.OwnerUsername)</span></li>
+                    <li class="mb-1"><span class="text-muted">Status:</span> <span class="badge @statusClass ms-1">@Model.Status</span></li>
+                    <li class="mb-1"><span class="text-muted">Created:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
+                    @if (Model.ClosedAt.HasValue)
+                    {
+                        <li class="mb-1"><span class="text-muted">Closed:</span> <span class="fw-medium">@Model.ClosedAt.Value.ToString("MMM d, yyyy")</span></li>
+                    }
+                    @if (Model.CompletedAt.HasValue)
+                    {
+                        <li><span class="text-muted">Completed:</span> <span class="fw-medium text-success">@Model.CompletedAt.Value.ToString("MMM d, yyyy")</span></li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Admin Actions -->
+            <div class="card p-3 border-warning">
+                <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin Actions</h6>
+                <div class="d-grid gap-2">
+                    @if (Model.Status == "PENDING")
+                    {
+                        <button class="btn btn-success" id="adminApproveBtn" data-id="@Model.Id">
+                            <i class="bi bi-check-circle me-2"></i>Approve Campaign
+                        </button>
+                        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle me-2"></i>Reject Campaign
+                        </button>
+                    }
+                    else if (Model.Status == "GOAL_REACHED")
+                    {
+                        <button class="btn btn-warning" id="adminCloseBtn" data-id="@Model.Id">
+                            <i class="bi bi-lock me-2"></i>Close Campaign
+                        </button>
+                    }
+                    else if (Model.Status == "CLOSED")
+                    {
+                        <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@Model.Id"
+                           class="btn btn-primary">
+                            <i class="bi bi-trophy me-2"></i>Create Completion
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="text-muted small text-center">No actions available for <strong>@Model.Status</strong>.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Reject Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Provide a reason. The owner will be notified.</p>
+                <textarea id="rejectReason" class="form-control" rows="4"
+                          placeholder="Reason for rejection…" maxlength="1000"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+                    <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3"
+                        data-bs-dismiss="modal"></button>
+                <img id="lightboxImg" src="" class="img-fluid rounded-xl" style="max-height:85vh;object-fit:contain;" alt="" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var campaignId = @Model.Id;
+
+        function openLightbox(url) {
+            document.getElementById('lightboxImg').src = url;
+            new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+        }
+
+        @if (Model.Status == "PENDING")
+        {
+            <text>
+            $('#adminApproveBtn').on('click', function () {
+                Danation.confirmPost('Approve this campaign? It will go OPEN for donations.',
+                    '/Admin/ApproveCampaign', { id: campaignId },
+                    function (res) {
+                        Notiflix.Notify.success(res.message);
+                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
+                    }
+                );
+            });
+
+            document.getElementById('confirmRejectBtn').addEventListener('click', function () {
+                var reason = document.getElementById('rejectReason').value.trim();
+                if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
+                bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                Danation.post('/Admin/RejectCampaign', { id: campaignId, reason: reason },
+                    function (res) {
+                        Notiflix.Notify.success(res.message);
+                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
+                    }
+                );
+            });
+            </text>
+        }
+
+        @if (Model.Status == "GOAL_REACHED")
+        {
+            <text>
+            $('#adminCloseBtn').on('click', function () {
+                Danation.confirmPost('Close this campaign? It will stop accepting donations.',
+                    '/Admin/CloseCampaign', { id: campaignId },
+                    function (res) {
+                        Notiflix.Notify.success(res.message);
+                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
+                    }
+                );
+            });
+            </text>
+        }
+    </script>
+}

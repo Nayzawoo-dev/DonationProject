@@ -1,0 +1,105 @@
+@model NotificationListViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "_Layout";
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="mb-1"><i class="bi bi-bell me-2"></i>Notifications</h1>
+                <p class="mb-0 opacity-75">
+                    @Model.Notifications.Count total
+                    @if (Model.UnreadCount > 0)
+                    {
+                        <span class="badge bg-danger ms-1">@Model.UnreadCount unread</span>
+                    }
+                </p>
+            </div>
+            @if (Model.UnreadCount > 0)
+            {
+                <div class="col-auto">
+                    <button class="btn btn-outline-light btn-sm" id="markAllReadPageBtn">
+                        <i class="bi bi-check2-all me-1"></i>Mark All Read
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    @if (Model.Notifications.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <h4>No Notifications</h4>
+            <p>You're all caught up! Check back after activity on your campaigns or donations.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card p-0 overflow-hidden">
+                    @foreach (var n in Model.Notifications)
+                    {
+                        <div class="notif-page-item d-flex align-items-start gap-3 p-3 border-bottom @(!n.IsRead ? "bg-light" : "")"
+                             data-id="@n.Id" style="cursor:pointer;" onclick="markRead(@n.Id, this)">
+                            <div class="flex-shrink-0 mt-1">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:40px;height:40px;background:@(!n.IsRead ? "var(--primary-light)" : "var(--border)");">
+                                    <i class="bi bi-bell @(!n.IsRead ? "text-primary" : "text-muted")"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="fw-semibold @(!n.IsRead ? "" : "text-muted")">
+                                        @n.Title
+                                        @if (!n.IsRead)
+                                        {
+                                            <span class="ms-1" style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;"></span>
+                                        }
+                                    </div>
+                                    <span class="text-muted ms-3 flex-shrink-0" style="font-size:12px;white-space:nowrap;">@n.RelativeTime</span>
+                                </div>
+                                <p class="mb-0 small text-muted mt-1" style="line-height:1.5;">@n.Message</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function markRead(id, el) {
+            if (!$(el).hasClass('bg-light')) return; // already read
+            Danation.post('/Notification/MarkRead/' + id, {},
+                function () {
+                    $(el).removeClass('bg-light');
+                    $(el).find('.notif-dot').remove();
+                    // Update badge
+                    var badge = $('.badge.bg-danger');
+                    var count = parseInt(badge.text()) - 1;
+                    if (count <= 0) badge.remove();
+                    else badge.text(count + ' unread');
+                }
+            );
+        }
+
+        $('#markAllReadPageBtn').on('click', function () {
+            Danation.post('/Notification/MarkAllRead', {},
+                function () {
+                    Notiflix.Notify.success('All notifications marked as read.');
+                    $('.notif-page-item').removeClass('bg-light');
+                    $('#markAllReadPageBtn').remove();
+                    $('.badge.bg-danger').remove();
+                }
+            );
+        });
+    </script>
+}

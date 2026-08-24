@@ -1,0 +1,238 @@
+@model List<AdminDonationSummaryViewModel>
+@{
+    ViewData["Title"] = "Manage Donations — Admin";
+    Layout = "_Layout";
+    var statusFilter = ViewBag.StatusFilter as string;
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <h1 class="mb-1"><i class="bi bi-cash-stack me-2"></i>Manage Donations</h1>
+        <p class="mb-0 opacity-75">Verify and approve/reject donor payment transfers</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Filter Tabs -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <a asp-action="Donations" asp-controller="Admin"
+           class="btn btn-sm @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-secondary")">All</a>
+        <a asp-action="Donations" asp-controller="Admin" asp-route-status="PENDING"
+           class="btn btn-sm @(statusFilter == "PENDING" ? "btn-warning" : "btn-outline-secondary")">
+            <i class="bi bi-clock me-1"></i>Pending
+        </a>
+        <a asp-action="Donations" asp-controller="Admin" asp-route-status="APPROVED"
+           class="btn btn-sm @(statusFilter == "APPROVED" ? "btn-success" : "btn-outline-secondary")">
+            <i class="bi bi-check-circle me-1"></i>Approved
+        </a>
+        <a asp-action="Donations" asp-controller="Admin" asp-route-status="REJECTED"
+           class="btn btn-sm @(statusFilter == "REJECTED" ? "btn-danger" : "btn-outline-secondary")">
+            <i class="bi bi-x-circle me-1"></i>Rejected
+        </a>
+    </div>
+
+    <div class="card p-0 overflow-hidden">
+        <table class="table table-hover mb-0" id="donationsTable">
+            <thead>
+                <tr>
+                    <th>Screenshot</th>
+                    <th>Donor</th>
+                    <th>Campaign</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No donations found.</td>
+                    </tr>
+                }
+                @foreach (var d in Model)
+                {
+                    var statusClass = d.Status switch
+                    {
+                        "APPROVED" => "badge-approved",
+                        "REJECTED" => "badge-rejected",
+                        _ => "badge-pending"
+                    };
+                    <tr data-id="@d.Id">
+                        <td>
+                            <img src="@d.TransferScreenshot" class="rounded" width="52" height="52"
+                                 style="object-fit:cover;cursor:pointer;"
+                                 onclick="openScreenshot('@d.TransferScreenshot')" alt="screenshot"
+                                 title="Click to view" />
+                        </td>
+                        <td>
+                            <div class="fw-semibold small">@d.DonorName</div>
+                            <div class="text-muted" style="font-size:11px;">@d.DonorEmail</div>
+                        </td>
+                        <td>
+                            <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@d.CampaignId"
+                               class="text-decoration-none small fw-medium" target="_blank">@d.CampaignTitle</a>
+                        </td>
+                        <td class="fw-semibold small">
+                            @if (d.Amount.HasValue)
+                            {
+                                <span class="text-success">@d.Amount.Value.ToString("N0") MMK</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td><span class="badge @statusClass don-status-badge">@d.Status</span></td>
+                        <td class="small text-muted">
+                            @d.CreatedAt.ToString("MMM d, yyyy")
+                            @if (d.VerifiedAt.HasValue)
+                            {
+                                <br /><span class="text-muted" style="font-size:11px;">Verified: @d.VerifiedAt.Value.ToString("MMM d")</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (d.Status == "PENDING")
+                            {
+                                <div class="d-flex justify-content-end gap-1">
+                                    <button class="btn btn-sm btn-success approve-don-btn" data-id="@d.Id" title="Approve">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger reject-don-btn" data-id="@d.Id" title="Reject">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">@(d.VerifiedByName ?? "—")</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div class="modal fade" id="screenshotModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Transfer Screenshot</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="screenshotImg" src="" class="img-fluid rounded-xl screenshot-preview" alt="" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Donation Modal (enter verified amount) -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle me-2 text-success"></i>Approve Donation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">
+                    Enter the actual verified transfer amount in MMK. This will be recorded as the official donation amount.
+                </p>
+                <label class="form-label">Verified Amount (MMK) <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light">MMK</span>
+                    <input type="number" id="verifiedAmount" class="form-control" min="1" step="1"
+                           placeholder="Enter the actual transferred amount" />
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmApproveBtn">
+                    <i class="bi bi-check-circle me-1"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Donation Modal -->
+<div class="modal fade" id="rejectDonModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Reject Donation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Provide a reason for rejection. The donor will be notified.</p>
+                <textarea id="donRejectReason" class="form-control" rows="3"
+                          placeholder="Reason for rejection…" maxlength="1000"></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDonRejectBtn">
+                    <i class="bi bi-x-circle me-1"></i>Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var approvingId = null, rejectingDonId = null;
+
+        function openScreenshot(url) {
+            document.getElementById('screenshotImg').src = url;
+            new bootstrap.Modal(document.getElementById('screenshotModal')).show();
+        }
+
+        // Approve btn → show modal
+        $(document).on('click', '.approve-don-btn', function () {
+            approvingId = $(this).data('id');
+            $('#verifiedAmount').val('');
+            new bootstrap.Modal(document.getElementById('approveModal')).show();
+        });
+
+        $('#confirmApproveBtn').on('click', function () {
+            var amount = parseFloat($('#verifiedAmount').val());
+            if (!amount || amount <= 0) { Notiflix.Notify.warning('Please enter a valid amount.'); return; }
+            var row = $('tr[data-id="' + approvingId + '"]');
+            bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
+            Danation.post('/Admin/ApproveDonation', { id: approvingId, amount: amount },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('APPROVED');
+                    row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(amount).toLocaleString('en-US') + ' MMK</span>');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">Verified</span>');
+                }
+            );
+        });
+
+        // Reject btn → modal
+        $(document).on('click', '.reject-don-btn', function () {
+            rejectingDonId = $(this).data('id');
+            $('#donRejectReason').val('');
+            new bootstrap.Modal(document.getElementById('rejectDonModal')).show();
+        });
+
+        $('#confirmDonRejectBtn').on('click', function () {
+            var reason = $('#donRejectReason').val().trim();
+            if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
+            var row = $('tr[data-id="' + rejectingDonId + '"]');
+            bootstrap.Modal.getInstance(document.getElementById('rejectDonModal')).hide();
+            Danation.post('/Admin/RejectDonation', { id: rejectingDonId, reason: reason },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('REJECTED');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">Rejected</span>');
+                }
+            );
+        });
+    </script>
+}

@@ -1,8 +1,200 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Home — Danation Charity Platform";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-6">
+                <p class="text-warning fw-semibold mb-2 small text-uppercase letter-spacing-1">
+                    <i class="bi bi-heart-fill me-2"></i>Making a Difference
+                </p>
+                <h1 class="hero-title">Give Hope,<br />Change Lives.</h1>
+                <p class="hero-subtitle">
+                    Join our community of donors and campaign creators making a real impact.
+                    Every contribution counts — from education to healthcare, from disaster relief to community support.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-controller="Campaign" asp-action="Index" class="btn btn-warning btn-lg fw-bold px-4">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Explore Campaigns
+                    </a>
+                    @if (!User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg px-4">
+                            Start Fundraising
+                        </a>
+                    }
+                    else if (!User.IsInRole("ADMIN"))
+                    {
+                        <a asp-controller="Campaign" asp-action="Create" class="btn btn-outline-light btn-lg px-4">
+                            <i class="bi bi-plus-circle me-2"></i>Start a Campaign
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="hero-stat-card p-4 rounded-xl" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);">
+                            <div class="fs-1 mb-1">💝</div>
+                            <div class="fw-bold fs-4 text-white">@ViewBag.TotalCampaigns</div>
+                            <div class="text-white-50 small">Total Campaigns</div>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-4">
+                        <div class="hero-stat-card p-4 rounded-xl" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);">
+                            <div class="fs-1 mb-1">🎯</div>
+                            <div class="fw-bold fs-4 text-white">@ViewBag.OpenCampaigns</div>
+                            <div class="text-white-50 small">Open Campaigns</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stat-card p-4 rounded-xl" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);">
+                            <div class="fs-1 mb-1">✅</div>
+                            <div class="fw-bold fs-4 text-white">@ViewBag.CompletedCampaigns</div>
+                            <div class="text-white-50 small">Completed</div>
+                        </div>
+                    </div>
+                    <div class="col-6 mt-4">
+                        <div class="hero-stat-card p-4 rounded-xl" style="background:rgba(255,255,255,.1);backdrop-filter:blur(10px);">
+                            <div class="fs-1 mb-1">👥</div>
+                            <div class="fw-bold fs-4 text-white">@ViewBag.TotalUsers</div>
+                            <div class="text-white-50 small">Members</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Campaigns -->
+@if (ViewBag.RecentCampaigns != null)
+{
+    var campaigns = (List<CampaignListItemViewModel>)ViewBag.RecentCampaigns;
+    if (campaigns.Count > 0)
+    {
+        <section class="py-5 bg-white">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Active Campaigns</h2>
+                    <div class="section-divider"></div>
+                    <p>Support these meaningful causes today</p>
+                </div>
+                <div class="row g-4">
+                    @foreach (var c in campaigns)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <a href="@Url.Action("Detail", "Campaign", new { id = c.Id })" class="text-decoration-none">
+                                <div class="card campaign-card h-100">
+                                    @if (!string.IsNullOrEmpty(c.ThumbnailImage))
+                                    {
+                                        <img src="@c.ThumbnailImage" class="card-img-top" alt="@c.Title" style="height:200px;object-fit:cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="campaign-card card-img-placeholder">
+                                            <i class="bi bi-heart-fill text-primary" style="font-size:3rem;opacity:.4;"></i>
+                                        </div>
+                                    }
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <span class="badge badge-@c.Status.ToLower().Replace("_","-")">@c.Status.Replace("_"," ")</span>
+                                        </div>
+                                        <h5 class="card-title fw-bold">@c.Title</h5>
+                                        <p class="card-text text-muted flex-grow-1">@(c.Description.Length > 100 ? c.Description[..100] + "…" : c.Description)</p>
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span class="fw-semibold">@c.RaisedAmount.ToString("N0") MMK raised</span>
+                                                <span class="text-muted">@c.ProgressPercent%</span>
+                                            </div>
+                                            <div class="progress">
+                                                <div class="progress-bar @(c.ProgressPercent >= 100 ? "goal-reached" : "")"
+                                                     style="width:@c.ProgressPercent%"></div>
+                                            </div>
+                                            <div class="text-muted small mt-1">Goal: @c.GoalAmount.ToString("N0") MMK</div>
+                                        </div>
+                                        <div class="d-flex align-items-center mt-3 pt-3 border-top">
+                                            @if (!string.IsNullOrEmpty(c.OwnerProfileImage))
+                                            {
+                                                <img src="@c.OwnerProfileImage" class="rounded-circle me-2" width="26" height="26" style="object-fit:cover;" alt="" />
+                                            }
+                                            else
+                                            {
+                                                <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2"
+                                                      style="width:26px;height:26px;background:linear-gradient(135deg,#5c6bc0,#ff7043);">
+                                                    <i class="bi bi-person-fill text-white" style="font-size:12px;"></i>
+                                                </span>
+                                            }
+                                            <span class="text-muted small">@c.OwnerName</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+                <div class="text-center mt-5">
+                    <a asp-controller="Campaign" asp-action="Index" class="btn btn-primary px-5 py-2">
+                        View All Campaigns <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    }
+}
+
+<!-- How It Works -->
+<section class="py-5" style="background:var(--bg-light);">
+    <div class="container">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <div class="section-divider"></div>
+            <p>Simple, transparent, and secure</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:70px;height:70px;background:var(--primary-light);">
+                        <i class="bi bi-person-plus-fill text-primary fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">1. Register</h5>
+                    <p class="text-muted small">Create your account with email verification to get started.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:70px;height:70px;background:#e8f5e9;">
+                        <i class="bi bi-megaphone-fill text-success fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">2. Create Campaign</h5>
+                    <p class="text-muted small">Start a campaign with your cause, evidence, and fundraising goal.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:70px;height:70px;background:#fff3e0;">
+                        <i class="bi bi-cash-stack text-warning fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">3. Donate</h5>
+                    <p class="text-muted small">Transfer via KPay/WavePay and upload your payment screenshot.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:70px;height:70px;background:#fce4ec;">
+                        <i class="bi bi-check-circle-fill text-danger fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">4. Impact</h5>
+                    <p class="text-muted small">Admin verifies donations and campaigns post completion evidence.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

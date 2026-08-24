@@ -1,0 +1,117 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "_Layout";
+}
+
+<div class="auth-wrapper">
+    <div class="container">
+        <div class="auth-card animate-fadeInUp" style="max-width:520px;">
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-2">
+                    <i class="bi bi-heart-fill"></i> Danation
+                </div>
+                <p class="text-muted small">Join our charity platform and make a difference.</p>
+            </div>
+
+            <form asp-action="Register" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+
+                <!-- Validation Summary -->
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3"></div>
+
+                <!-- Full Name -->
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">Full Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                        <input asp-for="FullName" class="form-control border-start-0 ps-0" placeholder="Your full name" autocomplete="name" />
+                    </div>
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-at text-muted"></i></span>
+                        <input asp-for="Username" class="form-control border-start-0 ps-0" placeholder="Choose a unique username" autocomplete="username" />
+                    </div>
+                    <span asp-validation-for="Username" class="text-danger small"></span>
+                    <div class="form-text small">3–50 characters, letters/numbers/underscore only.</div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                        <input asp-for="Email" class="form-control border-start-0 ps-0" type="email" placeholder="you@example.com" autocomplete="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <!-- Phone (Optional) -->
+                <div class="mb-3">
+                    <label asp-for="Phone" class="form-label">Phone Number <span class="text-muted fw-normal">(optional)</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-phone text-muted"></i></span>
+                        <input asp-for="Phone" class="form-control border-start-0 ps-0" placeholder="e.g. 09xxxxxxxxx" autocomplete="tel" />
+                    </div>
+                    <span asp-validation-for="Phone" class="text-danger small"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="At least 6 characters" autocomplete="new-password" />
+                        <button class="input-group-text bg-light border-start-0" type="button" id="togglePassword">
+                            <i class="bi bi-eye text-muted" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock-fill text-muted"></i></span>
+                        <input asp-for="ConfirmPassword" class="form-control border-start-0 ps-0" type="password" placeholder="Re-enter your password" autocomplete="new-password" />
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                    <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                </button>
+
+                <div class="text-center">
+                    <span class="text-muted small">Already have an account?</span>
+                    <a asp-controller="Account" asp-action="Login" class="fw-semibold ms-1 small">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $('#togglePassword').on('click', function () {
+            var inp = $('#passwordInput');
+            var icon = $('#toggleIcon');
+            if (inp.attr('type') === 'password') {
+                inp.attr('type', 'text');
+                icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            } else {
+                inp.attr('type', 'password');
+                icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            }
+        });
+    </script>
+}

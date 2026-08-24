@@ -1,0 +1,121 @@
+@model VerifyOtpViewModel
+@{
+    ViewData["Title"] = "Verify Your Email";
+    Layout = "_Layout";
+}
+
+<div class="auth-wrapper">
+    <div class="container">
+        <div class="auth-card animate-fadeInUp text-center">
+            <!-- Icon -->
+            <div class="mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                     style="width:80px;height:80px;background:linear-gradient(135deg,#e8eaf6,#c5cae9);">
+                    <i class="bi bi-envelope-check-fill fs-1 text-primary"></i>
+                </div>
+                <h2 class="fw-bold">Check Your Email</h2>
+                <p class="text-muted">
+                    We sent a 6-digit OTP to <strong class="text-primary">@Model.Email</strong>.<br />
+                    Enter it below to verify your account.
+                </p>
+            </div>
+
+            <!-- Error from TempData -->
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 text-start mb-3"></div>
+
+            <form asp-action="VerifyOtp" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="Email" type="hidden" />
+
+                <!-- OTP Input -->
+                <div class="mb-4">
+                    <label asp-for="OtpCode" class="form-label fw-semibold">Enter OTP Code</label>
+                    <input asp-for="OtpCode" id="otpInput"
+                           class="form-control text-center fw-bold"
+                           style="font-size:2rem;letter-spacing:14px;max-width:260px;margin:0 auto;"
+                           maxlength="6" placeholder="______"
+                           autocomplete="one-time-code"
+                           inputmode="numeric"
+                           pattern="[0-9]{6}" />
+                    <span asp-validation-for="OtpCode" class="text-danger small d-block mt-1"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-4">
+                    <i class="bi bi-shield-check me-2"></i>Verify Email
+                </button>
+            </form>
+
+            <!-- Resend OTP -->
+            <div class="border-top pt-3">
+                <p class="text-muted small mb-2">Didn't receive the code?</p>
+                <button type="button" id="resendBtn" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i>Resend OTP
+                </button>
+                <div id="resendTimer" class="text-muted small mt-2 d-none">
+                    Please wait <span id="timerCount">60</span>s before resending.
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a asp-controller="Account" asp-action="Register" class="text-muted small">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Registration
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // OTP digits only
+        $('#otpInput').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+        });
+
+        // Resend OTP
+        var resendCooldown = false;
+        $('#resendBtn').on('click', function () {
+            if (resendCooldown) return;
+            var email = '@Model.Email';
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            Notiflix.Loading.pulse('Sending OTP...');
+            $.ajax({
+                url: '/Account/ResendOtp',
+                type: 'POST',
+                data: { email: email, __RequestVerificationToken: token }
+            }).done(function (res) {
+                Notiflix.Loading.remove();
+                if (res.success) {
+                    Notiflix.Notify.success(res.message || 'A new OTP has been sent.');
+                    startResendTimer();
+                } else {
+                    Notiflix.Notify.failure(res.message || 'Failed to resend OTP.');
+                }
+            }).fail(function () {
+                Notiflix.Loading.remove();
+                Notiflix.Notify.failure('Could not send OTP. Please try again.');
+            });
+        });
+
+        function startResendTimer() {
+            resendCooldown = true;
+            $('#resendBtn').prop('disabled', true);
+            $('#resendTimer').removeClass('d-none');
+            var count = 60;
+            $('#timerCount').text(count);
+            var t = setInterval(function () {
+                count--;
+                $('#timerCount').text(count);
+                if (count <= 0) {
+                    clearInterval(t);
+                    resendCooldown = false;
+                    $('#resendBtn').prop('disabled', false);
+                    $('#resendTimer').addClass('d-none');
+                }
+            }, 1000);
+        }
+    </script>
+}

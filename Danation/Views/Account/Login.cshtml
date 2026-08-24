@@ -1,0 +1,100 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_Layout";
+}
+
+<div class="auth-wrapper">
+    <div class="container">
+        <div class="auth-card animate-fadeInUp">
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-2">
+                    <i class="bi bi-heart-fill"></i> Danation
+                </div>
+                <p class="text-muted small">Welcome back! Sign in to your account.</p>
+            </div>
+
+            <!-- Success/Error from TempData -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success border-0 mb-4">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+                </div>
+            }
+
+            <form id="loginForm" asp-action="Login" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                <!-- Validation Summary -->
+                <div asp-validation-summary="All" class="alert alert-danger border-0 mb-3 d-none" id="validationSummary"></div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                        <input asp-for="Email" class="form-control border-start-0 ps-0" type="email" placeholder="you@example.com" autocomplete="email" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="Enter your password" autocomplete="current-password" />
+                        <button class="input-group-text bg-light border-start-0" type="button" id="togglePassword" title="Show/Hide Password">
+                            <i class="bi bi-eye text-muted" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="mb-4 form-check">
+                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                    <label asp-for="RememberMe" class="form-check-label small text-muted">Keep me signed in for 5 days</label>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="loginBtn">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </button>
+
+                <div class="text-center">
+                    <span class="text-muted small">Don't have an account?</span>
+                    <a asp-controller="Account" asp-action="Register" class="fw-semibold ms-1 small">Create Account</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Password toggle
+        $('#togglePassword').on('click', function () {
+            var inp = $('#passwordInput');
+            var icon = $('#toggleIcon');
+            if (inp.attr('type') === 'password') {
+                inp.attr('type', 'text');
+                icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            } else {
+                inp.attr('type', 'password');
+                icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            }
+        });
+
+        // Show validation summary if errors present
+        var summary = document.querySelector('[data-valmsg-summary]');
+        if (summary) {
+            var errors = summary.querySelectorAll('li');
+            if (errors.length > 0) {
+                document.getElementById('validationSummary').classList.remove('d-none');
+            }
+        }
+    </script>
+}

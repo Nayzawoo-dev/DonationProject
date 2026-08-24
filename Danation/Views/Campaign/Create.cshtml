@@ -1,0 +1,102 @@
+@model CreateCampaignViewModel
+@{
+    ViewData["Title"] = "Create Campaign";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="d-flex align-items-center mb-4">
+                <a asp-controller="Campaign" asp-action="My" class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h2 class="fw-bold mb-0">Create a Campaign</h2>
+                    <p class="text-muted small mb-0">Fill in the details below. Your campaign will be reviewed by an admin before going live.</p>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                <form id="createCampaignForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label class="form-label" for="titleInput">Campaign Title <span class="text-danger">*</span></label>
+                        <input type="text" id="titleInput" name="Title" class="form-control"
+                               placeholder="Enter a compelling campaign title…" maxlength="200" required />
+                        <div class="form-text text-end"><span id="titleCount">0</span>/200</div>
+                    </div>
+
+                    <!-- Goal Amount -->
+                    <div class="mb-4">
+                        <label class="form-label" for="goalInput">Fundraising Goal (MMK) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">MMK</span>
+                            <input type="number" id="goalInput" name="GoalAmount" class="form-control"
+                                   placeholder="e.g. 500000" min="1000" max="100000000" step="1000" required />
+                        </div>
+                        <div class="form-text">Minimum: 1,000 MMK</div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="form-label" for="descInput">Description <span class="text-danger">*</span></label>
+                        <textarea id="descInput" name="Description" class="form-control"
+                                  rows="8" placeholder="Describe your campaign, its purpose, and how funds will be used. Be specific and compelling. (minimum 50 characters)"
+                                  maxlength="5000" required></textarea>
+                        <div class="form-text d-flex justify-content-between">
+                            <span>Minimum 50 characters</span>
+                            <span><span id="descCount">0</span>/5000</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>What happens next?</strong> After submission, your campaign will be reviewed by our admin team.
+                        You'll be notified once it's approved and goes live. You can upload campaign images and documents after creation.
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary px-4" id="createBtn">
+                            <i class="bi bi-check-circle me-2"></i>Submit Campaign
+                        </button>
+                        <a asp-controller="Campaign" asp-action="My" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Character counters
+        $('#titleInput').on('input', function () {
+            $('#titleCount').text($(this).val().length);
+        });
+        $('#descInput').on('input', function () {
+            $('#descCount').text($(this).val().length);
+        });
+
+        // AJAX submit
+        $('#createCampaignForm').on('submit', function (e) {
+            e.preventDefault();
+            var btn = $('#createBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+
+            Danation.post('/Campaign/Create', $(this).serialize(),
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    if (res.redirectUrl) {
+                        setTimeout(function () { window.location.href = res.redirectUrl; }, 1200);
+                    }
+                },
+                function () { btn.prop('disabled', false); }
+            );
+        });
+    </script>
+}

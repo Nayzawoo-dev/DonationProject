@@ -1,4 +1,4 @@
-﻿using DatabaseClass.Models;
+using DatabaseClass.Models;
 using Donation.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -12,31 +12,40 @@ namespace Donation.Extension;
 
 public static class ServiceCollectionExtension
 {
-   public static IServiceCollection AddApplicationServices(
-   this IServiceCollection services,
-   IConfiguration configuration)
+    public static IServiceCollection AddApplicationServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         // DbContext
         services.AddDbContext<AppDbContext>(opt =>
             opt.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-       
+        // Memory Cache
+        services.AddMemoryCache();
+
+        // HTTP Context Accessor
+        services.AddHttpContextAccessor();
+
+        // Application Services
         services.AddScoped<EmailService>();
         services.AddScoped<LoginService>();
+        services.AddScoped<UserService>();
+        services.AddScoped<FileService>();
+        services.AddScoped<NotificationService>();
+        services.AddScoped<CampaignService>();
+        services.AddScoped<DonationService>();
 
         // FluentEmail Configuration
-        var emailFrom = configuration["EmailSettings:From"] ?? "noreply@webchatbot.com";
+        var emailFrom = configuration["EmailSettings:From"] ?? "noreply@danation.com";
         var appPassword = configuration["EmailSettings:AppPassword"] ?? "";
 
-        services.AddFluentEmail(emailFrom, "Donation System")
+        services.AddFluentEmail(emailFrom, "Danation Charity Platform")
             .AddSmtpSender(new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
                 Credentials = new NetworkCredential(emailFrom, appPassword),
                 EnableSsl = true
             });
-
-     
 
         // Authentication & Cookie Configuration
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -50,9 +59,16 @@ public static class ServiceCollectionExtension
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.Name = "Danation.Auth";
             });
 
-  
+        // Authorization Policies
+        services.AddAuthorizationBuilder()
+            .AddPolicy("AdminOnly", policy => policy.RequireRole("ADMIN"))
+            .AddPolicy("UserOnly", policy => policy.RequireRole("USER"))
+            .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+
+        // Rate Limiter
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -61,19 +77,24 @@ public static class ServiceCollectionExtension
             {
                 context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
-                // HTML Response ပြန်ပေးမည်ဖြစ်ကြောင်း သတ်မှတ်ခြင်း
-                context.HttpContext.Response.ContentType = "text/html";
-
-                // User ကို ပြသချင်သည့် HTML Error Message (သို့မဟုတ် View သို့ Redirect လုပ်နိုင်သည်)
-                await context.HttpContext.Response.WriteAsync(@"
-            <html>
-                <head><title>Too Many Requests</title></head>
-                <body style='text-align:center; font-family:sans-serif; padding-top:50px;'>
-                    <h1 style='color:red;'>429 - Request တွေ ခဏခဏ ပို့လွန်းနေပါသည်။</h1>
-                    <p>ခဏစောင့်ပြီးမှ စာမျက်နှာကို Reload ပြန်လုပ်ပေးပါ။</p>
-                    <a href='/'>ပင်မစာမျက်နှာသို့ ပြန်သွားရန်</a>
-                </body>
-            </html>");
+                if (context.HttpContext.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    context.HttpContext.Response.ContentType = "application/json";
+                    await context.HttpContext.Response.WriteAsync("{\"success\":false,\"message\":\"Too many requests. Please slow down.\"}");
+                }
+                else
+                {
+                    context.HttpContext.Response.ContentType = "text/html";
+                    await context.HttpContext.Response.WriteAsync(@"
+                    <html>
+                        <head><title>Too Many Requests</title></head>
+                        <body style='text-align:center; font-family:sans-serif; padding-top:80px; background:#f7fafc;'>
+                            <h1 style='color:#e53e3e;'>429 - Too Many Requests</h1>
+                            <p>Please wait a moment and try again.</p>
+                            <a href='/' style='color:#667eea;'>Return to Home</a>
+                        </body>
+                    </html>");
+                }
             };
 
             options.AddPolicy("RoleBasedPolicy", httpContext =>
@@ -81,13 +102,9 @@ public static class ServiceCollectionExtension
                 var user = httpContext.User;
                 var isAuthenticated = user.Identity?.IsAuthenticated ?? false;
 
-                // ၁။ Admin ဖြစ်ပါက
-                if (isAuthenticated && user.IsInRole("Admin"))
+                if (isAuthenticated && user.IsInRole("ADMIN"))
                 {
-                    var adminId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.Identity?.Name;
-
-                    // Admin ကို အလွန်မြင့်မားသော Limit ပေးမည် (ဥပမာ - ၁ မိနစ်လျှင် Request ၁၀၀၀)
-                    // သို့မဟုတ် Limit လုံးဝ မထားချင်ပါက PermitLimit ကို အလွန်များသော ပမာဏ ပေးထားနိုင်ပါသည်။
+                    var adminId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
                     return RateLimitPartition.GetFixedWindowLimiter(
                         partitionKey: $"Admin_{adminId}",
                         factory: _ => new FixedWindowRateLimiterOptions
@@ -98,12 +115,9 @@ public static class ServiceCollectionExtension
                         });
                 }
 
-                // ၂။ ပုံမှန် Login ဝင်ထားသော User ဖြစ်ပါက
                 if (isAuthenticated)
                 {
                     var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.Identity?.Name;
-
-                    // User အတွက် Limit (ဥပမာ - ၁ မိနစ်လျှင် Request ၁၀၀)
                     return RateLimitPartition.GetFixedWindowLimiter(
                         partitionKey: $"User_{userId}",
                         factory: _ => new FixedWindowRateLimiterOptions
@@ -114,15 +128,12 @@ public static class ServiceCollectionExtension
                         });
                 }
 
-                // ၃။ Login မဝင်ထားသော Guest ဖြစ်ပါက
                 var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "UnknownIP";
-
-                // Guest အတွက် Limit (ဥပမာ - ၁ မိနစ်လျှင် Request ၂၀)
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: $"Guest_{clientIp}",
                     factory: _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 20,
+                        PermitLimit = 30,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     });

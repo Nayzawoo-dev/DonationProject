@@ -1,0 +1,122 @@
+@model EditProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <a asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-outline-secondary me-3">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-0">Edit Profile</h4>
+                        <p class="text-muted small mb-0">Update your personal information</p>
+                    </div>
+                </div>
+
+                <form id="editProfileForm" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="UserId" value="@Model.UserId" />
+
+                    <!-- Profile Image -->
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            @if (!string.IsNullOrEmpty(Model.CurrentProfileImage))
+                            {
+                                <img id="avatarPreview" src="@Model.CurrentProfileImage"
+                                     class="profile-avatar" alt="Profile" />
+                            }
+                            else
+                            {
+                                <div class="profile-avatar-placeholder" id="avatarPlaceholder">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <img id="avatarPreview" src="" class="profile-avatar d-none" alt="Profile" />
+                            }
+                            <label for="profileImageInput"
+                                   class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle p-1"
+                                   style="width:32px;height:32px;cursor:pointer;" title="Change photo">
+                                <i class="bi bi-camera-fill" style="font-size:14px;"></i>
+                            </label>
+                        </div>
+                        <input type="file" id="profileImageInput" name="NewProfileImage"
+                               accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
+                        <div class="text-muted small mt-2">Max 2MB. JPG, PNG, WebP, GIF.</div>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label class="form-label" for="fullNameInput">Full Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" id="fullNameInput" name="FullName" value="@Model.FullName"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Your full name" maxlength="150" required />
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="mb-4">
+                        <label class="form-label" for="phoneInput">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone text-muted"></i></span>
+                            <input type="text" id="phoneInput" name="Phone" value="@Model.Phone"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="e.g. 09xxxxxxxxx" maxlength="30" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                        </button>
+                        <a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Image preview
+        $('#profileImageInput').on('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                Notiflix.Notify.warning('Image must be under 2MB.');
+                this.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#avatarPreview').attr('src', e.target.result).removeClass('d-none');
+                $('#avatarPlaceholder').addClass('d-none');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // AJAX submit with FormData (supports file upload)
+        $('#editProfileForm').on('submit', function (e) {
+            e.preventDefault();
+            var btn = $('#saveProfileBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+
+            var formData = new FormData(this);
+            Danation.upload('/Profile/Edit', formData,
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    btn.prop('disabled', false);
+                    setTimeout(function () { window.location.href = '/Profile'; }, 1200);
+                },
+                function () { btn.prop('disabled', false); }
+            );
+        });
+    </script>
+}

@@ -1,4 +1,4 @@
-﻿using FluentEmail.Core;
+using FluentEmail.Core;
 using FluentEmail.Core.Models;
 
 namespace Donation.Services;
@@ -21,6 +21,4 @@ public class EmailService
             .SendAsync();
         return response;
     }
-}
-
 }

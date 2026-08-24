@@ -1,0 +1,64 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Donation.ViewModels.Account;
+
+public class LoginViewModel
+{
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    [Display(Name = "Email Address")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Password is required.")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
+
+    [Display(Name = "Remember me")]
+    public bool RememberMe { get; set; }
+}
+
+public class RegisterViewModel
+{
+    [Required(ErrorMessage = "Full name is required.")]
+    [StringLength(150, ErrorMessage = "Full name cannot exceed 150 characters.")]
+    [Display(Name = "Full Name")]
+    public string FullName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Username is required.")]
+    [StringLength(50, MinimumLength = 3, ErrorMessage = "Username must be 3–50 characters.")]
+    [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "Username can only contain letters, numbers, and underscores.")]
+    public string Username { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    [StringLength(150)]
+    public string Email { get; set; } = string.Empty;
+
+    [StringLength(30, ErrorMessage = "Phone number cannot exceed 30 characters.")]
+    [Display(Name = "Phone (optional)")]
+    public string? Phone { get; set; }
+
+    [Required(ErrorMessage = "Password is required.")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Please confirm your password.")]
+    [DataType(DataType.Password)]
+    [Compare("Password", ErrorMessage = "Passwords do not match.")]
+    [Display(Name = "Confirm Password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public class VerifyOtpViewModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "OTP code is required.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "OTP must be exactly 6 digits.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "OTP must be 6 digits.")]
+    [Display(Name = "OTP Code")]
+    public string OtpCode { get; set; } = string.Empty;
+}

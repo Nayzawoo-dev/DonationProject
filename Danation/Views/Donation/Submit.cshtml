@@ -1,0 +1,188 @@
+@model DonationSubmitViewModel
+@{
+    ViewData["Title"] = "Donate — " + Model.CampaignTitle;
+    Layout = "_Layout";
+    var progress = Model.CampaignGoal > 0
+        ? Math.Min(100, Math.Round((Model.CampaignRaised / Model.CampaignGoal) * 100, 1))
+        : 0;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="d-flex align-items-center mb-4">
+                <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@Model.CampaignId"
+                   class="btn btn-sm btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h2 class="fw-bold mb-0"><i class="bi bi-heart-fill text-danger me-2"></i>Make a Donation</h2>
+                    <p class="text-muted small mb-0">@Model.CampaignTitle</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Donation Form -->
+                <div class="col-lg-7">
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-1">Step 1 — Transfer the amount</h5>
+                        <p class="text-muted small mb-4">Transfer any amount to the account below, then upload your screenshot.</p>
+
+                        <!-- Payment Info -->
+                        <div class="p-3 rounded-xl mb-4" style="background:var(--primary-light);border:1.5px solid var(--primary);">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="fw-bold text-primary fs-5 me-2"><i class="bi bi-phone me-1"></i>@Model.PaymentMethod</span>
+                            </div>
+                            <div class="mb-1"><span class="text-muted small">Account Name:</span> <span class="fw-semibold">@Model.AccountName</span></div>
+                            <div><span class="text-muted small">Phone Number:</span>
+                                <span class="fw-semibold fs-5 text-primary ms-1">@Model.PaymentPhone</span>
+                                <button class="btn btn-sm btn-outline-primary ms-2 py-0 px-2" onclick="copyPhone()"
+                                        title="Copy number" id="copyPhoneBtn">
+                                    <i class="bi bi-clipboard" style="font-size:12px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <h5 class="fw-bold mb-1 mt-2">Step 2 — Upload screenshot</h5>
+                        <p class="text-muted small mb-3">After transferring, upload your payment confirmation screenshot.</p>
+
+                        <form id="donationForm" enctype="multipart/form-data"
+                              asp-action="Submit" asp-controller="Donation" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="CampaignId" value="@Model.CampaignId" />
+                            <input type="hidden" name="CampaignTitle" value="@Model.CampaignTitle" />
+                            <input type="hidden" name="CampaignGoal" value="@Model.CampaignGoal" />
+                            <input type="hidden" name="CampaignRaised" value="@Model.CampaignRaised" />
+                            <input type="hidden" name="PaymentMethod" value="@Model.PaymentMethod" />
+                            <input type="hidden" name="PaymentPhone" value="@Model.PaymentPhone" />
+                            <input type="hidden" name="AccountName" value="@Model.AccountName" />
+
+                            <!-- Screenshot Upload -->
+                            <div class="mb-3">
+                                <label class="form-label" for="screenshotInput">
+                                    Transfer Screenshot <span class="text-danger">*</span>
+                                </label>
+                                <div class="border-2 border-dashed rounded-xl p-4 text-center mb-2"
+                                     style="border-color:var(--border);cursor:pointer;border-style:dashed;"
+                                     id="dropZone">
+                                    <div id="dropZoneText">
+                                        <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
+                                        <div class="fw-medium">Click to select or drag & drop</div>
+                                        <div class="text-muted small">Max 5MB — JPG, PNG, WebP, GIF</div>
+                                    </div>
+                                    <img id="screenshotPreview" src="" class="screenshot-preview w-100 d-none" alt="Preview" />
+                                </div>
+                                <input type="file" id="screenshotInput" name="TransferScreenshot"
+                                       accept="image/jpeg,image/png,image/webp,image/gif"
+                                       class="d-none" required />
+                                @if (ViewData.ModelState["TransferScreenshot"]?.Errors.Count > 0)
+                                {
+                                    <div class="text-danger small mt-1">
+                                        @ViewData.ModelState["TransferScreenshot"]!.Errors[0].ErrorMessage
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Optional Note -->
+                            <div class="mb-4">
+                                <label class="form-label" for="noteInput">Note (optional)</label>
+                                <textarea id="noteInput" name="Note" class="form-control" rows="2"
+                                          placeholder="Any additional information…" maxlength="500"></textarea>
+                            </div>
+
+                            <div class="alert alert-warning border-0 mb-4">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Your donation will be <strong>PENDING</strong> until an admin verifies your transfer screenshot.
+                                The actual amount will be confirmed at that time.
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="submitDonationBtn">
+                                <i class="bi bi-heart-fill me-2 text-danger"></i>Submit Donation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Campaign Progress Sidebar -->
+                <div class="col-lg-5">
+                    <div class="card p-4">
+                        <h6 class="fw-bold mb-1">Campaign Progress</h6>
+                        <div class="campaign-amount">@Model.CampaignRaised.ToString("N0") MMK</div>
+                        <div class="campaign-goal mb-3">raised of @Model.CampaignGoal.ToString("N0") MMK goal</div>
+                        <div class="progress mb-2">
+                            <div class="progress-bar" style="width:@progress%"></div>
+                        </div>
+                        <div class="text-muted small">@progress% funded</div>
+                    </div>
+
+                    <div class="card p-4 mt-3">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-question-circle me-1 text-primary"></i>How it works</h6>
+                        <ol class="small text-muted ps-3">
+                            <li class="mb-2">Transfer any amount via <strong>@Model.PaymentMethod</strong> to the number above.</li>
+                            <li class="mb-2">Upload a screenshot of your payment confirmation.</li>
+                            <li class="mb-2">Submit your donation. It will show as <strong>PENDING</strong>.</li>
+                            <li>An admin will verify your transfer and update the status.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Drop zone click
+        $('#dropZone').on('click', function () {
+            $('#screenshotInput').click();
+        });
+
+        // File change preview
+        $('#screenshotInput').on('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                Notiflix.Notify.warning('Screenshot must be under 5MB.');
+                this.value = '';
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('#screenshotPreview').attr('src', e.target.result).removeClass('d-none');
+                $('#dropZoneText').addClass('d-none');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Drag & drop
+        $('#dropZone').on('dragover', function (e) {
+            e.preventDefault();
+            $(this).css('border-color', 'var(--primary)');
+        }).on('dragleave', function () {
+            $(this).css('border-color', 'var(--border)');
+        }).on('drop', function (e) {
+            e.preventDefault();
+            $(this).css('border-color', 'var(--border)');
+            var file = e.originalEvent.dataTransfer.files[0];
+            if (file) {
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('screenshotInput').files = dt.files;
+                $('#screenshotInput').trigger('change');
+            }
+        });
+
+        // Prevent double-submit
+        $('#donationForm').on('submit', function () {
+            $('#submitDonationBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Submitting…');
+        });
+
+        // Copy phone number
+        function copyPhone() {
+            navigator.clipboard.writeText('@Model.PaymentPhone').then(function () {
+                Notiflix.Notify.success('Phone number copied!');
+            });
+        }
+    </script>
+}
