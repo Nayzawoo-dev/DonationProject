@@ -1,8 +1,8 @@
-using Danation.Models;
+using Donation.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace Danation.Controllers
+namespace Donation.Controllers
 {
     public class HomeController : Controller
     {

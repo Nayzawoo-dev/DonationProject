@@ -1,4 +1,4 @@
-namespace Danation.Models
+namespace Donation.Models
 {
     public class ErrorViewModel
     {
