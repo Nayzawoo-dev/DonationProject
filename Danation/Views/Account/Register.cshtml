@@ -15,11 +15,11 @@
                 <p class="text-muted small">Join our charity platform and make a difference.</p>
             </div>
 
-            <form asp-action="Register" asp-controller="Account" method="post">
+            <form id="registerForm" asp-action="Register" asp-controller="Account" method="post">
                 @Html.AntiForgeryToken()
 
                 <!-- Validation Summary -->
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3 d-none" id="validationSummary"></div>
 
                 <!-- Full Name -->
                 <div class="mb-3">
@@ -86,7 +86,7 @@
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="registerBtn">
                     <i class="bi bi-person-plus-fill me-2"></i>Create Account
                 </button>
 
@@ -112,6 +112,32 @@
                 inp.attr('type', 'password');
                 icon.removeClass('bi-eye-slash').addClass('bi-eye');
             }
+        });
+
+        // AJAX Form Submit
+        $('#registerForm').on('submit', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var btn = $('#registerBtn');
+            var summary = $('#validationSummary');
+
+            summary.addClass('d-none').empty();
+
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+
+            Danation.post('/Account/Register', form.serialize(),
+                function (res) {
+                    Notiflix.Notify.success(res.message || 'Registration successful!');
+                    var target = res.redirectUrl || '/Account/Login';
+                    setTimeout(function () { window.location.href = target; }, 1000);
+                },
+                function (err) {
+                    btn.prop('disabled', false);
+                    var msg = (err && err.message) ? err.message : 'Registration failed. Please check the form.';
+                    summary.removeClass('d-none').html('<i class="bi bi-exclamation-triangle-fill me-2"></i>' + Danation.escHtml(msg));
+                }
+            );
         });
     </script>
 }

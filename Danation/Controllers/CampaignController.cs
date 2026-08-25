@@ -30,6 +30,10 @@ public class CampaignController : Controller
     public async Task<IActionResult> Index(string? search, string? status, string? township, int page = 1)
     {
         var vm = await _campaignService.GetPublicCampaignsAsync(search, status, township, page);
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_CampaignListPartial", vm);
+        }
         return View(vm);
     }
 

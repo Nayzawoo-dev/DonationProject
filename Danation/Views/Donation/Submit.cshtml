@@ -173,9 +173,31 @@
             }
         });
 
-        // Prevent double-submit
-        $('#donationForm').on('submit', function () {
-            $('#submitDonationBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Submitting…');
+        // AJAX Form Submit with FormData
+        $('#donationForm').on('submit', function (e) {
+            e.preventDefault();
+            var fileInput = document.getElementById('screenshotInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Notiflix.Notify.warning('Please select a transfer screenshot.');
+                return;
+            }
+
+            var btn = $('#submitDonationBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Submitting…');
+
+            var formData = new FormData(this);
+
+            Danation.upload('/Donation/Submit', formData,
+                function (res) {
+                    Notiflix.Notify.success(res.message || 'Donation submitted successfully!');
+                    var target = res.redirectUrl || '/Donation/My';
+                    setTimeout(function () { window.location.href = target; }, 1200);
+                },
+                function (err) {
+                    btn.prop('disabled', false).html('<i class="bi bi-heart-fill me-2 text-danger"></i>Submit Donation');
+                }
+            );
         });
 
         // Copy phone number

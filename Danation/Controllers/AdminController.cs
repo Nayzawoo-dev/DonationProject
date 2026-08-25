@@ -112,6 +112,10 @@ public class AdminController : Controller
         var campaigns = await _campaignService.GetAdminCampaignsAsync(status, search);
         ViewBag.StatusFilter = status;
         ViewBag.Search = search;
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_AdminCampaignTablePartial", campaigns);
+        }
         return View(campaigns);
     }
 
@@ -154,6 +158,10 @@ public class AdminController : Controller
     {
         var donations = await _donationService.GetAdminDonationsAsync(status);
         ViewBag.StatusFilter = status;
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_AdminDonationTablePartial", donations);
+        }
         return View(donations);
     }
 
@@ -215,11 +223,24 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateCompletion(AdminCreateCompletionViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+        if (!ModelState.IsValid)
+        {
+            if (isAjax)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = errors.FirstOrDefault() ?? "Please provide a completion caption." });
+            }
+            return View(model);
+        }
 
         var campaign = await _context.Campaigns.FindAsync(model.CampaignId);
         if (campaign == null || campaign.Status != "CLOSED")
+        {
+            if (isAjax) return Json(new { success = false, message = "Campaign not found or not in CLOSED status." });
             return NotFound();
+        }
 
         var adminId = GetCurrentAdminId();
 
@@ -270,13 +291,28 @@ public class AdminController : Controller
                 $"Your campaign \"{campaign.Title}\" has been officially completed. Thank you for your incredible contribution!");
 
             TempData["SuccessMessage"] = "Campaign completion record created successfully.";
+
+            if (isAjax)
+            {
+                return Json(new
+                {
+                    success = true,
+                    message = "Campaign completion record created successfully.",
+                    redirectUrl = Url.Action(nameof(Campaigns))
+                });
+            }
+
             return RedirectToAction(nameof(Campaigns));
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
             _logger.LogError(ex, "Failed to create completion for campaign {CampaignId}", model.CampaignId);
-            ModelState.AddModelError(string.Empty, "An error occurred. Please try again.");
+            var errMsg = "An error occurred while creating completion record. Please try again.";
+            if (isAjax)
+                return Json(new { success = false, message = errMsg });
+
+            ModelState.AddModelError(string.Empty, errMsg);
             return View(model);
         }
     }
@@ -308,6 +344,10 @@ public class AdminController : Controller
             .ToListAsync();
 
         ViewBag.Search = search;
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_AdminUserTablePartial", users);
+        }
         return View(users);
     }
 

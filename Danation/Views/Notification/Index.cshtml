@@ -130,15 +130,29 @@
         // Mark all read
         $('#markAllReadBtn').on('click', function () {
             var btn = $(this).prop('disabled', true);
-            $.post('/Notification/MarkAllRead',
-                { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+            Danation.post('/Notification/MarkAllRead', {},
                 function () {
                     $('.notif-item').removeClass('border-start border-primary').find('.bg-light-blue').removeClass('bg-light-blue');
                     $('.notif-item .badge.bg-primary').remove();
                     Notiflix.Notify.success('All notifications marked as read.');
                     btn.prop('disabled', false);
+                },
+                function () {
+                    btn.prop('disabled', false);
                 }
             );
+        });
+
+        // Mark single item read on click
+        $(document).on('click', '.notif-item', function () {
+            var item = $(this);
+            var id = item.data('id');
+            if (!item.hasClass('border-primary')) return; // Already read
+
+            Danation.post('/Notification/MarkRead/' + id, {}, function () {
+                item.removeClass('border-start border-primary').find('.bg-light-blue').removeClass('bg-light-blue');
+                item.find('.badge.bg-primary').fadeOut(200, function () { $(this).remove(); });
+            });
         });
 
         // Load on page ready

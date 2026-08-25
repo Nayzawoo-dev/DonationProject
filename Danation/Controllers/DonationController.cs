@@ -74,12 +74,19 @@ public class DonationController : Controller
     public async Task<IActionResult> Submit(DonationSubmitViewModel model)
     {
         var userId = GetCurrentUserId();
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 
         if (model.TransferScreenshot == null || model.TransferScreenshot.Length == 0)
             ModelState.AddModelError("TransferScreenshot", "Please upload a transfer screenshot.");
 
         if (!ModelState.IsValid)
         {
+            if (isAjax)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = errors.FirstOrDefault() ?? "Please provide a valid transfer screenshot." });
+            }
+
             // Re-populate payment info
             model.PaymentMethod = _configuration["DonationPayment:Method"] ?? "KPay";
             model.PaymentPhone = _configuration["DonationPayment:PhoneNumber"] ?? "";
@@ -92,6 +99,9 @@ public class DonationController : Controller
 
         if (!success)
         {
+            if (isAjax)
+                return Json(new { success = false, message = error });
+
             ModelState.AddModelError(string.Empty, error);
             model.PaymentMethod = _configuration["DonationPayment:Method"] ?? "KPay";
             model.PaymentPhone = _configuration["DonationPayment:PhoneNumber"] ?? "";
@@ -100,6 +110,17 @@ public class DonationController : Controller
         }
 
         TempData["SuccessMessage"] = "Your donation has been submitted! Our team will verify your transfer and update the status.";
+
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                message = "Your donation has been submitted! Our team will verify your transfer and update the status.",
+                redirectUrl = Url.Action(nameof(My))
+            });
+        }
+
         return RedirectToAction("My");
     }
 

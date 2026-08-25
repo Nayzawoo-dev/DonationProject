@@ -34,25 +34,53 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+        if (!ModelState.IsValid)
+        {
+            if (isAjax)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = errors.FirstOrDefault() ?? "Invalid registration details." });
+            }
+            return View(model);
+        }
 
         try
         {
             var (success, error) = await _userService.RegisterAsync(model);
             if (!success)
             {
+                if (isAjax)
+                    return Json(new { success = false, message = error });
+
                 ModelState.AddModelError(string.Empty, error);
                 return View(model);
             }
 
             TempData["RegistrationEmail"] = model.Email;
             TempData["SuccessMessage"] = "Registration successful! Please check your email for the OTP verification code.";
+
+            if (isAjax)
+            {
+                return Json(new
+                {
+                    success = true,
+                    message = "Registration successful! Redirecting to email verification...",
+                    redirectUrl = Url.Action(nameof(VerifyOtp), new { email = model.Email })
+                });
+            }
+
             return RedirectToAction(nameof(VerifyOtp), new { email = model.Email });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Registration failed for {Email}", model.Email);
-            ModelState.AddModelError(string.Empty, "Registration failed. Please check your details and try again.");
+            var err = "Registration failed. Please check your details and try again.";
+            if (isAjax)
+                return Json(new { success = false, message = err });
+
+            ModelState.AddModelError(string.Empty, err);
             return View(model);
         }
     }
@@ -73,16 +101,40 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> VerifyOtp(VerifyOtpViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+        if (!ModelState.IsValid)
+        {
+            if (isAjax)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = errors.FirstOrDefault() ?? "Invalid OTP code." });
+            }
+            return View(model);
+        }
 
         var (success, error) = await _userService.VerifyOtpAsync(model);
         if (!success)
         {
+            if (isAjax)
+                return Json(new { success = false, message = error });
+
             ModelState.AddModelError(string.Empty, error);
             return View(model);
         }
 
         TempData["SuccessMessage"] = "Email verified successfully! You can now log in.";
+
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                message = "Email verified successfully! Redirecting to login...",
+                redirectUrl = Url.Action(nameof(Login))
+            });
+        }
+
         return RedirectToAction(nameof(Login));
     }
 
@@ -120,23 +172,49 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl)
     {
-        if (!ModelState.IsValid) return View(model);
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 
-        var (success, error) = await _loginService.LoginAsync(model);
+        if (!ModelState.IsValid)
+        {
+            if (isAjax)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = errors.FirstOrDefault() ?? "Please enter your email and password." });
+            }
+            return View(model);
+        }
+
+        var (success, error, role) = await _loginService.LoginAsync(model);
         if (!success)
         {
+            if (isAjax)
+                return Json(new { success = false, message = error });
+
             ModelState.AddModelError(string.Empty, error);
             return View(model);
         }
 
+        string targetUrl = Url.Action("Index", "Home")!;
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
-            return Redirect(returnUrl);
+        {
+            targetUrl = returnUrl;
+        }
+        else if (role == "ADMIN")
+        {
+            targetUrl = Url.Action("Dashboard", "Admin")!;
+        }
 
-        // Role-based redirect
-        if (User.IsInRole("ADMIN"))
-            return RedirectToAction("Dashboard", "Admin");
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                message = "Login successful! Redirecting...",
+                redirectUrl = targetUrl
+            });
+        }
 
-        return RedirectToAction("Index", "Home");
+        return Redirect(targetUrl);
     }
 
     // POST: /Account/Logout

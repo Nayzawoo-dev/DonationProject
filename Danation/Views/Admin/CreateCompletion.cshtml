@@ -31,7 +31,7 @@
             <div class="card p-4">
                 <h5 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-primary"></i>Completion Details</h5>
 
-                <form asp-action="CreateCompletion" asp-controller="Admin" method="post" enctype="multipart/form-data">
+                <form id="createCompletionForm" asp-action="CreateCompletion" asp-controller="Admin" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="CampaignId" value="@Model.CampaignId" />
                     <input type="hidden" name="CampaignTitle" value="@Model.CampaignTitle" />
@@ -45,7 +45,7 @@
                                   placeholder="Describe how the campaign funds were used and the outcome achieved. Include dates, amounts spent, and beneficiaries. (minimum 10 characters)"
                                   maxlength="2000"></textarea>
                         <span asp-validation-for="Caption" class="text-danger small"></span>
-                        <div class="form-text text-end"><span id="captionCount">@Model.Caption?.Length ?? 0</span>/2000</div>
+                        <div class="form-text text-end"><span id="captionCount">@(Model.Caption?.Length ?? 0)</span>/2000</div>
                     </div>
 
                     <!-- Evidence Images -->
@@ -60,9 +60,9 @@
                         <div class="border-2 rounded-xl p-4 text-center mb-2"
                              style="border-color:var(--border);border-style:dashed;cursor:pointer;"
                              id="evidenceDropZone">
-                            <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
-                            <div class="fw-medium">Click to select images or drag & drop</div>
-                            <div class="text-muted small">JPG, PNG, WebP, GIF — Multiple files allowed</div>
+                             <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
+                             <div class="fw-medium">Click to select images or drag & drop</div>
+                             <div class="text-muted small">JPG, PNG, WebP, GIF — Multiple files allowed</div>
                         </div>
                         <input type="file" id="evidenceFileInput" name="CompletionImages"
                                accept="image/jpeg,image/png,image/webp,image/gif"
@@ -71,7 +71,7 @@
                     </div>
 
                     <!-- Validation summary -->
-                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3"></div>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-3 d-none" id="validationSummary"></div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary px-4" id="submitCompletionBtn">
@@ -86,21 +86,21 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         // Caption counter
-        document.getElementById('captionInput').addEventListener('input', function () {
-            document.getElementById('captionCount').textContent = this.value.length;
+        $('#captionInput').on('input', function () {
+            $('#captionCount').text(this.value.length);
         });
 
         // Drop zone trigger
-        document.getElementById('evidenceDropZone').addEventListener('click', function () {
-            document.getElementById('evidenceFileInput').click();
+        $('#evidenceDropZone').on('click', function () {
+            $('#evidenceFileInput').click();
         });
 
         // Preview selected images
-        document.getElementById('evidenceFileInput').addEventListener('change', function () {
-            var previews = document.getElementById('evidencePreviews');
-            previews.innerHTML = '';
+        $('#evidenceFileInput').on('change', function () {
+            var previews = $('#evidencePreviews').empty();
             Array.from(this.files).forEach(function (file) {
                 if (file.size > 5 * 1024 * 1024) {
                     Notiflix.Notify.warning(file.name + ' exceeds 5MB and will be skipped.');
@@ -108,36 +108,52 @@
                 }
                 var reader = new FileReader();
                 reader.onload = function (e) {
-                    var col = document.createElement('div');
-                    col.className = 'col-4 col-md-3';
-                    col.innerHTML = '<img src="' + e.target.result + '" class="gallery-thumb w-100" alt="" />';
-                    previews.appendChild(col);
+                    var col = $('<div class="col-4 col-md-3"></div>');
+                    col.html('<img src="' + e.target.result + '" class="gallery-thumb w-100" alt="" />');
+                    previews.append(col);
                 };
                 reader.readAsDataURL(file);
             });
         });
 
         // Drag & drop
-        var dz = document.getElementById('evidenceDropZone');
-        dz.addEventListener('dragover', function (e) {
+        $('#evidenceDropZone').on('dragover', function (e) {
             e.preventDefault();
-            this.style.borderColor = 'var(--primary)';
-        });
-        dz.addEventListener('dragleave', function () {
-            this.style.borderColor = 'var(--border)';
-        });
-        dz.addEventListener('drop', function (e) {
+            $(this).css('border-color', 'var(--primary)');
+        }).on('dragleave', function () {
+            $(this).css('border-color', 'var(--border)');
+        }).on('drop', function (e) {
             e.preventDefault();
-            this.style.borderColor = 'var(--border)';
-            document.getElementById('evidenceFileInput').files = e.dataTransfer.files;
-            document.getElementById('evidenceFileInput').dispatchEvent(new Event('change'));
+            $(this).css('border-color', 'var(--border)');
+            document.getElementById('evidenceFileInput').files = e.originalEvent.dataTransfer.files;
+            $('#evidenceFileInput').trigger('change');
         });
 
-        // Prevent double-submit
-        document.querySelector('form').addEventListener('submit', function () {
-            document.getElementById('submitCompletionBtn').disabled = true;
-            document.getElementById('submitCompletionBtn').innerHTML =
-                '<i class="bi bi-hourglass-split me-2"></i>Saving…';
+        // AJAX Form Submit
+        $('#createCompletionForm').on('submit', function (e) {
+            e.preventDefault();
+            var caption = $('#captionInput').val().trim();
+            if (caption.length < 10) {
+                Notiflix.Notify.warning('Please enter at least 10 characters for the completion summary.');
+                return;
+            }
+
+            var btn = $('#submitCompletionBtn');
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Saving…');
+
+            var formData = new FormData(this);
+
+            Danation.upload('/Admin/CreateCompletion', formData,
+                function (res) {
+                    Notiflix.Notify.success(res.message || 'Completion record created successfully!');
+                    var target = res.redirectUrl || '/Admin/Campaigns';
+                    setTimeout(function () { window.location.href = target; }, 1000);
+                },
+                function (err) {
+                    btn.prop('disabled', false).html('<i class="bi bi-trophy me-2"></i>Create Completion Record');
+                }
+            );
         });
     </script>
 }

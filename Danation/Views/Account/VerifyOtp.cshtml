@@ -21,9 +21,9 @@
             </div>
 
             <!-- Error from TempData -->
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 text-start mb-3"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 text-start mb-3 d-none" id="validationSummary"></div>
 
-            <form asp-action="VerifyOtp" asp-controller="Account" method="post">
+            <form id="verifyOtpForm" asp-action="VerifyOtp" asp-controller="Account" method="post">
                 @Html.AntiForgeryToken()
                 <input asp-for="Email" type="hidden" />
 
@@ -41,7 +41,7 @@
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="btn btn-primary w-100 py-2 mb-4">
+                <button type="submit" class="btn btn-primary w-100 py-2 mb-4" id="verifyOtpBtn">
                     <i class="bi bi-shield-check me-2"></i>Verify Email
                 </button>
             </form>
@@ -72,6 +72,41 @@
         // OTP digits only
         $('#otpInput').on('input', function () {
             this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+            if (this.value.length === 6) {
+                $('#verifyOtpForm').submit();
+            }
+        });
+
+        // AJAX Form Submit
+        $('#verifyOtpForm').on('submit', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var btn = $('#verifyOtpBtn');
+            var summary = $('#validationSummary');
+
+            summary.addClass('d-none').empty();
+
+            var otp = $('#otpInput').val().trim();
+            if (otp.length !== 6) {
+                Notiflix.Notify.warning('Please enter the 6-digit OTP code.');
+                return;
+            }
+
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+
+            Danation.post('/Account/VerifyOtp', form.serialize(),
+                function (res) {
+                    Notiflix.Notify.success(res.message || 'Email verified successfully!');
+                    var target = res.redirectUrl || '/Account/Login';
+                    setTimeout(function () { window.location.href = target; }, 1000);
+                },
+                function (err) {
+                    btn.prop('disabled', false);
+                    var msg = (err && err.message) ? err.message : 'Invalid or expired OTP code.';
+                    summary.removeClass('d-none').html('<i class="bi bi-exclamation-triangle-fill me-2"></i>' + Danation.escHtml(msg));
+                }
+            );
         });
 
         // Resend OTP
@@ -85,7 +120,8 @@
             $.ajax({
                 url: '/Account/ResendOtp',
                 type: 'POST',
-                data: { email: email, __RequestVerificationToken: token }
+                data: { email: email, __RequestVerificationToken: token },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
             }).done(function (res) {
                 Notiflix.Loading.remove();
                 if (res.success) {

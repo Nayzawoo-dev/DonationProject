@@ -14,17 +14,17 @@
 </div>
 
 <div class="container py-4">
-    <!-- Filters -->
-    <form method="get" asp-action="Campaigns" asp-controller="Admin" class="row g-2 mb-4">
+    <!-- Filters Form -->
+    <form id="adminCampaignFilterForm" method="get" asp-action="Campaigns" asp-controller="Admin" class="row g-2 mb-4">
         <div class="col-md-5">
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                <input type="text" name="search" value="@search" class="form-control border-start-0 ps-0"
-                       placeholder="Search title or owner…" />
+                <input type="text" name="search" id="adminCampaignSearch" value="@search" class="form-control border-start-0 ps-0"
+                       placeholder="Search title or owner…" autocomplete="off" />
             </div>
         </div>
         <div class="col-md-3">
-            <select name="status" class="form-select" onchange="this.form.submit()">
+            <select name="status" id="adminCampaignStatus" class="form-select">
                 <option value="">All Statuses</option>
                 @{
                     string[] adminStatuses = { "PENDING", "OPEN", "GOAL_REACHED", "CLOSED", "COMPLETED", "REJECTED" };
@@ -46,111 +46,15 @@
         <div class="col-md-2">
             <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Search</button>
         </div>
-        @if (!string.IsNullOrEmpty(search) || !string.IsNullOrEmpty(statusFilter))
-        {
-            <div class="col-md-2">
-                <a asp-action="Campaigns" asp-controller="Admin" class="btn btn-outline-secondary w-100">Clear</a>
-            </div>
-        }
+        <div class="col-md-2">
+            <button type="button" id="clearAdminCampaignsBtn" class="btn btn-outline-secondary w-100 @(string.IsNullOrEmpty(search) && string.IsNullOrEmpty(statusFilter) ? "d-none" : "")">
+                Clear
+            </button>
+        </div>
     </form>
 
-    <div class="card p-0 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="campaignsTable">
-            <thead>
-                <tr>
-                    <th>Campaign</th>
-                    <th>Owner</th>
-                    <th>Goal</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Files</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Count == 0)
-                {
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No campaigns found.</td>
-                    </tr>
-                }
-                @foreach (var c in Model)
-                {
-                    var statusClass = c.Status switch
-                    {
-                        "OPEN" => "badge-open",
-                        "GOAL_REACHED" => "badge-goal",
-                        "CLOSED" => "badge-closed",
-                        "COMPLETED" => "badge-completed",
-                        "REJECTED" => "badge-rejected",
-                        _ => "badge-pending"
-                    };
-                    <tr data-id="@c.Id">
-                        <td>
-                            <div class="fw-semibold" style="max-width:200px;">
-                                <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
-                                   class="text-dark text-decoration-none">@c.Title</a>
-                            </div>
-                        </td>
-                        <td class="small">
-                            <span class="fw-medium">@c.OwnerName</span><br />
-                            <span class="text-muted">@@@c.OwnerUsername</span>
-                            @if (!string.IsNullOrEmpty(c.ContactPhone))
-                            {
-                                <div class="text-primary mt-1" style="font-size:11px;">
-                                    <i class="bi bi-telephone-fill me-1"></i>@c.ContactPhone
-                                </div>
-                            }
-                            @if (!string.IsNullOrEmpty(c.Township))
-                            {
-                                <div class="text-muted" style="font-size:11px;">
-                                    <i class="bi bi-geo-alt me-1"></i>@c.Township
-                                </div>
-                            }
-                        </td>
-                        <td class="small">@c.GoalAmount.ToString("N0") MMK</td>
-                        <td><span class="badge @statusClass status-badge">@c.Status.Replace("_", " ")</span></td>
-                        <td class="small text-muted">@c.CreatedAt.ToString("MMM d, yyyy")</td>
-                        <td class="small">
-                            <span title="Images"><i class="bi bi-images me-1"></i>@c.ImageCount</span>
-                            <span class="ms-2" title="Docs"><i class="bi bi-file-earmark me-1"></i>@c.DocumentCount</span>
-                        </td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-1 flex-wrap">
-                                <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
-                                   class="btn btn-sm btn-outline-secondary" title="View">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if (c.Status == "PENDING")
-                                {
-                                    <button class="btn btn-sm btn-success approve-btn" data-id="@c.Id" title="Approve">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger reject-btn" data-id="@c.Id" title="Reject">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                }
-                                @if (c.Status == "GOAL_REACHED")
-                                {
-                                    <button class="btn btn-sm btn-warning close-btn" data-id="@c.Id" title="Close Campaign">
-                                        <i class="bi bi-lock"></i>
-                                    </button>
-                                }
-                                @if (c.Status == "CLOSED")
-                                {
-                                    <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@c.Id"
-                                       class="btn btn-sm btn-primary" title="Create Completion">
-                                        <i class="bi bi-trophy"></i>
-                                    </a>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        </div>
+    <div class="card p-0 overflow-hidden" id="adminCampaignsTableContainer">
+        <partial name="_AdminCampaignTablePartial" model="Model" />
     </div>
 </div>
 
@@ -180,6 +84,45 @@
 @section Scripts {
     <script>
         var rejectingId = null;
+        var adminSearchTimer = null;
+
+        function fetchAdminCampaigns() {
+            var form = $('#adminCampaignFilterForm');
+            var url = '/Admin/Campaigns?' + form.serialize();
+
+            Danation.loadPartial(url, '#adminCampaignsTableContainer', function () {
+                var hasVal = $('#adminCampaignSearch').val() || $('#adminCampaignStatus').val();
+                if (hasVal) {
+                    $('#clearAdminCampaignsBtn').removeClass('d-none');
+                } else {
+                    $('#clearAdminCampaignsBtn').addClass('d-none');
+                }
+            });
+        }
+
+        // Live status change
+        $('#adminCampaignStatus').on('change', function () {
+            fetchAdminCampaigns();
+        });
+
+        // Search live debounce
+        $('#adminCampaignSearch').on('input', function () {
+            clearTimeout(adminSearchTimer);
+            adminSearchTimer = setTimeout(fetchAdminCampaigns, 400);
+        });
+
+        // Form submit
+        $('#adminCampaignFilterForm').on('submit', function (e) {
+            e.preventDefault();
+            fetchAdminCampaigns();
+        });
+
+        // Clear filters
+        $('#clearAdminCampaignsBtn').on('click', function () {
+            $('#adminCampaignSearch').val('');
+            $('#adminCampaignStatus').val('');
+            fetchAdminCampaigns();
+        });
 
         // Approve
         $(document).on('click', '.approve-btn', function () {

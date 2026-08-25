@@ -76,20 +76,27 @@ $(function () {
 var Danation = window.Danation || {};
 
 /**
+ * Get the current Anti-Forgery Token
+ */
+Danation.getCsrfToken = function () {
+    return $('input[name="__RequestVerificationToken"]').first().val() || '';
+};
+
+/**
  * Standard AJAX POST helper
  * @param {string} url
- * @param {object} data
+ * @param {object|string} data
  * @param {function} onSuccess - called with (response)
  * @param {function} [onError]
  */
 Danation.post = function (url, data, onSuccess, onError) {
-    var token = $('input[name="__RequestVerificationToken"]').first().val();
+    var token = Danation.getCsrfToken();
     Notiflix.Loading.pulse('Please wait...');
     $.ajax({
         url: url,
         type: 'POST',
         data: data,
-        headers: { 'RequestVerificationToken': token }
+        headers: { 'RequestVerificationToken': token, 'X-Requested-With': 'XMLHttpRequest' }
     }).done(function (res) {
         Notiflix.Loading.remove();
         if (res && res.success) {
@@ -119,7 +126,7 @@ Danation.post = function (url, data, onSuccess, onError) {
  * @param {function} [onError]
  */
 Danation.upload = function (url, formData, onSuccess, onError) {
-    var token = $('input[name="__RequestVerificationToken"]').first().val();
+    var token = Danation.getCsrfToken();
     if (token && !formData.has('__RequestVerificationToken')) {
         formData.append('__RequestVerificationToken', token);
     }
@@ -130,7 +137,7 @@ Danation.upload = function (url, formData, onSuccess, onError) {
         data: formData,
         processData: false,
         contentType: false,
-        headers: { 'RequestVerificationToken': token }
+        headers: { 'RequestVerificationToken': token, 'X-Requested-With': 'XMLHttpRequest' }
     }).done(function (res) {
         Notiflix.Loading.remove();
         if (res && res.success) {
@@ -149,6 +156,30 @@ Danation.upload = function (url, formData, onSuccess, onError) {
         } catch (e) { }
         Notiflix.Notify.failure(msg);
         if (onError) onError(null);
+    });
+};
+
+/**
+ * Standard AJAX Partial View loader
+ * @param {string} url
+ * @param {string|jQuery} container
+ * @param {function} [onSuccess]
+ * @param {function} [onError]
+ */
+Danation.loadPartial = function (url, container, onSuccess, onError) {
+    var $el = $(container);
+    $el.css('opacity', '0.5');
+    $.ajax({
+        url: url,
+        type: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).done(function (html) {
+        $el.html(html).css('opacity', '1');
+        if (onSuccess) onSuccess(html);
+    }).fail(function (jqXHR) {
+        $el.css('opacity', '1');
+        Notiflix.Notify.failure('Failed to load content. Please refresh.');
+        if (onError) onError(jqXHR);
     });
 };
 

@@ -77,6 +77,7 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         // Password toggle
         $('#togglePassword').on('click', function () {
@@ -91,19 +92,30 @@
             }
         });
 
-        var summary = document.getElementById('validationSummary');
+        // AJAX Form Submit
+        $('#loginForm').on('submit', function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var btn = $('#loginBtn');
+            var summary = $('#validationSummary');
 
-        if (summary) {
-            // Hidden မဟုတ်တဲ့ သို့မဟုတ် စာသားအမှန်တကယ်ရှိတဲ့ li ရှိမရှိ စစ်ခြင်း
-            var errors = Array.from(summary.querySelectorAll('li')).filter(function(li) {
-                return li.textContent.trim().length > 0 && li.style.display !== 'none';
-            });
+            summary.addClass('d-none').empty();
 
-            if (errors.length > 0) {
-                summary.classList.remove('d-none');
-            } else {
-                summary.classList.add('d-none');
-            }
-        }
+            if (btn.prop('disabled')) return;
+            btn.prop('disabled', true);
+
+            Danation.post('/Account/Login', form.serialize(),
+                function (res) {
+                    Notiflix.Notify.success(res.message || 'Login successful!');
+                    var target = res.redirectUrl || '/';
+                    setTimeout(function () { window.location.href = target; }, 800);
+                },
+                function (err) {
+                    btn.prop('disabled', false);
+                    var msg = (err && err.message) ? err.message : 'Invalid email or password.';
+                    summary.removeClass('d-none').html('<i class="bi bi-exclamation-triangle-fill me-2"></i>' + Danation.escHtml(msg));
+                }
+            );
+        });
     </script>
 }

@@ -14,107 +14,25 @@
 
 <div class="container py-4">
     <!-- Filter Tabs -->
-    <div class="d-flex gap-2 mb-4 flex-wrap">
-        <a asp-action="Donations" asp-controller="Admin"
-           class="btn btn-sm @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-secondary")">All</a>
-        <a asp-action="Donations" asp-controller="Admin" asp-route-status="PENDING"
-           class="btn btn-sm @(statusFilter == "PENDING" ? "btn-warning" : "btn-outline-secondary")">
+    <div class="d-flex gap-2 mb-4 flex-wrap" id="donationFilterTabs">
+        <button type="button" data-status=""
+           class="btn btn-sm don-filter-btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-secondary")">All</button>
+        <button type="button" data-status="PENDING"
+           class="btn btn-sm don-filter-btn @(statusFilter == "PENDING" ? "btn-warning" : "btn-outline-secondary")">
             <i class="bi bi-clock me-1"></i>Pending
-        </a>
-        <a asp-action="Donations" asp-controller="Admin" asp-route-status="APPROVED"
-           class="btn btn-sm @(statusFilter == "APPROVED" ? "btn-success" : "btn-outline-secondary")">
+        </button>
+        <button type="button" data-status="APPROVED"
+           class="btn btn-sm don-filter-btn @(statusFilter == "APPROVED" ? "btn-success" : "btn-outline-secondary")">
             <i class="bi bi-check-circle me-1"></i>Approved
-        </a>
-        <a asp-action="Donations" asp-controller="Admin" asp-route-status="REJECTED"
-           class="btn btn-sm @(statusFilter == "REJECTED" ? "btn-danger" : "btn-outline-secondary")">
+        </button>
+        <button type="button" data-status="REJECTED"
+           class="btn btn-sm don-filter-btn @(statusFilter == "REJECTED" ? "btn-danger" : "btn-outline-secondary")">
             <i class="bi bi-x-circle me-1"></i>Rejected
-        </a>
+        </button>
     </div>
 
-    <div class="card p-0 overflow-hidden">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0" id="donationsTable">
-            <thead>
-                <tr>
-                    <th>Screenshot</th>
-                    <th>Donor</th>
-                    <th>Campaign</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Count == 0)
-                {
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No donations found.</td>
-                    </tr>
-                }
-                @foreach (var d in Model)
-                {
-                    var statusClass = d.Status switch
-                    {
-                        "APPROVED" => "badge-approved",
-                        "REJECTED" => "badge-rejected",
-                        _ => "badge-pending"
-                    };
-                    <tr data-id="@d.Id">
-                        <td>
-                            <img src="@d.TransferScreenshot" class="rounded" width="52" height="52"
-                                 style="object-fit:cover;cursor:pointer;"
-                                 onclick="openScreenshot('@d.TransferScreenshot')" alt="screenshot"
-                                 title="Click to view" />
-                        </td>
-                        <td>
-                            <div class="fw-semibold small">@d.DonorName</div>
-                            <div class="text-muted" style="font-size:11px;">@d.DonorEmail</div>
-                        </td>
-                        <td>
-                            <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@d.CampaignId"
-                               class="text-decoration-none small fw-medium" target="_blank">@d.CampaignTitle</a>
-                        </td>
-                        <td class="fw-semibold small">
-                            @if (d.Amount.HasValue)
-                            {
-                                <span class="text-success">@d.Amount.Value.ToString("N0") MMK</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">—</span>
-                            }
-                        </td>
-                        <td><span class="badge @statusClass don-status-badge">@d.Status</span></td>
-                        <td class="small text-muted">
-                            @d.CreatedAt.ToString("MMM d, yyyy")
-                            @if (d.VerifiedAt.HasValue)
-                            {
-                                <br /><span class="text-muted" style="font-size:11px;">Verified: @d.VerifiedAt.Value.ToString("MMM d")</span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            @if (d.Status == "PENDING")
-                            {
-                                <div class="d-flex justify-content-end gap-1">
-                                    <button class="btn btn-sm btn-success approve-don-btn" data-id="@d.Id" title="Approve">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger reject-don-btn" data-id="@d.Id" title="Reject">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            }
-                            else
-                            {
-                                <span class="text-muted small">@(d.VerifiedByName ?? "—")</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        </div>
+    <div class="card p-0 overflow-hidden" id="adminDonationsTableContainer">
+        <partial name="_AdminDonationTablePartial" model="Model" />
     </div>
 </div>
 
@@ -193,6 +111,21 @@
             document.getElementById('screenshotImg').src = url;
             new bootstrap.Modal(document.getElementById('screenshotModal')).show();
         }
+
+        // Filter tabs click (AJAX)
+        $('.don-filter-btn').on('click', function () {
+            var btn = $(this);
+            var status = btn.data('status');
+
+            $('.don-filter-btn').removeClass('btn-primary btn-warning btn-success btn-danger').addClass('btn-outline-secondary');
+            if (status === 'PENDING') btn.removeClass('btn-outline-secondary').addClass('btn-warning');
+            else if (status === 'APPROVED') btn.removeClass('btn-outline-secondary').addClass('btn-success');
+            else if (status === 'REJECTED') btn.removeClass('btn-outline-secondary').addClass('btn-danger');
+            else btn.removeClass('btn-outline-secondary').addClass('btn-primary');
+
+            var url = '/Admin/Donations' + (status ? '?status=' + status : '');
+            Danation.loadPartial(url, '#adminDonationsTableContainer');
+        });
 
         // Approve btn → show modal
         $(document).on('click', '.approve-don-btn', function () {

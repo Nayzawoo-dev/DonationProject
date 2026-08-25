@@ -23,24 +23,24 @@ public class LoginServices
             _userPasswordHasher = new PasswordHasher<User>();
         }
 
-        public async Task<(bool Success, string ErrorMessage)> LoginAsync(LoginViewModel model)
+        public async Task<(bool Success, string ErrorMessage, string? Role)> LoginAsync(LoginViewModel model)
         {
-            if (model == null) return (false, "Invalid login request.");
+            if (model == null) return (false, "Invalid login request.", null);
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == model.Email.ToLower());
             if (user == null)
-                return (false, "Invalid email or password.");
+                return (false, "Invalid email or password.", null);
 
             if (!user.IsActive)
-                return (false, "Your account has been deactivated. Please contact an administrator.");
+                return (false, "Your account has been deactivated. Please contact an administrator.", null);
 
             if (!user.EmailVerified)
-                return (false, "Your email is not verified. Please verify your OTP to activate your account.");
+                return (false, "Your email is not verified. Please verify your OTP to activate your account.", null);
 
             var verifyResult = _userPasswordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
             if (verifyResult == PasswordVerificationResult.Failed)
             {
-                return (false, "Invalid email or password.");
+                return (false, "Invalid email or password.", null);
             }
 
             await SignInUserAsync(
@@ -51,7 +51,7 @@ public class LoginServices
                 model.RememberMe,
                 user.ProfileImage ?? string.Empty);
 
-            return (true, string.Empty);
+            return (true, string.Empty, user.Role);
         }
 
         public async Task SignInUserAsync(string userId, string fullName, string email, string role, bool rememberMe, string profileImage)

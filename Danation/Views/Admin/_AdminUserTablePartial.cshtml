@@ -1,0 +1,60 @@
+@model List<AdminUserViewModel>
+
+<div class="table-responsive">
+    <table class="table table-hover mb-0" id="usersTable">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Activity</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No users found.</td>
+                </tr>
+            }
+            @foreach (var u in Model)
+            {
+                <tr data-id="@u.Id">
+                    <td>
+                        <div class="fw-semibold">@u.FullName</div>
+                        <div class="text-muted small">@@@u.Username</div>
+                    </td>
+                    <td class="small">
+                        @u.Email
+                        @if (u.EmailVerified)
+                        {
+                            <i class="bi bi-patch-check-fill text-success ms-1" title="Verified"></i>
+                        }
+                    </td>
+                    <td class="small text-muted">@(u.Phone ?? "—")</td>
+                    <td class="small">
+                        <span title="Campaigns"><i class="bi bi-megaphone me-1"></i>@u.TotalCampaigns</span>
+                        <span class="ms-2" title="Donations"><i class="bi bi-heart me-1"></i>@u.TotalDonations</span>
+                    </td>
+                    <td class="small text-muted">@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                    <td>
+                        <span class="badge user-status-badge @(u.IsActive ? "badge-approved" : "badge-rejected")">
+                            @(u.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm @(u.IsActive ? "btn-outline-danger" : "btn-outline-success") toggle-btn"
+                                data-id="@u.Id" data-active="@u.IsActive.ToString().ToLower()"
+                                title="@(u.IsActive ? "Deactivate" : "Activate")">
+                            <i class="bi @(u.IsActive ? "bi-person-slash" : "bi-person-check")"></i>
+                            <span class="ms-1 d-none d-md-inline">@(u.IsActive ? "Deactivate" : "Activate")</span>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -91,7 +91,6 @@ public static class ServiceCollectionExtension
                         <body style='text-align:center; font-family:sans-serif; padding-top:80px; background:#f7fafc;'>
                             <h1 style='color:#e53e3e;'>429 - Too Many Requests</h1>
                             <p>Please wait a moment and try again.</p>
-                            <a href='/' style='color:#667eea;'>Return to Home</a>
                         </body>
                     </html>");
                 }

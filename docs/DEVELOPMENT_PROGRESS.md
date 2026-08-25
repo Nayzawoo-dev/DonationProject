@@ -9,9 +9,9 @@
 
 ## Current Phase
 
-**Phase 4: Final Polish & Optimization Complete (Production-Ready)**
+**Phase 5: Full AJAX-First Refactoring Complete (Production-Ready)**
 
-Backend (Controllers + Services + ViewModels) and Frontend (Razor Views, AJAX workflows, Custom CSS, and JavaScript) are fully implemented, optimized, and verified with 0 errors and 0 warnings.
+The entire web application user experience has been refactored to be AJAX-first, eliminating unnecessary full-page reloads and delivering a smooth, responsive, single-page-like experience across all key user and admin workflows.
 
 ---
 
@@ -19,19 +19,28 @@ Backend (Controllers + Services + ViewModels) and Frontend (Razor Views, AJAX wo
 
 **BUILD SUCCEEDED — 0 Errors, 0 Warnings**
 Date: 2026-08-26
-Polishing & Optimizations applied:
-1. **Performance & Query Optimization**:
-   - Upgraded `NotificationService.MarkAllReadAsync` and `NotificationService.MarkReadAsync` to use EF Core `ExecuteUpdateAsync` for direct SQL update execution without tracking overhead or entity materialization.
-   - Added `NotificationService.GetPagedAsync` with `Skip/Take` projection to enable efficient server-side pagination.
-   - Implemented `IMemoryCache` in `HomeController` for high-traffic landing page stats (2-minute sliding cache) and featured campaigns (1-minute cache), reducing redundant database hits.
-   - Enhanced `HomeController.Index` query projection to include `Township` and `OwnerId` for complete card rendering.
-2. **UI/UX & Mobile Responsiveness**:
-   - Wrapped admin data tables in `Views/Admin/Campaigns.cshtml`, `Views/Admin/Donations.cshtml`, and `Views/Admin/Users.cshtml` with Bootstrap `table-responsive` to prevent layout overflow on mobile screens.
-   - Made landing page platform impact stat cards visible to all visitors (guests, donors, and admins) to increase trust and social proof.
-   - Polished global AJAX anti-forgery token extraction and multipart `FormData` handling in `wwwroot/js/site.js`.
-3. **Campaign Edit Permission Rule (Server-Side & UI)**:
-   - Permanently locked campaign editing once approved/OPEN (enforced in `CampaignService` and `CampaignController` for all details, images, and documents).
-   - Displayed helpful badges and disabled edit controls for non-pending campaigns.
+AJAX-First Refactoring Summary:
+1. **Global JavaScript Architecture (`wwwroot/js/site.js`)**:
+   - Added `Danation.loadPartial(url, container, onSuccess, onError)` for zero-page-reload content updates.
+   - Added `Danation.getCsrfToken()` and automatic `X-Requested-With: XMLHttpRequest` header injection.
+   - Enhanced `Danation.upload()` with robust anti-forgery injection and error notifications.
+2. **Authentication Flow (Register, VerifyOtp, Login)**:
+   - Updated `LoginService.LoginAsync` to return role for instant client-side redirection.
+   - Converted `AccountController` actions (`Register`, `VerifyOtp`, `Login`) to dual-mode: returning structured JSON with redirect URLs for AJAX requests.
+   - Refactored `Login.cshtml`, `Register.cshtml`, and `VerifyOtp.cshtml` to submit via jQuery AJAX with Notiflix feedback and smooth transitions.
+3. **Public Campaign Discovery (`/Campaign/Index`)**:
+   - Extracted `_CampaignListPartial.cshtml` containing active filter tags, campaign cards grid, and pagination.
+   - Refactored `Views/Campaign/Index.cshtml` with live debounced search, township filter, status dropdown, and pagination.
+   - Added `history.pushState` and `window.onpopstate` listener for seamless browser back/forward navigation.
+4. **Donation Submissions (`/Donation/Submit`)**:
+   - Updated `DonationController.Submit` to return JSON on AJAX POST.
+   - Refactored `Views/Donation/Submit.cshtml` to upload transfer screenshot via AJAX `FormData` with progress indicators.
+5. **Admin Portal Management (`/Admin/Campaigns`, `/Admin/Donations`, `/Admin/Users`, `/Admin/CreateCompletion`)**:
+   - Extracted `_AdminCampaignTablePartial.cshtml`, `_AdminDonationTablePartial.cshtml`, `_AdminUserTablePartial.cshtml`.
+   - Converted table filters (status tabs and live search debounce) to load partials dynamically without page refresh.
+   - Converted `CreateCompletion` multi-image upload form to AJAX `FormData` upload.
+6. **Notifications (`/Notification/Index`)**:
+   - Added single-notification item click mark-as-read via AJAX `POST /Notification/MarkRead/{id}`.
 
 ---
 
