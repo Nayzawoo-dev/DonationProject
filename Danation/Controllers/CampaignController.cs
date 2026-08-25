@@ -2,10 +2,12 @@ using Donation.Services;
 using Donation.ViewModels.Campaign;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
 
+[EnableRateLimiting("RoleBasedPolicy")]
 public class CampaignController : Controller
 {
     private readonly CampaignService _campaignService;

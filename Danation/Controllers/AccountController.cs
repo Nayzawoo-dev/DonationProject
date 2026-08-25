@@ -2,10 +2,12 @@ using Donation.Services;
 using Donation.ViewModels.Account;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using static Donation.Services.LoginServices;
 
 namespace Donation.Controllers;
 
+[EnableRateLimiting("RoleBasedPolicy")]
 public class AccountController : Controller
 {
     private readonly UserService _userService;

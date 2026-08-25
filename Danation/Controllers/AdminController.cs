@@ -3,12 +3,14 @@ using Donation.Services;
 using Donation.ViewModels.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
 
 [Authorize(Roles = "ADMIN")]
+[EnableRateLimiting("RoleBasedPolicy")]
 public class AdminController : Controller
 {
     private readonly AppDbContext _context;

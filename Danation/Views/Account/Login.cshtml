@@ -28,7 +28,7 @@
                 <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
                 <!-- Validation Summary -->
-                <div asp-validation-summary="All" class="alert alert-danger border-0 mb-3 d-none" id="validationSummary"></div>
+                <div asp-validation-summary="All" class="alert alert-danger border-0 d-none" id="validationSummary"></div>
 
                 <!-- Email -->
                 <div class="mb-3">
@@ -91,12 +91,18 @@
             }
         });
 
-        // Show validation summary if errors present
-        var summary = document.querySelector('[data-valmsg-summary]');
+        var summary = document.getElementById('validationSummary');
+
         if (summary) {
-            var errors = summary.querySelectorAll('li');
+            // Hidden မဟုတ်တဲ့ သို့မဟုတ် စာသားအမှန်တကယ်ရှိတဲ့ li ရှိမရှိ စစ်ခြင်း
+            var errors = Array.from(summary.querySelectorAll('li')).filter(function(li) {
+                return li.textContent.trim().length > 0 && li.style.display !== 'none';
+            });
+
             if (errors.length > 0) {
-                document.getElementById('validationSummary').classList.remove('d-none');
+                summary.classList.remove('d-none');
+            } else {
+                summary.classList.add('d-none');
             }
         }
     </script>

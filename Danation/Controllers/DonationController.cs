@@ -2,11 +2,13 @@ using Donation.Services;
 using Donation.ViewModels.Donation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
 
 [Authorize]
+[EnableRateLimiting("RoleBasedPolicy")]
 public class DonationController : Controller
 {
     private readonly DonationService _donationService;

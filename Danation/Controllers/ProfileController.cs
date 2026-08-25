@@ -2,11 +2,13 @@ using Donation.Services;
 using Donation.ViewModels.Profile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
 
 [Authorize]
+[EnableRateLimiting("RoleBasedPolicy")]
 public class ProfileController : Controller
 {
     private readonly UserService _userService;

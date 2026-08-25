@@ -2,11 +2,13 @@ using Donation.Services;
 using Donation.ViewModels.Notification;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
 
 [Authorize]
+[EnableRateLimiting("RoleBasedPolicy")]
 public class NotificationController : Controller
 {
     private readonly NotificationService _notificationService;
