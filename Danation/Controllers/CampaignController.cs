@@ -25,9 +25,9 @@ public class CampaignController : Controller
 
     // GET: /Campaign — Public campaign listing
     [HttpGet]
-    public async Task<IActionResult> Index(string? search, string? status, int page = 1)
+    public async Task<IActionResult> Index(string? search, string? status, string? township, int page = 1)
     {
-        var vm = await _campaignService.GetPublicCampaignsAsync(search, status, page);
+        var vm = await _campaignService.GetPublicCampaignsAsync(search, status, township, page);
         return View(vm);
     }
 
@@ -82,14 +82,18 @@ public class CampaignController : Controller
         return Json(new { success = true, message = "Campaign created successfully! It is pending admin approval.", redirectUrl = Url.Action("Edit", new { id = campaignId }) });
     }
 
-    // GET: /Campaign/Edit/5
+    // GET: /Campaign/Edit/5 (Allowed only while PENDING)
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
         var userId = GetCurrentUserId();
         var model = await _campaignService.GetEditViewModelAsync(id, userId);
-        if (model == null) return NotFound();
+        if (model == null)
+        {
+            TempData["ErrorMessage"] = "Campaign not found or it cannot be edited because it has already been approved.";
+            return RedirectToAction(nameof(My));
+        }
         return View(model);
     }
 

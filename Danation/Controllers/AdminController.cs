@@ -325,12 +325,16 @@ public class AdminController : Controller
         return Json(new { success = true, isActive = user.IsActive, message = user.IsActive ? "User activated." : "User deactivated." });
     }
 
-    // GET: /Admin/CampaignDetail/5 — View campaign docs
+    // GET: /Admin/CampaignDetail/5 — View campaign docs + contact phone
     [HttpGet]
     public async Task<IActionResult> CampaignDetail(int id)
     {
         var campaign = await _campaignService.GetDetailWithDocsAsync(id, 0);
         if (campaign == null) return NotFound();
+
+        var raw = await _context.Campaigns.AsNoTracking().Where(c => c.Id == id).Select(c => new { c.ContactPhone }).FirstOrDefaultAsync();
+        ViewBag.ContactPhone = raw?.ContactPhone;
+
         return View(campaign);
     }
 }

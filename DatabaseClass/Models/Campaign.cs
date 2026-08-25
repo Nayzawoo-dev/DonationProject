@@ -25,6 +25,12 @@ public partial class Campaign
 
     public DateTime? CompletedAt { get; set; }
 
+    public string Address { get; set; } = null!;
+
+    public string Township { get; set; } = null!;
+
+    public string ContactPhone { get; set; } = null!;
+
     public virtual CampaignCompletion? CampaignCompletion { get; set; }
 
     public virtual ICollection<CampaignDocument> CampaignDocuments { get; set; } = new List<CampaignDocument>();

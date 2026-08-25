@@ -83,7 +83,7 @@ var Danation = window.Danation || {};
  * @param {function} [onError]
  */
 Danation.post = function (url, data, onSuccess, onError) {
-    var token = $('input[name="__RequestVerificationToken"]').val();
+    var token = $('input[name="__RequestVerificationToken"]').first().val();
     Notiflix.Loading.pulse('Please wait...');
     $.ajax({
         url: url,
@@ -119,8 +119,10 @@ Danation.post = function (url, data, onSuccess, onError) {
  * @param {function} [onError]
  */
 Danation.upload = function (url, formData, onSuccess, onError) {
-    var token = $('input[name="__RequestVerificationToken"]').val();
-    formData.append('__RequestVerificationToken', token);
+    var token = $('input[name="__RequestVerificationToken"]').first().val();
+    if (token && !formData.has('__RequestVerificationToken')) {
+        formData.append('__RequestVerificationToken', token);
+    }
     Notiflix.Loading.pulse('Uploading...');
     $.ajax({
         url: url,

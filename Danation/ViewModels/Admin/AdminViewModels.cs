@@ -31,6 +31,9 @@ public class AdminCampaignSummaryViewModel
     public DateTime CreatedAt { get; set; }
     public int DocumentCount { get; set; }
     public int ImageCount { get; set; }
+    public string Township { get; set; } = string.Empty;
+    /// <summary>Admin-only — must never be exposed in public ViewModels or API responses.</summary>
+    public string ContactPhone { get; set; } = string.Empty;
 }
 
 public class AdminDonationSummaryViewModel

@@ -53,6 +53,41 @@
                         </div>
                     </div>
 
+                    <!-- Location Section -->
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                            <i class="bi bi-geo-alt me-1 text-primary"></i>Campaign Location
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label" for="addressInput">Full Address <span class="text-danger">*</span></label>
+                                <input type="text" id="addressInput" name="Address" class="form-control"
+                                       placeholder="e.g. No. 12, Pyay Road, Kamaryut…" maxlength="500" required />
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label" for="townshipInput">Township <span class="text-danger">*</span></label>
+                                <input type="text" id="townshipInput" name="Township" class="form-control"
+                                       placeholder="e.g. Kamaryut, Yangon" maxlength="100" required />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Phone -->
+                    <div class="mb-4">
+                        <label class="form-label" for="contactPhoneInput">
+                            Contact Phone <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                            <input type="text" id="contactPhoneInput" name="ContactPhone" class="form-control"
+                                   placeholder="e.g. 09 123 456 789" maxlength="30" required />
+                        </div>
+                        <div class="form-text">
+                            <i class="bi bi-lock-fill me-1 text-warning"></i>
+                            This number is <strong>only visible to admins</strong> — not shown publicly.
+                        </div>
+                    </div>
+
                     <div class="alert alert-info border-0">
                         <i class="bi bi-info-circle-fill me-2"></i>
                         <strong>What happens next?</strong> After submission, your campaign will be reviewed by our admin team.

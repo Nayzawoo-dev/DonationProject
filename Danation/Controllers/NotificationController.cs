@@ -43,10 +43,10 @@ public class NotificationController : Controller
 
     // GET: /Notification/Latest (AJAX)
     [HttpGet]
-    public async Task<IActionResult> Latest()
+    public async Task<IActionResult> Latest(int page = 1, int pageSize = 10)
     {
         var userId = GetCurrentUserId();
-        var notifications = await _notificationService.GetLatestAsync(userId, 8);
+        var notifications = await _notificationService.GetPagedAsync(userId, page, pageSize);
         return Json(new { success = true, data = notifications });
     }
 

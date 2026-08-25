@@ -12,9 +12,11 @@ public class CampaignListItemViewModel
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public string OwnerName { get; set; } = string.Empty;
+    public int OwnerId { get; set; }
     public string? OwnerProfileImage { get; set; }
     public string? ThumbnailImage { get; set; }
     public int ImageCount { get; set; }
+    public string Township { get; set; } = string.Empty;
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
 }
 
@@ -23,6 +25,7 @@ public class CampaignListViewModel
     public List<CampaignListItemViewModel> Campaigns { get; set; } = new();
     public string? SearchTerm { get; set; }
     public string? StatusFilter { get; set; }
+    public string? TownshipFilter { get; set; }
     public int CurrentPage { get; set; } = 1;
     public int TotalPages { get; set; }
     public int TotalCount { get; set; }
@@ -42,6 +45,11 @@ public class CampaignDetailViewModel
     public DateTime? ClosedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
+
+    // Location — Township is public-safe, Address is public-safe
+    public string Address { get; set; } = string.Empty;
+    public string Township { get; set; } = string.Empty;
+    // ContactPhone is intentionally excluded from this public ViewModel — admin only
 
     // Owner info
     public string OwnerName { get; set; } = string.Empty;
@@ -106,6 +114,19 @@ public class CreateCampaignViewModel
     [Range(1000, 100000000, ErrorMessage = "Goal amount must be at least 1,000.")]
     [Display(Name = "Goal Amount (MMK)")]
     public decimal GoalAmount { get; set; }
+
+    [Required(ErrorMessage = "Address is required.")]
+    [StringLength(500, ErrorMessage = "Address cannot exceed 500 characters.")]
+    public string Address { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Township is required.")]
+    [StringLength(100, ErrorMessage = "Township cannot exceed 100 characters.")]
+    public string Township { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Contact phone number is required.")]
+    [StringLength(30, ErrorMessage = "Contact phone cannot exceed 30 characters.")]
+    [Display(Name = "Contact Phone")]
+    public string ContactPhone { get; set; } = string.Empty;
 }
 
 public class EditCampaignViewModel
@@ -124,6 +145,19 @@ public class EditCampaignViewModel
     [Range(1000, 100000000, ErrorMessage = "Goal amount must be at least 1,000.")]
     [Display(Name = "Goal Amount (MMK)")]
     public decimal GoalAmount { get; set; }
+
+    [Required(ErrorMessage = "Address is required.")]
+    [StringLength(500, ErrorMessage = "Address cannot exceed 500 characters.")]
+    public string Address { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Township is required.")]
+    [StringLength(100, ErrorMessage = "Township cannot exceed 100 characters.")]
+    public string Township { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Contact phone number is required.")]
+    [StringLength(30, ErrorMessage = "Contact phone cannot exceed 30 characters.")]
+    [Display(Name = "Contact Phone")]
+    public string ContactPhone { get; set; } = string.Empty;
 
     public string Status { get; set; } = string.Empty;
 

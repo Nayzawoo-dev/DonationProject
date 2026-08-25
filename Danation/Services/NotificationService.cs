@@ -61,6 +61,25 @@ public class NotificationService
             .ToListAsync();
     }
 
+    public async Task<List<NotificationViewModel>> GetPagedAsync(int userId, int page = 1, int pageSize = 10)
+    {
+        return await _context.Notifications
+            .AsNoTracking()
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(n => new NotificationViewModel
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = n.Message,
+                IsRead = n.IsRead,
+                CreatedAt = n.CreatedAt
+            })
+            .ToListAsync();
+    }
+
     public async Task<List<NotificationViewModel>> GetAllAsync(int userId)
     {
         return await _context.Notifications
@@ -80,26 +99,17 @@ public class NotificationService
 
     public async Task<bool> MarkReadAsync(int notificationId, int userId)
     {
-        var notification = await _context.Notifications
-            .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
+        var updated = await _context.Notifications
+            .Where(n => n.Id == notificationId && n.UserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
 
-        if (notification == null) return false;
-
-        notification.IsRead = true;
-        await _context.SaveChangesAsync();
-        return true;
+        return updated > 0;
     }
 
     public async Task<int> MarkAllReadAsync(int userId)
     {
-        var unread = await _context.Notifications
+        return await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-
-        foreach (var n in unread)
-            n.IsRead = true;
-
-        await _context.SaveChangesAsync();
-        return unread.Count;
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
     }
 }

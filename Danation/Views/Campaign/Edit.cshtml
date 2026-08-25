@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Edit Campaign — " + Model.Title;
     Layout = "_Layout";
-    bool canEditDetails = Model.Status == "PENDING" || Model.Status == "OPEN";
+    bool canEditDetails = Model.Status == "PENDING";
 }
 
 <div class="container py-4">
@@ -46,6 +46,37 @@
                             <label class="form-label">Description <span class="text-danger">*</span></label>
                             <textarea name="Description" class="form-control" rows="7" maxlength="5000" required>@Model.Description</textarea>
                         </div>
+
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                                <i class="bi bi-geo-alt me-1 text-primary"></i>Campaign Location
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <label class="form-label">Full Address <span class="text-danger">*</span></label>
+                                    <input type="text" name="Address" value="@Model.Address" class="form-control" maxlength="500" required />
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">Township <span class="text-danger">*</span></label>
+                                    <input type="text" name="Township" value="@Model.Township" class="form-control" maxlength="100" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Phone -->
+                        <div class="mb-4">
+                            <label class="form-label">Contact Phone <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                                <input type="text" name="ContactPhone" value="@Model.ContactPhone" class="form-control" maxlength="30" required />
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-lock-fill me-1 text-warning"></i>
+                                This number is <strong>only visible to admins</strong> — not shown publicly.
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary" id="saveDetailsBtn">
                             <i class="bi bi-check-circle me-2"></i>Save Changes
                         </button>

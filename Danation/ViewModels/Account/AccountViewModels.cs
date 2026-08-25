@@ -62,3 +62,54 @@ public class VerifyOtpViewModel
     [Display(Name = "OTP Code")]
     public string OtpCode { get; set; } = string.Empty;
 }
+
+// =============================================
+//  Forgot Password ViewModels
+// =============================================
+
+/// <summary>Step 1: User enters their email to request a password reset OTP.</summary>
+public class ForgotPasswordViewModel
+{
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    [Display(Name = "Email Address")]
+    public string Email { get; set; } = string.Empty;
+}
+
+/// <summary>Step 2: User enters the OTP sent to their email.</summary>
+public class VerifyResetOtpViewModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Verification code is required.")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "Code must be exactly 6 digits.")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Code must be 6 digits.")]
+    [Display(Name = "Verification Code")]
+    public string OtpCode { get; set; } = string.Empty;
+}
+
+/// <summary>Step 3: User enters new password after OTP is verified.</summary>
+public class ResetPasswordViewModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>Server-generated token that proves OTP was already verified.</summary>
+    [Required]
+    public string ResetToken { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "New password is required.")]
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "New Password")]
+    public string NewPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Please confirm your new password.")]
+    [DataType(DataType.Password)]
+    [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
+    [Display(Name = "Confirm New Password")]
+    public string ConfirmPassword { get; set; } = string.Empty;
+}

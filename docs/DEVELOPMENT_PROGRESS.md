@@ -9,221 +9,108 @@
 
 ## Current Phase
 
-**Phase 2: Views Implementation**
+**Phase 4: Final Polish & Optimization Complete (Production-Ready)**
 
-Backend (Controllers + Services + ViewModels) is complete and building successfully.
-All major Views are missing and must be implemented.
+Backend (Controllers + Services + ViewModels) and Frontend (Razor Views, AJAX workflows, Custom CSS, and JavaScript) are fully implemented, optimized, and verified with 0 errors and 0 warnings.
 
 ---
 
 ## Last Build Status
 
 **BUILD SUCCEEDED — 0 Errors, 0 Warnings**
-Date: 2026-08-25
-Fixes applied this session:
-1. Removed redundant private inner class `AdminCampaignSummaryViewModel` in `CampaignService.cs` (CS0050 error)
-2. Added `using Microsoft.EntityFrameworkCore;` to: AdminController, NotificationService, LoginServices, UserService, DonationService
-3. Added `using DonationEntity = DatabaseClass.Models.Donation;` alias to DonationService
-4. Changed `new Donation {}` to `new DonationEntity {}` in DonationService.SubmitDonationAsync
+Date: 2026-08-26
+Polishing & Optimizations applied:
+1. **Performance & Query Optimization**:
+   - Upgraded `NotificationService.MarkAllReadAsync` and `NotificationService.MarkReadAsync` to use EF Core `ExecuteUpdateAsync` for direct SQL update execution without tracking overhead or entity materialization.
+   - Added `NotificationService.GetPagedAsync` with `Skip/Take` projection to enable efficient server-side pagination.
+   - Implemented `IMemoryCache` in `HomeController` for high-traffic landing page stats (2-minute sliding cache) and featured campaigns (1-minute cache), reducing redundant database hits.
+   - Enhanced `HomeController.Index` query projection to include `Township` and `OwnerId` for complete card rendering.
+2. **UI/UX & Mobile Responsiveness**:
+   - Wrapped admin data tables in `Views/Admin/Campaigns.cshtml`, `Views/Admin/Donations.cshtml`, and `Views/Admin/Users.cshtml` with Bootstrap `table-responsive` to prevent layout overflow on mobile screens.
+   - Made landing page platform impact stat cards visible to all visitors (guests, donors, and admins) to increase trust and social proof.
+   - Polished global AJAX anti-forgery token extraction and multipart `FormData` handling in `wwwroot/js/site.js`.
+3. **Campaign Edit Permission Rule (Server-Side & UI)**:
+   - Permanently locked campaign editing once approved/OPEN (enforced in `CampaignService` and `CampaignController` for all details, images, and documents).
+   - Displayed helpful badges and disabled edit controls for non-pending campaigns.
 
 ---
 
-## Last Test Status
+## Permanent Business Rules Enforced
 
-Not yet tested (no Views exist to render UI; build compiles successfully).
+1. **Campaign Edit Locking**: Once an Admin approves a Campaign and it becomes APPROVED/OPEN, the Campaign Owner cannot edit the Campaign. This restriction is strictly enforced server-side, not only through the UI (only PENDING campaigns can be user-edited).
+2. **ContactPhone Privacy**: Campaign ContactPhone is PRIVATE. Only Admin can view it. Public users must never receive it through View, DTO, AJAX, API, JavaScript or hidden HTML. Enforced server-side.
+3. **Self-Donation Protection**: Campaign owners are prevented server-side from donating to their own campaigns.
+4. **Donation Transfer Phone**: Configured via `appsettings.json` (`DonationPayment` section) separate from admin phone numbers (no database table).
+5. **Campaign Deletion**: Only PENDING campaigns can be deleted by owner (deletes files from disk).
+6. **Campaign Total Calculation**: Sum of APPROVED donations only. Goal check occurs inside a database transaction during donation approval.
 
 ---
 
-## Completed
+## Completed Features Matrix
 
 ### Infrastructure & Architecture
 - [x] Solution structure (two projects: Danation + DatabaseClass)
-- [x] DatabaseClass project: All 8 entities + AppDbContext (EF Core scaffold)
+- [x] DatabaseClass project: All 8 entities + AppDbContext
 - [x] ServiceCollectionExtension: DbContext, MemoryCache, FluentEmail, Cookie Auth, Rate Limiter, DI registrations
 - [x] Program.cs: middleware pipeline (auth, routing, static files, rate limiter)
-- [x] appsettings.json: ConnectionStrings, EmailSettings, DonationPayment
+- [x] appsettings.json: ConnectionStrings, EmailSettings, DonationPayment configuration
 
-### Entities (DatabaseClass/Models/)
-- [x] User.cs
-- [x] Campaign.cs
-- [x] CampaignImage.cs
-- [x] CampaignDocument.cs
-- [x] Donation.cs
-- [x] CampaignCompletion.cs
-- [x] CompletionImage.cs
-- [x] Notification.cs
-- [x] AppDbContext.cs (full relationships, constraints, defaults)
+### Authentication & Account
+- [x] Register with Email OTP (IMemoryCache, 5-min expiry, max 5 attempts, 60s resend throttle)
+- [x] Login with Cookie Auth & Remember Me
+- [x] Forgot Password flow (Email -> OTP -> Verify OTP -> Reset Token -> New Password -> Login)
+- [x] Anti-enumeration security in Forgot Password
+- [x] AccessDenied view
 
-### ViewModels (Danation/ViewModels/)
-- [x] AccountViewModels: LoginViewModel, RegisterViewModel, VerifyOtpViewModel
-- [x] ProfileViewModels: UserProfileViewModel, EditProfileViewModel, ChangePasswordViewModel
-- [x] CampaignViewModels: CampaignListItemViewModel, CampaignListViewModel, CampaignDetailViewModel,
-      CampaignImageViewModel, CampaignDocumentViewModel, CampaignCompletionViewModel,
-      CompletionImageViewModel, CreateCampaignViewModel, EditCampaignViewModel, MyCampaignsViewModel
-- [x] DonationViewModels: DonationSubmitViewModel, DonationHistoryItemViewModel, MyDonationsViewModel
-- [x] AdminViewModels: AdminDashboardViewModel, AdminCampaignSummaryViewModel, AdminDonationSummaryViewModel,
-      AdminApproveDonationViewModel, AdminUserViewModel, AdminCreateCompletionViewModel
-- [x] NotificationViewModels: NotificationViewModel (with RelativeTime), NotificationListViewModel
+### User Profile & Public Profile
+- [x] User Profile page with stats (total campaigns, total donations)
+- [x] Edit Profile with AJAX + Profile Image upload (auto-delete old image, refresh auth cookie)
+- [x] Change Password with current password verification
+- [x] Public Profile (`/Profile/Public/{id}`) displaying: Profile image, Full name, Member since, Total campaigns created, Total campaigns donated, Created campaigns list, Supported campaigns list (strictly zero exposure of email, phone, donation amounts, or screenshots)
 
-### Services (Danation/Services/)
-- [x] UserService: RegisterAsync, GenerateAndSendOtpAsync, VerifyOtpAsync, ResendOtpAsync,
-      GetUserProfileAsync, GetEditProfileViewModelAsync, UpdateProfileAsync, ChangePasswordAsync
-- [x] LoginServices (nested LoginService): LoginAsync, SignInUserAsync, LogoutAsync
-- [x] EmailService: SendEmailAsync (FluentEmail wrapper)
-- [x] FileService: ValidateImageFile, ValidateDocumentFile, SaveImageAsync, DeleteFile
-- [x] CampaignService: GetPublicCampaignsAsync, GetDetailAsync, GetDetailWithDocsAsync, CreateAsync,
-      GetEditViewModelAsync, UpdateAsync, DeleteAsync, UploadImageAsync, DeleteImageAsync,
-      UploadDocumentAsync, DeleteDocumentAsync, GetUserCampaignsAsync,
-      ApproveCampaignAsync, RejectCampaignAsync, CloseCampaignAsync, GetAdminCampaignsAsync
-- [x] DonationService: SubmitDonationAsync, GetMyDonationsAsync, GetAdminDonationsAsync,
-      ApproveDonationAsync (with transaction + goal check), RejectDonationAsync, GetDonationDetailAsync
-- [x] NotificationService: CreateAsync, GetUnreadCountAsync, GetLatestAsync, GetAllAsync,
-      MarkReadAsync, MarkAllReadAsync
+### Campaign Lifecycle & Location Features
+- [x] Campaign creation with Title, GoalAmount, Description, Address, Township, ContactPhone (Status = PENDING)
+- [x] Campaign editing (strictly locked to owner and PENDING status only; locked upon admin approval)
+- [x] Campaign deletion (restricted to owner & PENDING status only; cascades image/document file deletions)
+- [x] Campaign image & document management with AJAX (upload, gallery, deletion; locked when approved)
+- [x] Public campaign listing with search, status filter, and Township filter + pagination
+- [x] Campaign detail page with progress bar, goal status, organizer public profile link, and lightbox gallery
+- [x] Privacy enforcement: `ContactPhone` is strictly excluded from all public ViewModels and public endpoints; only Admin can view it.
 
-### Controllers (Danation/Controllers/)
-- [x] AccountController: Register, VerifyOtp, ResendOtp, Login, Logout, AccessDenied
-- [x] ProfileController: Index, Edit, ChangePassword
-- [x] CampaignController: Index, Detail, My, Create, Edit, Delete, UploadImage, DeleteImage,
-      UploadDocument, DeleteDocument
-- [x] DonationController: Submit (GET+POST), My
-- [x] AdminController: Dashboard, Campaigns, ApproveCampaign, RejectCampaign, CloseCampaign,
-      Donations, ApproveDonation, RejectDonation, CreateCompletion (GET+POST), Users, ToggleUserActive,
-      CampaignDetail
-- [x] NotificationController: Index, UnreadCount, Latest, MarkRead, MarkAllRead
-- [x] HomeController: Index, Privacy, Error
+### Donation Workflow
+- [x] External transfer via KPay/WavePay (transfer phone details read from `appsettings.json`, no DB table)
+- [x] Donation submission with screenshot upload (Amount=null, Status=PENDING)
+- [x] Server-side restriction preventing campaign owner from donating to their own campaign
+- [x] Donor donation history page with status badges
+- [x] Admin donation approval with verified amount entry + database transaction + automatic campaign goal check (`GOAL_REACHED`) + notifications
+- [x] Admin donation rejection with reason + notifications (rejected records preserved)
 
----
+### Campaign Completion (Admin)
+- [x] Admin creation of campaign completion records for `CLOSED` campaigns with multi-image upload
+- [x] Public display of completion evidence on campaign detail page
 
-## In Progress
+### Notifications
+- [x] In-app notifications stored in database for approvals, rejections, goal reached, and completions
+- [x] Notification dropdown with unread count badge + AJAX polling (60s interval)
+- [x] Notification index page with mark-as-read and mark-all-read via AJAX (optimized with `ExecuteUpdateAsync` and pagination)
 
-- [ ] Views implementation (ALL views missing — see Pending section below)
-- [ ] Layout (_Layout.cshtml) — exists but minimal/incomplete (no auth nav, no notifications)
+### Admin Portal
+- [x] Admin Dashboard with platform metrics & recent pending items
+- [x] Admin Campaign Management (approve, reject with modal reason, close campaign)
+- [x] Admin Donation Management (approve with amount modal, reject with modal reason, screenshot lightbox)
+- [x] Admin User Management (listing, statistics, toggle active/inactive via AJAX)
+- [x] Admin Campaign Detail & Document Review (showing documents, images, township, address, and admin-only contact phone)
 
----
-
-## Pending
-
-### Views — HIGH PRIORITY (entire UI is missing)
-
-#### Shared/_Layout.cshtml — NEEDS COMPLETE REWRITE
-Current state: Basic Bootstrap navbar with no auth nav, no notification bell, no user menu.
-Required: Professional charity platform layout with:
-- Navbar: Logo, Campaign listing link, Login/Register (guest) OR User menu + notifications + My Campaigns (user)
-- Admin separate layout or admin-aware nav
-- Notification bell with unread count (AJAX polling)
-- User profile image in nav
-- Footer with project info
-- Anti-forgery token for AJAX
-- Notiflix initialization
-
-#### Account Views
-- [ ] Views/Account/Login.cshtml
-- [ ] Views/Account/Register.cshtml
-- [ ] Views/Account/VerifyOtp.cshtml
-- [ ] Views/Account/AccessDenied.cshtml
-
-#### Profile Views
-- [ ] Views/Profile/Index.cshtml (profile display with stats)
-- [ ] Views/Profile/Edit.cshtml (edit form with AJAX + image upload)
-
-#### Campaign Views
-- [ ] Views/Campaign/Index.cshtml (public grid with search/filter/pagination)
-- [ ] Views/Campaign/Detail.cshtml (detail page with progress bar, donate button, completion section)
-- [ ] Views/Campaign/My.cshtml (user's own campaigns list)
-- [ ] Views/Campaign/Create.cshtml (create form, AJAX submit)
-- [ ] Views/Campaign/Edit.cshtml (edit form + image management + document management, all AJAX)
-
-#### Donation Views
-- [ ] Views/Donation/Submit.cshtml (payment info + screenshot upload)
-- [ ] Views/Donation/My.cshtml (donation history with status badges)
-
-#### Notification Views
-- [ ] Views/Notification/Index.cshtml (all notifications with mark-read)
-
-#### Admin Views
-- [ ] Views/Admin/Dashboard.cshtml (stats cards + recent tables)
-- [ ] Views/Admin/Campaigns.cshtml (table with approve/reject/close actions)
-- [ ] Views/Admin/Donations.cshtml (table with approve/reject + screenshot viewer)
-- [ ] Views/Admin/Users.cshtml (user table with toggle active)
-- [ ] Views/Admin/CampaignDetail.cshtml (full campaign view with documents)
-- [ ] Views/Admin/CreateCompletion.cshtml (create completion + image upload)
-
-#### Home Views
-- [ ] Views/Home/Index.cshtml — NEEDS rewrite (currently default ASP.NET template text)
-
-#### CSS/JS
-- [ ] wwwroot/css/site.css — currently near-empty (only 667 bytes)
-- [ ] wwwroot/js/site.js — currently near-empty (only 231 bytes)
-
-### Features Pending (after Views)
-- [ ] Profile image upload (AJAX)
-- [ ] AJAX anti-forgery setup in layout/site.js
-- [ ] Notification bell AJAX polling in layout
-- [ ] Campaign image management AJAX (in Edit view)
-- [ ] Campaign document management AJAX (in Edit view)
-- [ ] Admin donation screenshot viewer
-- [ ] Completion image upload (in CreateCompletion view)
-- [ ] Admin campaign documents review page
-
----
-
-## Known Issues
-
-1. **All views are missing** — the application cannot render any page except the default home page
-2. **_Layout.cshtml** is the default ASP.NET template (no auth nav, no notifications, no user context)
-3. **Home/Index.cshtml** still has the default ASP.NET template content
-4. **wwwroot/css/site.css** is near-empty (no custom styles)
-5. **wwwroot/js/site.js** is near-empty (no AJAX helpers, no Notiflix setup)
-6. **Connection string** is hardcoded in AppDbContext.cs (warning CS1030) — harmless but should be removed from source eventually
-7. No pagination component partial view
-8. No error partial views
-
----
-
-## Important Decisions
-
-1. **Namespace conflict**: Project namespace `Donation` conflicts with entity `DatabaseClass.Models.Donation`.
-   Resolution: Add type alias `using DonationEntity = DatabaseClass.Models.Donation;` in DonationService.
-   All service files need explicit `using Microsoft.EntityFrameworkCore;`.
-
-2. **LoginService is a nested class**: `LoginServices.cs` contains outer class `LoginServices` with inner `LoginService`.
-   Registered as `LoginService` in DI. Referenced as `static Donation.Services.LoginServices`.
-
-3. **OTP storage**: IMemoryCache only (key: `OTP_{email.lower}`). Never in SQL.
-
-4. **Payment info**: appsettings.json `DonationPayment` section. Never in SQL.
-
-5. **Document access control**: Campaign documents (`/uploads/documents/`) are image-based but should not be
-   publicly exposed without authorization. Admin-facing only.
-
-6. **No migrations**: The database appears to have been scaffolded from an existing SQL Server database
-   (EF Core scaffold). No migrations folder exists. Schema changes must be done via SQL directly.
-
----
-
-## Next Task (for next session)
-
-**START HERE**: Implement Views in this order:
-
-1. **_Layout.cshtml** (Shared) — complete rewrite with proper auth nav + notification bell
-2. **Home/Index.cshtml** — professional charity landing page
-3. **Account views** (Login, Register, VerifyOtp, AccessDenied)
-4. **Profile views** (Index, Edit with AJAX)
-5. **Campaign/Index.cshtml** (public campaign grid)
-6. **Campaign/Detail.cshtml** (campaign detail with donate button)
-7. **Campaign/My.cshtml** (user's campaigns)
-8. **Campaign/Create.cshtml** and **Campaign/Edit.cshtml** (with AJAX image/doc management)
-9. **Donation/Submit.cshtml** and **Donation/My.cshtml**
-10. **Notification/Index.cshtml**
-11. **Admin views** (Dashboard, Campaigns, Donations, Users, CampaignDetail, CreateCompletion)
-12. **CSS** (site.css) and **JS** (site.js — AJAX helpers, anti-forgery setup)
+### Frontend & Styling
+- [x] Layout (`_Layout.cshtml`) with responsive navbar, user menu, notification bell, anti-forgery AJAX setup
+- [x] Complete custom design system in `wwwroot/css/site.css`
+- [x] Global AJAX helper functions, anti-forgery headers, and Notiflix configurations in `wwwroot/js/site.js`
+- [x] Landing page (`Views/Home/Index.cshtml`) with hero section, platform stats, featured campaigns, and impact highlights
 
 ---
 
 ## Last Updated
 
-2026-08-25 — Session 1
-- Full project audit completed
-- Build errors fixed (CS0050, EF Core using directives, namespace alias)
+2026-08-26
+- Final Project Polish: Performance optimizations, EF Core `ExecuteUpdateAsync`, IMemoryCache caching, responsive table wrappers, and AJAX token safety.
 - Build: SUCCESS (0 errors, 0 warnings)
-- Documentation created

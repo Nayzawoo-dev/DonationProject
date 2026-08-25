@@ -31,9 +31,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DELL;Database=CharityPlatform;User Id=sa;Password=root;TrustServerCertificate=True;");
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +39,10 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Campaign__3214EC0792861D59");
 
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.ContactPhone)
+                .HasMaxLength(20)
+                .IsUnicode(false);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
             entity.Property(e => e.GoalAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Status)
@@ -48,6 +50,7 @@ public partial class AppDbContext : DbContext
                 .IsUnicode(false)
                 .HasDefaultValue("PENDING");
             entity.Property(e => e.Title).HasMaxLength(200);
+            entity.Property(e => e.Township).HasMaxLength(100);
 
             entity.HasOne(d => d.User).WithMany(p => p.Campaigns)
                 .HasForeignKey(d => d.UserId)

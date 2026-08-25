@@ -1,0 +1,165 @@
+@model PublicProfileViewModel
+@{
+    ViewData["Title"] = Model.FullName + " (@" + Model.Username + ") — Danation";
+    Layout = "_Layout";
+}
+
+<!-- Profile Header -->
+<div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:3.5rem 0 2rem;position:relative;overflow:hidden;">
+    <!-- Background decoration -->
+    <div style="position:absolute;top:-40%;right:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(92,107,192,.3) 0%,transparent 70%);pointer-events:none;"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center gy-3">
+            <div class="col-auto">
+                @if (!string.IsNullOrEmpty(Model.ProfileImage))
+                {
+                    <img src="@Model.ProfileImage" class="profile-avatar" alt="@Model.FullName" />
+                }
+                else
+                {
+                    <div class="profile-avatar-placeholder">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                }
+            </div>
+            <div class="col">
+                <h1 class="fw-bold text-white mb-1" style="font-size:1.8rem;">@Model.FullName</h1>
+                <p class="text-white-50 mb-2">@@@Model.Username</p>
+                <p class="text-white-50 small mb-0">
+                    <i class="bi bi-calendar3 me-1"></i>Member since @Model.MemberSince.ToString("MMMM yyyy")
+                </p>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="row g-3 mt-3">
+            <div class="col-6 col-md-3">
+                <div style="background:rgba(255,255,255,.08);border-radius:var(--radius);padding:1rem;text-align:center;">
+                    <div class="fw-bold fs-3 text-white">@Model.TotalCampaignsCreated</div>
+                    <div class="text-white-50 small">Campaigns Created</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div style="background:rgba(255,255,255,.08);border-radius:var(--radius);padding:1rem;text-align:center;">
+                    <div class="fw-bold fs-3 text-white">@Model.TotalCampaignsDonated</div>
+                    <div class="text-white-50 small">Campaigns Supported</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+
+        <!-- Campaigns Created -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-megaphone me-2 text-primary"></i>Campaigns Created
+                    <span class="badge bg-primary-light text-primary ms-2" style="font-size:.75rem;border-radius:50px;">@Model.TotalCampaignsCreated</span>
+                </h5>
+
+                @if (Model.CampaignsCreated.Count == 0)
+                {
+                    <div class="empty-state py-3">
+                        <i class="bi bi-megaphone" style="font-size:2.5rem;"></i>
+                        <p class="mt-2 mb-0">No active campaigns yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var c in Model.CampaignsCreated)
+                        {
+                            <a href="@Url.Action("Detail", "Campaign", new { id = c.Id })"
+                               class="d-flex align-items-center gap-3 text-decoration-none p-2 rounded-xl"
+                               style="transition:var(--transition);" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background=''">
+                                @if (!string.IsNullOrEmpty(c.ThumbnailImage))
+                                {
+                                    <img src="@c.ThumbnailImage" class="rounded-xl" width="56" height="56" style="object-fit:cover;flex-shrink:0;" alt="" />
+                                }
+                                else
+                                {
+                                    <div class="rounded-xl d-flex align-items-center justify-content-center"
+                                         style="width:56px;height:56px;min-width:56px;background:var(--primary-light);">
+                                        <i class="bi bi-heart-fill text-primary" style="font-size:1.3rem;opacity:.5;"></i>
+                                    </div>
+                                }
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-dark small text-truncate">@c.Title</div>
+                                    @if (!string.IsNullOrEmpty(c.Township))
+                                    {
+                                        <div class="text-muted" style="font-size:.78rem;"><i class="bi bi-geo-alt me-1"></i>@c.Township</div>
+                                    }
+                                    <div class="mt-1">
+                                        <span class="badge badge-@c.Status.ToLower().Replace("_","-")" style="font-size:.68rem;">@c.Status.Replace("_"," ")</span>
+                                        <span class="text-muted ms-2" style="font-size:.72rem;"><i class="bi bi-calendar3 me-1"></i>@c.CreatedAt.ToString("MMM yyyy")</span>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted" style="flex-shrink:0;"></i>
+                            </a>
+                        }
+                    </div>
+                    @if (Model.TotalCampaignsCreated > Model.CampaignsCreated.Count)
+                    {
+                        <div class="text-center mt-3">
+                            <a asp-controller="Campaign" asp-action="Index"
+                               class="text-primary small text-decoration-none fw-semibold">
+                                View all @Model.TotalCampaignsCreated campaigns <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Campaigns Supported (Donated) -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-heart me-2 text-danger"></i>Campaigns Supported
+                    <span class="badge bg-danger text-white ms-2" style="font-size:.75rem;border-radius:50px;background:#fce4ec!important;color:#c62828!important;">@Model.TotalCampaignsDonated</span>
+                </h5>
+
+                @if (Model.CampaignsDonated.Count == 0)
+                {
+                    <div class="empty-state py-3">
+                        <i class="bi bi-heart" style="font-size:2.5rem;"></i>
+                        <p class="mt-2 mb-0">No campaigns supported yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var d in Model.CampaignsDonated)
+                        {
+                            <a href="@Url.Action("Detail", "Campaign", new { id = d.CampaignId })"
+                               class="d-flex align-items-center gap-3 text-decoration-none p-2 rounded-xl"
+                               style="transition:var(--transition);" onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background=''">
+                                @if (!string.IsNullOrEmpty(d.CampaignThumbnail))
+                                {
+                                    <img src="@d.CampaignThumbnail" class="rounded-xl" width="56" height="56" style="object-fit:cover;flex-shrink:0;" alt="" />
+                                }
+                                else
+                                {
+                                    <div class="rounded-xl d-flex align-items-center justify-content-center"
+                                         style="width:56px;height:56px;min-width:56px;background:#fce4ec;">
+                                        <i class="bi bi-heart-fill text-danger" style="font-size:1.3rem;opacity:.5;"></i>
+                                    </div>
+                                }
+                                <div class="min-w-0">
+                                    <div class="fw-semibold text-dark small text-truncate">@d.CampaignTitle</div>
+                                    <div class="text-muted" style="font-size:.75rem;">
+                                        <i class="bi bi-calendar3 me-1"></i>Supported @d.DonatedAt.ToString("MMM d, yyyy")
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted" style="flex-shrink:0;"></i>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

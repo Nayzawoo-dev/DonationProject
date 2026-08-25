@@ -25,7 +25,12 @@ public class CampaignService
         _logger = logger;
     }
 
-    public async Task<CampaignListViewModel> GetPublicCampaignsAsync(string? search, string? status, int page = 1)
+    /// <summary>
+    /// Public campaign listing with search, status, and township filters.
+    /// ContactPhone is NEVER included in the projection — public-safe only.
+    /// </summary>
+    public async Task<CampaignListViewModel> GetPublicCampaignsAsync(
+        string? search, string? status, string? township, int page = 1)
     {
         var query = _context.Campaigns
             .AsNoTracking()
@@ -37,6 +42,10 @@ public class CampaignService
 
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(c => c.Status == status);
+
+        // Township filter — server-side, case-insensitive contains
+        if (!string.IsNullOrWhiteSpace(township))
+            query = query.Where(c => c.Township.Contains(township));
 
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / PageSize);
@@ -56,10 +65,13 @@ public class CampaignService
                     .Sum(d => (decimal?)d.Amount) ?? 0,
                 Status = c.Status,
                 CreatedAt = c.CreatedAt,
+                OwnerId = c.UserId,
                 OwnerName = c.User.FullName,
                 OwnerProfileImage = c.User.ProfileImage,
                 ThumbnailImage = c.CampaignImages.OrderBy(i => i.CreatedAt).Select(i => i.ImageUrl).FirstOrDefault(),
-                ImageCount = c.CampaignImages.Count
+                ImageCount = c.CampaignImages.Count,
+                Township = c.Township
+                // ContactPhone intentionally excluded from public projection
             })
             .ToListAsync();
 
@@ -68,12 +80,17 @@ public class CampaignService
             Campaigns = campaigns,
             SearchTerm = search,
             StatusFilter = status,
+            TownshipFilter = township,
             CurrentPage = page,
             TotalPages = totalPages,
             TotalCount = totalCount
         };
     }
 
+    /// <summary>
+    /// Public campaign detail.
+    /// ContactPhone is NEVER included — use GetDetailForAdminAsync for admin.
+    /// </summary>
     public async Task<CampaignDetailViewModel?> GetDetailAsync(int id, int? currentUserId)
     {
         var campaign = await _context.Campaigns
@@ -94,6 +111,9 @@ public class CampaignService
                 UpdatedAt = c.UpdatedAt,
                 ClosedAt = c.ClosedAt,
                 CompletedAt = c.CompletedAt,
+                Address = c.Address,
+                Township = c.Township,
+                // ContactPhone intentionally excluded from public projection
                 OwnerName = c.User.FullName,
                 OwnerUsername = c.User.Username,
                 OwnerProfileImage = c.User.ProfileImage,
@@ -134,6 +154,10 @@ public class CampaignService
         return campaign;
     }
 
+    /// <summary>
+    /// Public campaign detail + campaign documents (for edit view / owner).
+    /// ContactPhone is NOT exposed here — admin only.
+    /// </summary>
     public async Task<CampaignDetailViewModel?> GetDetailWithDocsAsync(int id, int currentUserId)
     {
         var campaign = await GetDetailAsync(id, currentUserId);
@@ -155,7 +179,11 @@ public class CampaignService
         return campaign;
     }
 
-    public async Task<(bool Success, string ErrorMessage, int CampaignId)> CreateAsync(ViewModels.Campaign.CreateCampaignViewModel model, int userId)
+    /// <summary>
+    /// Creates a new Campaign with all required fields including Address, Township, ContactPhone.
+    /// </summary>
+    public async Task<(bool Success, string ErrorMessage, int CampaignId)> CreateAsync(
+        ViewModels.Campaign.CreateCampaignViewModel model, int userId)
     {
         var campaign = new Campaign
         {
@@ -163,6 +191,9 @@ public class CampaignService
             Title = model.Title,
             Description = model.Description,
             GoalAmount = model.GoalAmount,
+            Address = model.Address,
+            Township = model.Township,
+            ContactPhone = model.ContactPhone,
             Status = "PENDING",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -174,17 +205,21 @@ public class CampaignService
         return (true, string.Empty, campaign.Id);
     }
 
+    /// <summary>Loads the edit ViewModel including Address, Township, ContactPhone for the owner (PENDING only).</summary>
     public async Task<EditCampaignViewModel?> GetEditViewModelAsync(int id, int currentUserId)
     {
         return await _context.Campaigns
             .AsNoTracking()
-            .Where(c => c.Id == id && c.UserId == currentUserId)
+            .Where(c => c.Id == id && c.UserId == currentUserId && c.Status == "PENDING")
             .Select(c => new EditCampaignViewModel
             {
                 Id = c.Id,
                 Title = c.Title,
                 Description = c.Description,
                 GoalAmount = c.GoalAmount,
+                Address = c.Address,
+                Township = c.Township,
+                ContactPhone = c.ContactPhone,
                 Status = c.Status,
                 Images = c.CampaignImages.OrderBy(i => i.CreatedAt).Select(i => new CampaignImageViewModel
                 {
@@ -198,18 +233,22 @@ public class CampaignService
             .FirstOrDefaultAsync();
     }
 
+    /// <summary>Updates an owned campaign (only allowed while PENDING).</summary>
     public async Task<(bool Success, string ErrorMessage)> UpdateAsync(EditCampaignViewModel model, int currentUserId)
     {
         var campaign = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == model.Id && c.UserId == currentUserId);
         if (campaign == null)
             return (false, "Campaign not found or you do not have permission to edit it.");
 
-        if (campaign.Status != "PENDING" && campaign.Status != "OPEN")
-            return (false, "Only PENDING or OPEN campaigns can be edited.");
+        if (campaign.Status != "PENDING")
+            return (false, "This campaign can no longer be edited because it has already been approved or is no longer pending.");
 
         campaign.Title = model.Title;
         campaign.Description = model.Description;
         campaign.GoalAmount = model.GoalAmount;
+        campaign.Address = model.Address;
+        campaign.Township = model.Township;
+        campaign.ContactPhone = model.ContactPhone;
         campaign.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -240,11 +279,15 @@ public class CampaignService
         return (true, string.Empty);
     }
 
-    public async Task<(bool Success, string ErrorMessage, CampaignImageViewModel? Image)> UploadImageAsync(int campaignId, IFormFile file, string? caption, int currentUserId)
+    public async Task<(bool Success, string ErrorMessage, CampaignImageViewModel? Image)> UploadImageAsync(
+        int campaignId, IFormFile file, string? caption, int currentUserId)
     {
         var campaign = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == campaignId && c.UserId == currentUserId);
         if (campaign == null)
             return (false, "Campaign not found.", null);
+
+        if (campaign.Status != "PENDING")
+            return (false, "Campaign images cannot be modified after approval.", null);
 
         var (valid, error) = _fileService.ValidateImageFile(file);
         if (!valid) return (false, error, null);
@@ -279,17 +322,24 @@ public class CampaignService
         if (image == null) return (false, "Image not found.");
         if (image.Campaign.UserId != currentUserId) return (false, "Unauthorized.");
 
+        if (image.Campaign.Status != "PENDING")
+            return (false, "Campaign images cannot be modified after approval.");
+
         _fileService.DeleteFile(image.ImageUrl);
         _context.CampaignImages.Remove(image);
         await _context.SaveChangesAsync();
         return (true, string.Empty);
     }
 
-    public async Task<(bool Success, string ErrorMessage, CampaignDocumentViewModel? Document)> UploadDocumentAsync(int campaignId, IFormFile file, string? documentType, int currentUserId)
+    public async Task<(bool Success, string ErrorMessage, CampaignDocumentViewModel? Document)> UploadDocumentAsync(
+        int campaignId, IFormFile file, string? documentType, int currentUserId)
     {
         var campaign = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == campaignId && c.UserId == currentUserId);
         if (campaign == null)
             return (false, "Campaign not found.", null);
+
+        if (campaign.Status != "PENDING")
+            return (false, "Campaign documents cannot be modified after approval.", null);
 
         var (valid, error) = _fileService.ValidateDocumentFile(file);
         if (!valid) return (false, error, null);
@@ -324,6 +374,9 @@ public class CampaignService
         if (doc == null) return (false, "Document not found.");
         if (doc.Campaign.UserId != currentUserId) return (false, "Unauthorized.");
 
+        if (doc.Campaign.Status != "PENDING")
+            return (false, "Campaign documents cannot be modified after approval.");
+
         _fileService.DeleteFile(doc.ImageUrl);
         _context.CampaignDocuments.Remove(doc);
         await _context.SaveChangesAsync();
@@ -345,14 +398,19 @@ public class CampaignService
                 RaisedAmount = c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0,
                 Status = c.Status,
                 CreatedAt = c.CreatedAt,
+                OwnerId = c.UserId,
                 OwnerName = c.User.FullName,
                 ThumbnailImage = c.CampaignImages.OrderBy(i => i.CreatedAt).Select(i => i.ImageUrl).FirstOrDefault(),
-                ImageCount = c.CampaignImages.Count
+                ImageCount = c.CampaignImages.Count,
+                Township = c.Township
             })
             .ToListAsync();
     }
 
-    // Admin methods
+    // =============================================
+    //  Admin Methods
+    // =============================================
+
     public async Task<(bool Success, string ErrorMessage)> ApproveCampaignAsync(int campaignId, int adminId)
     {
         var campaign = await _context.Campaigns.FindAsync(campaignId);
@@ -408,6 +466,10 @@ public class CampaignService
         return (true, string.Empty);
     }
 
+    /// <summary>
+    /// Admin campaign listing — includes ContactPhone (admin-only field).
+    /// This data must NEVER be returned to public-facing endpoints.
+    /// </summary>
     public async Task<List<AdminCampaignSummaryViewModel>> GetAdminCampaignsAsync(string? status, string? search)
     {
         var query = _context.Campaigns.AsNoTracking().AsQueryable();
@@ -431,9 +493,10 @@ public class CampaignService
                 OwnerUsername = c.User.Username,
                 CreatedAt = c.CreatedAt,
                 DocumentCount = c.CampaignDocuments.Count,
-                ImageCount = c.CampaignImages.Count
+                ImageCount = c.CampaignImages.Count,
+                Township = c.Township,
+                ContactPhone = c.ContactPhone // Admin-only field
             })
             .ToListAsync();
     }
-
 }

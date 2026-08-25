@@ -52,23 +52,26 @@
             </div>
             <h1 class="fw-bold mb-3" style="font-size:2rem;">@Model.Title</h1>
 
-            <!-- Owner Info -->
+            <!-- Owner Info — clickable link to public profile -->
             <div class="d-flex align-items-center mb-4">
-                @if (!string.IsNullOrEmpty(Model.OwnerProfileImage))
-                {
-                    <img src="@Model.OwnerProfileImage" class="rounded-circle me-2" width="36" height="36" style="object-fit:cover;" alt="" />
-                }
-                else
-                {
-                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2"
-                          style="width:36px;height:36px;background:linear-gradient(135deg,#5c6bc0,#ff7043);">
-                        <i class="bi bi-person-fill text-white" style="font-size:16px;"></i>
-                    </span>
-                }
-                <div>
-                    <div class="fw-semibold">@Model.OwnerName</div>
-                    <div class="text-muted small">@@@Model.OwnerUsername · <i class="bi bi-calendar3 me-1"></i>@Model.CreatedAt.ToString("MMM d, yyyy")</div>
-                </div>
+                <a href="@Url.Action("Public", "Profile", new { id = Model.OwnerId })"
+                   class="d-flex align-items-center text-decoration-none">
+                    @if (!string.IsNullOrEmpty(Model.OwnerProfileImage))
+                    {
+                        <img src="@Model.OwnerProfileImage" class="rounded-circle me-2" width="36" height="36" style="object-fit:cover;" alt="" />
+                    }
+                    else
+                    {
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center me-2"
+                              style="width:36px;height:36px;background:linear-gradient(135deg,#5c6bc0,#ff7043);">
+                            <i class="bi bi-person-fill text-white" style="font-size:16px;"></i>
+                        </span>
+                    }
+                    <div>
+                        <div class="fw-semibold text-dark">@Model.OwnerName</div>
+                        <div class="text-muted small">@@@Model.OwnerUsername · <i class="bi bi-calendar3 me-1"></i>@Model.CreatedAt.ToString("MMM d, yyyy")</div>
+                    </div>
+                </a>
             </div>
 
             <!-- Description -->
@@ -145,8 +148,8 @@
                 }
             </div>
 
-            <!-- Owner Actions -->
-            @if (Model.IsOwner && (Model.Status == "PENDING" || Model.Status == "OPEN"))
+            <!-- Owner Actions (Only for PENDING campaigns) -->
+            @if (Model.IsOwner && Model.Status == "PENDING")
             {
                 <div class="card p-3 mb-3">
                     <h6 class="fw-bold mb-2"><i class="bi bi-gear me-1"></i>Campaign Actions</h6>
@@ -155,13 +158,10 @@
                            class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-pencil me-1"></i>Edit Campaign
                         </a>
-                        @if (Model.Status == "PENDING")
-                        {
-                            <button class="btn btn-outline-danger btn-sm" id="deleteCampaignBtn"
-                                    data-id="@Model.Id">
-                                <i class="bi bi-trash me-1"></i>Delete Campaign
-                            </button>
-                        }
+                        <button class="btn btn-outline-danger btn-sm" id="deleteCampaignBtn"
+                                data-id="@Model.Id">
+                            <i class="bi bi-trash me-1"></i>Delete Campaign
+                        </button>
                     </div>
                 </div>
             }
@@ -178,10 +178,26 @@
                 </div>
             }
 
-            <!-- Dates Info -->
-            <div class="card p-3">
+            <!-- Campaign Info -->
+            <div class="card p-3 mb-3">
                 <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Campaign Info</h6>
                 <ul class="list-unstyled small mb-0">
+                    @if (!string.IsNullOrEmpty(Model.Township))
+                    {
+                        <li class="mb-2">
+                            <i class="bi bi-geo-alt me-1 text-muted"></i>
+                            <span class="text-muted">Township:</span>
+                            <span class="fw-medium ms-1">@Model.Township</span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Address))
+                    {
+                        <li class="mb-2">
+                            <i class="bi bi-pin-map me-1 text-muted"></i>
+                            <span class="text-muted">Address:</span>
+                            <span class="fw-medium ms-1">@Model.Address</span>
+                        </li>
+                    }
                     <li class="mb-1"><span class="text-muted">Created:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
                     @if (Model.ClosedAt.HasValue)
                     {
@@ -192,6 +208,30 @@
                         <li class="mb-1"><span class="text-muted">Completed:</span> <span class="fw-medium text-success">@Model.CompletedAt.Value.ToString("MMM d, yyyy")</span></li>
                     }
                 </ul>
+            </div>
+
+            <!-- Organizer link -->
+            <div class="card p-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-person me-1 text-primary"></i>Organizer</h6>
+                <a href="@Url.Action("Public", "Profile", new { id = Model.OwnerId })"
+                   class="d-flex align-items-center gap-2 text-decoration-none">
+                    @if (!string.IsNullOrEmpty(Model.OwnerProfileImage))
+                    {
+                        <img src="@Model.OwnerProfileImage" class="rounded-circle" width="40" height="40" style="object-fit:cover;" alt="" />
+                    }
+                    else
+                    {
+                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                              style="width:40px;height:40px;min-width:40px;background:linear-gradient(135deg,#5c6bc0,#ff7043);">
+                            <i class="bi bi-person-fill text-white"></i>
+                        </span>
+                    }
+                    <div>
+                        <div class="fw-semibold text-dark small">@Model.OwnerName</div>
+                        <div class="text-muted" style="font-size:.78rem;">@@@Model.OwnerUsername</div>
+                    </div>
+                    <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                </a>
             </div>
         </div>
     </div>

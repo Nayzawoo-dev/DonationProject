@@ -44,13 +44,16 @@ public class ProfileController : Controller
         return View(model);
     }
 
-    // POST: /Profile/Edit
+    // POST: /Profile/Edit (AJAX)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditProfileViewModel model)
     {
         if (!ModelState.IsValid)
-            return View(model);
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            return Json(new { success = false, message = string.Join(" ", errors) });
+        }
 
         var userId = GetCurrentUserId();
         var (success, error) = await _userService.UpdateProfileAsync(model, userId);
@@ -61,8 +64,8 @@ public class ProfileController : Controller
         return Json(new { success = false, message = error });
     }
 
-    // POST: /Profile/ChangePassword (AJAX)
-    [Authorize(Roles = "User")]
+    // POST: /Profile/ChangePassword (AJAX) — role "USER" (uppercase, matching the claim)
+    [Authorize(Roles = "USER")]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
@@ -77,5 +80,18 @@ public class ProfileController : Controller
         var (success, error) = await _userService.ChangePasswordAsync(userId, model);
 
         return Json(new { success, message = success ? "Password changed successfully!" : error });
+    }
+
+    // GET: /Profile/Public/5 — Public user profile (no [Authorize] — accessible to everyone)
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> Public(int id)
+    {
+        if (id <= 0) return NotFound();
+
+        var profile = await _userService.GetPublicProfileAsync(id);
+        if (profile == null) return NotFound();
+
+        return View(profile);
     }
 }

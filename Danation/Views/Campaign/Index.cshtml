@@ -27,7 +27,7 @@
 <div class="container py-4">
     <!-- Search & Filter -->
     <form method="get" asp-action="Index" asp-controller="Campaign" class="row g-2 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" value="@Model.SearchTerm"
@@ -35,6 +35,13 @@
             </div>
         </div>
         <div class="col-md-3">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                <input type="text" name="township" value="@Model.TownshipFilter"
+                       class="form-control border-start-0 ps-0" placeholder="Filter by township…" />
+            </div>
+        </div>
+        <div class="col-md-2">
             <select name="status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Statuses</option>
                 @{
@@ -57,13 +64,41 @@
         <div class="col-md-3">
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>Search</button>
-                @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.StatusFilter))
+                @if (!string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.StatusFilter) || !string.IsNullOrEmpty(Model.TownshipFilter))
                 {
-                    <a asp-action="Index" asp-controller="Campaign" class="btn btn-outline-secondary">Clear</a>
+                    <a asp-action="Index" asp-controller="Campaign" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                    </a>
                 }
             </div>
         </div>
     </form>
+
+    <!-- Active Filters -->
+    @if (!string.IsNullOrEmpty(Model.TownshipFilter) || !string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.StatusFilter))
+    {
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <small class="text-muted align-self-center">Active filters:</small>
+            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+            {
+                <span class="badge bg-primary-light text-primary px-3 py-2" style="border-radius:50px;font-size:.8rem;">
+                    <i class="bi bi-search me-1"></i>@Model.SearchTerm
+                </span>
+            }
+            @if (!string.IsNullOrEmpty(Model.TownshipFilter))
+            {
+                <span class="badge bg-primary-light text-primary px-3 py-2" style="border-radius:50px;font-size:.8rem;">
+                    <i class="bi bi-geo-alt me-1"></i>@Model.TownshipFilter
+                </span>
+            }
+            @if (!string.IsNullOrEmpty(Model.StatusFilter))
+            {
+                <span class="badge bg-primary-light text-primary px-3 py-2" style="border-radius:50px;font-size:.8rem;">
+                    <i class="bi bi-funnel me-1"></i>@Model.StatusFilter.Replace("_"," ")
+                </span>
+            }
+        </div>
+    }
 
     <!-- Campaign Grid -->
     @if (Model.Campaigns.Count == 0)
@@ -72,6 +107,7 @@
             <i class="bi bi-megaphone"></i>
             <h4>No Campaigns Found</h4>
             <p>Try adjusting your search filters or check back later.</p>
+            <a asp-action="Index" asp-controller="Campaign" class="btn btn-outline-primary mt-2">Clear All Filters</a>
         </div>
     }
     else
@@ -101,6 +137,10 @@
                                     }
                                 </div>
                                 <h5 class="card-title fw-bold">@c.Title</h5>
+                                @if (!string.IsNullOrEmpty(c.Township))
+                                {
+                                    <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i>@c.Township</p>
+                                }
                                 <p class="card-text text-muted flex-grow-1">
                                     @(c.Description.Length > 100 ? c.Description[..100] + "…" : c.Description)
                                 </p>
@@ -146,7 +186,8 @@
                     {
                         <li class="page-item">
                             <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage - 1)"
-                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter">
+                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter"
+                               asp-route-township="@Model.TownshipFilter">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -155,14 +196,16 @@
                     {
                         <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
                             <a class="page-link" asp-action="Index" asp-route-page="@i"
-                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter">@i</a>
+                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter"
+                               asp-route-township="@Model.TownshipFilter">@i</a>
                         </li>
                     }
                     @if (Model.CurrentPage < Model.TotalPages)
                     {
                         <li class="page-item">
                             <a class="page-link" asp-action="Index" asp-route-page="@(Model.CurrentPage + 1)"
-                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter">
+                               asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter"
+                               asp-route-township="@Model.TownshipFilter">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>

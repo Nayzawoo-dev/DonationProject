@@ -217,7 +217,7 @@ PENDING -> (Admin rejects) -> REJECTED
 ```
 
 Rules:
-- Owner can only edit PENDING or OPEN campaigns
+- Owner can ONLY edit PENDING campaigns (Once approved/OPEN, locked from editing)
 - Only PENDING campaigns can be deleted by owner (also removes files)
 - Admin approves/rejects PENDING only; closes GOAL_REACHED only
 - New donations blocked when status != OPEN
@@ -334,7 +334,7 @@ Password hash must be generated using ASP.NET Core Identity PasswordHasher<User>
 
 1. Donors cannot donate to own campaign (server-side enforced)
 2. Only PENDING campaigns can be deleted
-3. Only PENDING/OPEN campaigns can be user-edited
+3. Once an Admin approves a Campaign and it becomes APPROVED/OPEN, the Campaign Owner cannot edit the Campaign. This restriction must be enforced server-side, not only through the UI (only PENDING campaigns can be user-edited).
 4. Rejected donations are NEVER deleted
 5. Campaign total = SUM of APPROVED donation amounts only
 6. Goal check happens inside a transaction at donation approval time

@@ -84,7 +84,7 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login));
     }
 
-    // POST: /Account/ResendOtp
+    // POST: /Account/ResendOtp (AJAX)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ResendOtp([FromForm] string email)
@@ -150,4 +150,90 @@ public class AccountController : Controller
     // GET: /Account/AccessDenied
     [HttpGet]
     public IActionResult AccessDenied() => View();
+
+    // =============================================
+    //  Forgot Password — Multi-step AJAX Flow
+    // =============================================
+
+    // GET: /Account/ForgotPassword
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        if (User.Identity?.IsAuthenticated == true) return RedirectToAction("Index", "Home");
+        return View();
+    }
+
+    /// <summary>
+    /// POST: /Account/SendResetOtp (AJAX, Step 1)
+    /// Sends a password reset OTP to the email.
+    /// Always returns generic message — never reveals if email exists (anti-enumeration).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendResetOtp([FromForm] string email)
+    {
+        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            return Json(new { success = false, message = "Please enter a valid email address." });
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (success, message) = await _userService.ForgotPasswordAsync(email.Trim().ToLower(), clientIp);
+
+        // Always return success = true with generic message (anti-enumeration)
+        return Json(new { success = true, message });
+    }
+
+    /// <summary>
+    /// POST: /Account/VerifyResetOtp (AJAX, Step 2)
+    /// Verifies the reset OTP. On success, returns a reset token for Step 3.
+    /// The token is short-lived (10 min) and stored server-side in IMemoryCache.
+    /// The token is NOT a user credential — it only authorizes a single password reset.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult VerifyResetOtp([FromForm] string email, [FromForm] string otpCode)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
+            return Json(new { success = false, message = "Email and code are required." });
+
+        var (success, message, resetToken) = _userService.VerifyPasswordResetOtp(email.Trim().ToLower(), otpCode.Trim());
+
+        if (!success)
+            return Json(new { success = false, message });
+
+        // Return token to client so it can be submitted with the password reset
+        // This is safe: the token has no privilege itself, it only allows ONE password reset
+        // and expires in 10 minutes in IMemoryCache
+        return Json(new { success = true, message, resetToken });
+    }
+
+    /// <summary>
+    /// POST: /Account/ResetPassword (AJAX, Step 3)
+    /// Resets the password. Requires valid email + reset token from Step 2.
+    /// Redirects to Login on success.
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            return Json(new { success = false, message = string.Join(" ", errors) });
+        }
+
+        var (success, message) = await _userService.ResetPasswordAsync(
+            model.Email.Trim().ToLower(),
+            model.ResetToken,
+            model.NewPassword);
+
+        if (!success)
+            return Json(new { success = false, message });
+
+        return Json(new
+        {
+            success = true,
+            message = "Password reset successfully!",
+            redirectUrl = Url.Action(nameof(Login))
+        });
+    }
 }
