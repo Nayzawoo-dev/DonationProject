@@ -5,6 +5,7 @@
     bool canEditDetails = Model.Status == "PENDING";
 }
 
+@await Html.PartialAsync("FlashMessage");
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
         <a asp-controller="Campaign" asp-action="My" class="btn btn-sm btn-outline-secondary me-3">

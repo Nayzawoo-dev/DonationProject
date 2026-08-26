@@ -1,3 +1,4 @@
+using DatabaseClass.Models;
 using Donation.Services;
 using Donation.ViewModels.Campaign;
 using Microsoft.AspNetCore.Authorization;
@@ -84,7 +85,7 @@ public class CampaignController : Controller
 
         if (!success)
             return Json(new { success = false, message = error });
-
+        TempData["SuccessMessage"] = "Campaign created successfully! It is pending admin approval.";
         return Json(new { success = true, message = "Campaign created successfully! It is pending admin approval.", redirectUrl = Url.Action("Edit", new { id = campaignId }) });
     }
 

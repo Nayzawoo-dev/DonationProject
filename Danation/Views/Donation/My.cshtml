@@ -11,6 +11,7 @@
     </div>
 </div>
 
+@await Html.PartialAsync("FlashMessage");
 <div class="container py-4">
     @if (Model.Donations.Count == 0)
     {

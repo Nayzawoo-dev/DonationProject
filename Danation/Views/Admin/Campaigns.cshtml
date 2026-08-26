@@ -13,6 +13,8 @@
     </div>
 </div>
 
+@await Html.PartialAsync("FlashMessage");
+
 <div class="container py-4">
     <!-- Filters Form -->
     <form id="adminCampaignFilterForm" method="get" asp-action="Campaigns" asp-controller="Admin" class="row g-2 mb-4">

@@ -46,6 +46,10 @@
                         </span>
                     </td>
                     <td class="text-end">
+                        <a asp-controller="Profile" asp-action="Public" asp-route-id="@u.Id"
+                           class="btn btn-sm btn-outline-secondary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
                         <button class="btn btn-sm @(u.IsActive ? "btn-outline-danger" : "btn-outline-success") toggle-btn"
                                 data-id="@u.Id" data-active="@u.IsActive.ToString().ToLower()"
                                 title="@(u.IsActive ? "Deactivate" : "Activate")">
