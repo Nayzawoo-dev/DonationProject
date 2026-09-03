@@ -170,5 +170,31 @@
                 }
             );
         });
+
+        // Real-time: Donation created or updated from other admin/user
+        $(document).on('donationCreated', function (e, data) {
+            var activeBtn = $('.don-filter-btn.btn-warning, .don-filter-btn.btn-primary');
+            var activeStatus = activeBtn.length ? activeBtn.data('status') : '';
+            if (activeStatus === '' || activeStatus === 'PENDING') {
+                var url = '/Admin/Donations' + (activeStatus ? '?status=' + activeStatus : '');
+                Danation.loadPartial(url, '#adminDonationsTableContainer');
+            }
+        });
+
+        $(document).on('donationStatusChanged', function (e, data) {
+            var row = $('#donationsTable tr[data-id="' + data.donationId + '"]');
+            if (row.length) {
+                if (data.status === 'APPROVED') {
+                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('APPROVED');
+                    if (data.amount) {
+                        row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(data.amount).toLocaleString('en-US') + ' MMK</span>');
+                    }
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">' + Danation.escHtml(data.verifiedByName || 'Verified') + '</span>');
+                } else if (data.status === 'REJECTED') {
+                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('REJECTED');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">Rejected</span>');
+                }
+            }
+        });
     </script>
 }

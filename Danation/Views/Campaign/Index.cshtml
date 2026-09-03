@@ -170,5 +170,33 @@
             $('#pageInput').val(params.get('page') || 1);
             fetchCampaigns(false);
         });
+
+        // Real-time: Live campaign card updates
+        $(document).on('campaignDonationUpdated', function (e, data) {
+            var card = $('.campaign-card[data-campaign-id="' + data.campaignId + '"]');
+            if (card.length) {
+                card.find('.campaign-card-raised').text(Danation.formatMMK(data.raisedAmount) + ' raised');
+                card.find('.campaign-card-percent').text(data.progressPercent + '%');
+                card.find('.campaign-card-bar')
+                    .css('width', data.progressPercent + '%')
+                    .toggleClass('goal-reached', data.progressPercent >= 100);
+
+                if (data.status === 'GOAL_REACHED') {
+                    card.find('.campaign-card-status')
+                        .attr('class', 'badge badge-goal-reached campaign-card-status')
+                        .text('GOAL REACHED');
+                }
+            }
+        });
+
+        $(document).on('campaignStatusChanged', function (e, data) {
+            var card = $('.campaign-card[data-campaign-id="' + data.campaignId + '"]');
+            if (card.length) {
+                var badgeCls = 'badge-' + data.status.toLowerCase().replace('_', '-');
+                card.find('.campaign-card-status')
+                    .attr('class', 'badge ' + badgeCls + ' campaign-card-status')
+                    .text(data.status.replace('_', ' '));
+            }
+        });
     </script>
 }

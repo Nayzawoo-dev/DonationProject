@@ -1,4 +1,5 @@
 using Donation.Extension;
+using Donation.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+app.MapHub<AppHub>("/hubs/app");
 
 
 app.Run();

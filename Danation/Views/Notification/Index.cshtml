@@ -157,5 +157,25 @@
 
         // Load on page ready
         loadNotifications();
+
+        // Real-time: Prepend new notification when received
+        $(document).on('receiveNotification', function (e, n) {
+            $('#notifEmpty').addClass('d-none');
+            var html = renderNotification(n);
+            var $newEl = $(html).hide();
+            $('#notifContainer').prepend($newEl);
+            $newEl.slideDown(300);
+        });
+
+        $(document).on('notificationReadUpdated', function (e, data) {
+            if (data.allRead) {
+                $('.notif-item').removeClass('border-start border-primary').find('.bg-light-blue').removeClass('bg-light-blue');
+                $('.notif-item .badge.bg-primary').remove();
+            } else if (data.notificationId) {
+                var item = $('.notif-item[data-id="' + data.notificationId + '"]');
+                item.removeClass('border-start border-primary').find('.bg-light-blue').removeClass('bg-light-blue');
+                item.find('.badge.bg-primary').remove();
+            }
+        });
     </script>
 }

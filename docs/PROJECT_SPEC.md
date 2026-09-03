@@ -39,6 +39,7 @@ This is **NOT** a payment gateway. Donors transfer money externally (KPay/WavePa
 | Email | FluentEmail 3.0.2 + Gmail SMTP |
 | Caching | IMemoryCache (OTP only) |
 | Auth | Cookie Authentication (ASP.NET Core) |
+| Real-Time Engine | ASP.NET Core SignalR + @microsoft/signalr |
 | Password Hashing | ASP.NET Core Identity PasswordHasher |
 | DI Container | ASP.NET Core built-in |
 | Rate Limiting | ASP.NET Core built-in RateLimiter |
@@ -343,3 +344,28 @@ Password hash must be generated using ASP.NET Core Identity PasswordHasher<User>
 9. Only GOAL_REACHED campaigns can be closed by admin
 10. No admin registration through public form
 11. OTP is single-use; max 5 attempts; 60s resend throttle
+
+---
+
+## 19. Real-Time Architecture (ASP.NET Core SignalR)
+
+### 19.1 Architectural Principles
+- **Separation of Concerns**: jQuery AJAX handles all CRUD operations and user actions. ASP.NET Core SignalR handles real-time server-to-client updates.
+- **Resilience**: SignalR is an enhancement. If a client disconnects or WebSockets fail, AJAX operations and fallback polling remain 100% operational.
+- **Centralized Hub**: `AppHub` (`Danation/Hubs/AppHub.cs`) mapped to endpoint `/hubs/app`.
+
+### 19.2 SignalR Groups & Security
+- **Admins Group (`Admins`)**: Authenticated users with role `ADMIN` automatically join the `Admins` group in `OnConnectedAsync()`.
+- **User Targeting**: `Clients.User(userId.ToString())` targets all active connections across tabs/devices for a specific user using `ClaimTypes.NameIdentifier`.
+- **Campaign Groups (`Campaign_{id}`)**: Clients viewing a campaign detail page invoke `JoinCampaign(id)` and `LeaveCampaign(id)`.
+- **Data Privacy**: ContactPhone, OTPs, donor transfer screenshots, and sensitive identity details are strictly excluded from public broadcasts.
+
+### 19.3 Real-Time Events Catalog
+- `ReceiveNotification`: Sent to `Clients.User(userId)` on notification creation. Updates bell badge, shows Notiflix toast, and prepends to notification list.
+- `NotificationReadUpdated`: Sent to `Clients.User(userId)` on single/all mark-as-read to synchronize badges across multiple browser tabs.
+- `CampaignStatusChanged`: Broadcast when admin approves, rejects, closes, or completes a campaign. Updates detail badges, donate button states, and admin/owner listings.
+- `CampaignDonationUpdated`: Broadcast when an admin approves a donation. Updates raised amount, funded percentage, and progress bars in real time without full-page reloads.
+- `DonationCreated`: Sent to `Clients.Group("Admins")` when a donor submits proof. Updates pending donation counters and recent list on the Admin Dashboard.
+- `DonationStatusChanged`: Sent to donor (`Clients.User`) and admins (`Clients.Group`) when donation is approved/rejected with verified amount or reason.
+- `AdminDashboardStats`: Live synchronization of admin platform counters (Pending Donations, Total Approved Amount, Open Campaigns, etc.).
+

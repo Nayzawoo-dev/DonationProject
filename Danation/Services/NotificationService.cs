@@ -1,5 +1,7 @@
 using DatabaseClass.Models;
+using Donation.Hubs;
 using Donation.ViewModels.Notification;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Donation.Services;
@@ -7,11 +9,16 @@ namespace Donation.Services;
 public class NotificationService
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<AppHub> _hubContext;
     private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(AppDbContext context, ILogger<NotificationService> logger)
+    public NotificationService(
+        AppDbContext context,
+        IHubContext<AppHub> hubContext,
+        ILogger<NotificationService> logger)
     {
         _context = context;
+        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -29,6 +36,19 @@ public class NotificationService
             };
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Real-time push to user
+            var unreadCount = await GetUnreadCountAsync(userId);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                id = notification.Id,
+                title = notification.Title,
+                message = notification.Message,
+                isRead = false,
+                createdAt = notification.CreatedAt.ToString("o"),
+                relativeTime = "Just now",
+                unreadCount = unreadCount
+            });
         }
         catch (Exception ex)
         {
@@ -103,13 +123,34 @@ public class NotificationService
             .Where(n => n.Id == notificationId && n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
 
+        if (updated > 0)
+        {
+            var unreadCount = await GetUnreadCountAsync(userId);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("NotificationReadUpdated", new
+            {
+                unreadCount,
+                notificationId
+            });
+        }
+
         return updated > 0;
     }
 
     public async Task<int> MarkAllReadAsync(int userId)
     {
-        return await _context.Notifications
+        var updated = await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+
+        if (updated > 0)
+        {
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("NotificationReadUpdated", new
+            {
+                unreadCount = 0,
+                allRead = true
+            });
+        }
+
+        return updated;
     }
 }

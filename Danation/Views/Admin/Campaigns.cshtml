@@ -176,5 +176,39 @@
                 }
             );
         });
+
+        // Real-time: Campaign status change from other sessions/admins
+        $(document).on('campaignStatusChanged', function (e, data) {
+            var row = $('#campaignsTable tr[data-id="' + data.campaignId + '"]');
+            if (row.length) {
+                var badgeMap = {
+                    'OPEN': 'badge-open',
+                    'GOAL_REACHED': 'badge-goal',
+                    'CLOSED': 'badge-closed',
+                    'COMPLETED': 'badge-completed',
+                    'REJECTED': 'badge-rejected',
+                    'PENDING': 'badge-pending'
+                };
+                var cls = badgeMap[data.status] || 'bg-secondary';
+                row.find('.status-badge').attr('class', 'badge ' + cls + ' status-badge').text(data.status.replace('_', ' '));
+
+                if (data.status === 'OPEN' || data.status === 'REJECTED') {
+                    row.find('.approve-btn, .reject-btn').remove();
+                } else if (data.status === 'CLOSED') {
+                    row.find('.close-btn').replaceWith(
+                        '<a href="/Admin/CreateCompletion/' + data.campaignId + '" class="btn btn-sm btn-primary" title="Create Completion"><i class="bi bi-trophy"></i></a>'
+                    );
+                } else if (data.status === 'COMPLETED') {
+                    row.find('a[title="Create Completion"]').remove();
+                }
+            }
+        });
+
+        $(document).on('campaignCreated', function (e, data) {
+            var currentStatus = $('#adminCampaignStatus').val();
+            if (!currentStatus || currentStatus === 'PENDING') {
+                fetchAdminCampaigns();
+            }
+        });
     </script>
 }

@@ -1,9 +1,11 @@
 using DatabaseClass.Models;
+using Donation.Hubs;
 using Donation.Services;
 using Donation.ViewModels.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -18,6 +20,7 @@ public class AdminController : Controller
     private readonly DonationService _donationService;
     private readonly FileService _fileService;
     private readonly NotificationService _notificationService;
+    private readonly IHubContext<AppHub> _hubContext;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
@@ -26,6 +29,7 @@ public class AdminController : Controller
         DonationService donationService,
         FileService fileService,
         NotificationService notificationService,
+        IHubContext<AppHub> hubContext,
         ILogger<AdminController> logger)
     {
         _context = context;
@@ -33,6 +37,7 @@ public class AdminController : Controller
         _donationService = donationService;
         _fileService = fileService;
         _notificationService = notificationService;
+        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -289,6 +294,21 @@ public class AdminController : Controller
                 campaign.UserId,
                 "Campaign Completed! 🏆",
                 $"Your campaign \"{campaign.Title}\" has been officially completed. Thank you for your incredible contribution!");
+
+            // Real-time broadcast status change
+            try
+            {
+                await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+                {
+                    campaignId = campaign.Id,
+                    status = "COMPLETED",
+                    title = campaign.Title
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to broadcast CampaignStatusChanged for completed campaign {CampaignId}", campaign.Id);
+            }
 
             TempData["SuccessMessage"] = "Campaign completion record created successfully.";
 

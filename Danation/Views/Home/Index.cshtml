@@ -10,11 +10,10 @@
             <div class="col-lg-6">
                 <p class="text-warning fw-semibold mb-2 small text-uppercase letter-spacing-1">
                     <i class="bi bi-heart-fill me-2"></i>Making a Difference
-                </p>
-                <h1 class="hero-title">Give Hope,<br />Change Lives.</h1>
+                </p><br />
+                <h1 class="hero-title">ဖေးမကြည်ဖြူ လက်တွဲကူ,<br /><bt/><bt/>ပရဟိတ တို့အလှူ</h1>
                 <p class="hero-subtitle">
-                    Join our community of donors and campaign creators making a real impact.
-                    Every contribution counts — from education to healthcare, from disaster relief to community support.
+                    အနယ်နယ်အရပ်ရပ်မှ ပရဟိတ Campaign များကိုအချိန်နဲ့တပြေးညီဆောက်ရွက်ပေးပြီးအချင်းချင်းကူညီဆောင်ရွက်ခြင်းအားဖြင့်အချင်းချင်းဖေးမကူညီရိုင်းပင်းကြပါစို့....................
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a asp-controller="Campaign" asp-action="Index" class="btn btn-warning btn-lg fw-bold px-4">
@@ -23,7 +22,7 @@
                     @if (!User.Identity?.IsAuthenticated == true)
                     {
                         <a asp-controller="Account" asp-action="Register" class="btn btn-outline-light btn-lg px-4">
-                            Start Fundraising
+                            Register to Start a Campaign
                         </a>
                     }
                     else if (!User.IsInRole("ADMIN"))

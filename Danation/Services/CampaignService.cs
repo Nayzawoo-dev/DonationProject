@@ -1,6 +1,8 @@
 using DatabaseClass.Models;
+using Donation.Hubs;
 using Donation.ViewModels.Admin;
 using Donation.ViewModels.Campaign;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Donation.Services;
@@ -10,6 +12,7 @@ public class CampaignService
     private readonly AppDbContext _context;
     private readonly FileService _fileService;
     private readonly NotificationService _notificationService;
+    private readonly IHubContext<AppHub> _hubContext;
     private readonly ILogger<CampaignService> _logger;
     private const int PageSize = 9;
 
@@ -17,11 +20,13 @@ public class CampaignService
         AppDbContext context,
         FileService fileService,
         NotificationService notificationService,
+        IHubContext<AppHub> hubContext,
         ILogger<CampaignService> logger)
     {
         _context = context;
         _fileService = fileService;
         _notificationService = notificationService;
+        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -201,6 +206,30 @@ public class CampaignService
 
         _context.Campaigns.Add(campaign);
         await _context.SaveChangesAsync();
+
+        // Real-time notify Admins of new pending campaign
+        try
+        {
+            var ownerName = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.FullName)
+                .FirstOrDefaultAsync() ?? "User";
+            var pendingCount = await _context.Campaigns.CountAsync(c => c.Status == "PENDING");
+
+            await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("CampaignCreated", new
+            {
+                id = campaign.Id,
+                title = campaign.Title,
+                ownerName,
+                goalAmount = campaign.GoalAmount,
+                createdAt = campaign.CreatedAt.ToString("o"),
+                pendingCount
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to broadcast CampaignCreated for campaign {CampaignId}", campaign.Id);
+        }
 
         return (true, string.Empty, campaign.Id);
     }
@@ -426,6 +455,21 @@ public class CampaignService
             "Campaign Approved! 🎉",
             $"Your campaign \"{campaign.Title}\" has been approved and is now live for donations.");
 
+        // Real-time broadcast status change
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+            {
+                campaignId = campaign.Id,
+                status = "OPEN",
+                title = campaign.Title
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to broadcast CampaignStatusChanged for {CampaignId}", campaignId);
+        }
+
         return (true, string.Empty);
     }
 
@@ -443,6 +487,29 @@ public class CampaignService
             campaign.UserId,
             "Campaign Not Approved",
             $"Your campaign \"{campaign.Title}\" was not approved. Reason: {reason}");
+
+        // Real-time broadcast status change to owner & admins
+        try
+        {
+            await _hubContext.Clients.User(campaign.UserId.ToString()).SendAsync("CampaignStatusChanged", new
+            {
+                campaignId = campaign.Id,
+                status = "REJECTED",
+                title = campaign.Title,
+                reason
+            });
+            await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("CampaignStatusChanged", new
+            {
+                campaignId = campaign.Id,
+                status = "REJECTED",
+                title = campaign.Title,
+                reason
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to broadcast CampaignStatusChanged for {CampaignId}", campaignId);
+        }
 
         return (true, string.Empty);
     }
@@ -462,6 +529,21 @@ public class CampaignService
             campaign.UserId,
             "Campaign Closed",
             $"Your campaign \"{campaign.Title}\" has been officially closed after reaching its goal. Thank you for making a difference!");
+
+        // Real-time broadcast status change to all clients
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+            {
+                campaignId = campaign.Id,
+                status = "CLOSED",
+                title = campaign.Title
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to broadcast CampaignStatusChanged for {CampaignId}", campaignId);
+        }
 
         return (true, string.Empty);
     }

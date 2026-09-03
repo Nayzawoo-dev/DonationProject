@@ -9,38 +9,36 @@
 
 ## Current Phase
 
-**Phase 5: Full AJAX-First Refactoring Complete (Production-Ready)**
+**Phase 6: Full Real-Time SignalR Architecture Complete (Production-Ready)**
 
-The entire web application user experience has been refactored to be AJAX-first, eliminating unnecessary full-page reloads and delivering a smooth, responsive, single-page-like experience across all key user and admin workflows.
+Real-time capabilities have been seamlessly integrated on top of the existing ASP.NET Core MVC, EF Core, and jQuery AJAX architecture using ASP.NET Core SignalR. All business rules, security models, and database-first designs are preserved with zero full-page reloads and targeted DOM updates.
 
 ---
 
 ## Last Build Status
 
 **BUILD SUCCEEDED — 0 Errors, 0 Warnings**
-Date: 2026-08-26
-AJAX-First Refactoring Summary:
-1. **Global JavaScript Architecture (`wwwroot/js/site.js`)**:
-   - Added `Danation.loadPartial(url, container, onSuccess, onError)` for zero-page-reload content updates.
-   - Added `Danation.getCsrfToken()` and automatic `X-Requested-With: XMLHttpRequest` header injection.
-   - Enhanced `Danation.upload()` with robust anti-forgery injection and error notifications.
-2. **Authentication Flow (Register, VerifyOtp, Login)**:
-   - Updated `LoginService.LoginAsync` to return role for instant client-side redirection.
-   - Converted `AccountController` actions (`Register`, `VerifyOtp`, `Login`) to dual-mode: returning structured JSON with redirect URLs for AJAX requests.
-   - Refactored `Login.cshtml`, `Register.cshtml`, and `VerifyOtp.cshtml` to submit via jQuery AJAX with Notiflix feedback and smooth transitions.
-3. **Public Campaign Discovery (`/Campaign/Index`)**:
-   - Extracted `_CampaignListPartial.cshtml` containing active filter tags, campaign cards grid, and pagination.
-   - Refactored `Views/Campaign/Index.cshtml` with live debounced search, township filter, status dropdown, and pagination.
-   - Added `history.pushState` and `window.onpopstate` listener for seamless browser back/forward navigation.
-4. **Donation Submissions (`/Donation/Submit`)**:
-   - Updated `DonationController.Submit` to return JSON on AJAX POST.
-   - Refactored `Views/Donation/Submit.cshtml` to upload transfer screenshot via AJAX `FormData` with progress indicators.
-5. **Admin Portal Management (`/Admin/Campaigns`, `/Admin/Donations`, `/Admin/Users`, `/Admin/CreateCompletion`)**:
-   - Extracted `_AdminCampaignTablePartial.cshtml`, `_AdminDonationTablePartial.cshtml`, `_AdminUserTablePartial.cshtml`.
-   - Converted table filters (status tabs and live search debounce) to load partials dynamically without page refresh.
-   - Converted `CreateCompletion` multi-image upload form to AJAX `FormData` upload.
-6. **Notifications (`/Notification/Index`)**:
-   - Added single-notification item click mark-as-read via AJAX `POST /Notification/MarkRead/{id}`.
+Date: 2026-09-03
+SignalR Real-Time Implementation Summary:
+1. **Centralized Hub Architecture (`Danation/Hubs/AppHub.cs` mapped to `/hubs/app`)**:
+   - Automatic `Admins` group assignment in `OnConnectedAsync` for role `ADMIN`.
+   - `JoinCampaign(campaignId)` and `LeaveCampaign(campaignId)` for granular group scoping.
+   - User-targeted delivery via `Clients.User(userId)` leveraging `ClaimTypes.NameIdentifier` across multiple tabs and devices.
+2. **Service-Layer Event Dispatchers (`IHubContext<AppHub>`)**:
+   - `NotificationService`: Real-time push via `ReceiveNotification` and multi-tab read synchronization via `NotificationReadUpdated`.
+   - `CampaignService`: Real-time `CampaignCreated` alerts to admins, and `CampaignStatusChanged` to all affected clients on approval, rejection, and closing.
+   - `DonationService`: Real-time `DonationCreated` alerts to admins, live progress updates via `CampaignDonationUpdated`, donor notifications via `DonationStatusChanged`, and live counter sync via `AdminDashboardStats`.
+   - `AdminController`: Broadcasts `CampaignStatusChanged` with `COMPLETED` upon campaign completion creation.
+3. **Client-Side Real-Time Management (`wwwroot/js/signalr-client.js`)**:
+   - Built with official `@microsoft/signalr` library with exponential backoff automatic reconnection (`[0, 2000, 5000, 10000, 30000]`).
+   - Graceful offline fallback: failure never breaks AJAX forms or UI actions.
+   - Instant Notiflix toast notifications, navbar unread badge counters, and real-time dropdown prepending.
+4. **Targeted Real-Time UI Reactivity**:
+   - **Campaign Detail (`/Campaign/Detail/{id}`)**: Live raised amount, progress bar width, goal reached badge, and donate button toggle without page refresh.
+   - **Public Campaign Grid (`/Campaign/Index`)**: In-place card progress and status badge updates.
+   - **Admin Dashboard (`/Admin/Dashboard`)**: Live stat cards (Total Users, Pending Campaigns, Open Campaigns, Pending Donations, Total Approved MMK) and instant pending item list prepend.
+   - **Admin Management Tables (`/Admin/Campaigns`, `/Admin/Donations`)**: Instant status badge and action button swaps.
+   - **User Portals (`/Campaign/My`, `/Donation/My`, `/Notification/Index`)**: Live status updates, verified amount indicators, and smooth notification item prepending.
 
 ---
 
@@ -109,6 +107,18 @@ AJAX-First Refactoring Summary:
 - [x] Admin Donation Management (approve with amount modal, reject with modal reason, screenshot lightbox)
 - [x] Admin User Management (listing, statistics, toggle active/inactive via AJAX)
 - [x] Admin Campaign Detail & Document Review (showing documents, images, township, address, and admin-only contact phone)
+
+### Real-Time SignalR Engine
+- [x] Centralized `AppHub` (`Danation/Hubs/AppHub.cs`) mapped to `/hubs/app`
+- [x] Role-based groups: auto-join `Admins` group for admin users in `OnConnectedAsync`
+- [x] User-targeted messaging using `Clients.User(userId)` mapping to `ClaimTypes.NameIdentifier` (multi-tab & multi-device sync)
+- [x] Campaign-scoped groups (`Campaign_{id}`) with client `JoinCampaign` / `LeaveCampaign`
+- [x] Real-time user notifications: instant bell badge counter update + Notiflix toast + dropdown list update
+- [x] Real-time read sync: marking notification(s) read syncs unread badge across all open tabs
+- [x] Real-time campaign lifecycle: status badge updates, edit lock enforcement, and donate button toggle
+- [x] Real-time donation progress: instant raised amount and progress bar updates on public detail page and public discovery cards
+- [x] Real-time admin dashboard live sync: pending counters, approved totals, and live pending queue updates
+- [x] Robust client resilience: automatic reconnect with backoff (`[0, 2s, 5s, 10s, 30s]`), zero disruption to AJAX CRUD on network disconnect
 
 ### Frontend & Styling
 - [x] Layout (`_Layout.cshtml`) with responsive navbar, user menu, notification bell, anti-forgery AJAX setup

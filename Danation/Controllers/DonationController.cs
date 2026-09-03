@@ -34,6 +34,7 @@ public class DonationController : Controller
         return int.TryParse(value, out var id) ? id : 0;
     }
 
+    [Authorize(Roles = "USER")]
     // GET: /Donation/Submit/5
     [HttpGet]
     public async Task<IActionResult> Submit(int id)

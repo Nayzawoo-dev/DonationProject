@@ -35,7 +35,7 @@
                     "REJECTED" => "badge-rejected",
                     _ => "badge-pending"
                 };
-                <div class="col-12">
+                <div class="col-12 my-donation-card" data-donation-id="@d.Id">
                     <div class="card p-3">
                         <div class="row align-items-center g-3">
                             <!-- Screenshot Thumbnail -->
@@ -54,15 +54,17 @@
                                        class="text-dark text-decoration-none">@d.CampaignTitle</a>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <span class="badge @statusClass">@d.Status</span>
-                                    @if (d.Amount.HasValue && d.Status == "APPROVED")
-                                    {
-                                        <span class="fw-semibold text-success">@d.Amount.Value.ToString("N0") MMK</span>
-                                    }
-                                    else if (d.Status == "PENDING")
-                                    {
-                                        <span class="text-muted small">Amount pending verification</span>
-                                    }
+                                    <span class="badge @statusClass my-donation-status">@d.Status</span>
+                                    <span class="my-donation-amount">
+                                        @if (d.Amount.HasValue && d.Status == "APPROVED")
+                                        {
+                                            <span class="fw-semibold text-success">@d.Amount.Value.ToString("N0") MMK</span>
+                                        }
+                                        else if (d.Status == "PENDING")
+                                        {
+                                            <span class="text-muted small">Amount pending verification</span>
+                                        }
+                                    </span>
                                     <span class="text-muted small">
                                         Campaign: <span class="badge badge-@d.CampaignStatus.ToLower().Replace("_","-")">@d.CampaignStatus.Replace("_"," ")</span>
                                     </span>
@@ -72,13 +74,15 @@
                             <!-- Date & Verified By -->
                             <div class="col-auto text-end text-muted small">
                                 <div><i class="bi bi-calendar3 me-1"></i>@d.CreatedAt.ToString("MMM d, yyyy")</div>
-                                @if (d.VerifiedAt.HasValue)
-                                {
-                                    <div class="mt-1">
-                                        <i class="bi bi-check-circle me-1 text-success"></i>
-                                        Verified @d.VerifiedAt.Value.ToString("MMM d") by @d.VerifiedByName
-                                    </div>
-                                }
+                                <div class="my-donation-verified">
+                                    @if (d.VerifiedAt.HasValue)
+                                    {
+                                        <div class="mt-1">
+                                            <i class="bi bi-check-circle me-1 text-success"></i>
+                                            Verified @d.VerifiedAt.Value.ToString("MMM d") by @d.VerifiedByName
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -109,5 +113,24 @@
             document.getElementById('screenshotModalImg').src = url;
             new bootstrap.Modal(document.getElementById('screenshotModal')).show();
         }
+
+        // Real-time: Live update donation status when admin approves/rejects
+        $(document).on('donationStatusChanged', function (e, data) {
+            var card = $('.my-donation-card[data-donation-id="' + data.donationId + '"]');
+            if (card.length) {
+                if (data.status === 'APPROVED') {
+                    card.find('.my-donation-status').attr('class', 'badge badge-approved my-donation-status').text('APPROVED');
+                    if (data.amount) {
+                        card.find('.my-donation-amount').html('<span class="fw-semibold text-success">' + parseFloat(data.amount).toLocaleString('en-US') + ' MMK</span>');
+                    }
+                    if (data.verifiedByName) {
+                        card.find('.my-donation-verified').html('<div class="mt-1"><i class="bi bi-check-circle me-1 text-success"></i>Verified ' + (data.verifiedAt || 'today') + ' by ' + Danation.escHtml(data.verifiedByName) + '</div>');
+                    }
+                } else if (data.status === 'REJECTED') {
+                    card.find('.my-donation-status').attr('class', 'badge badge-rejected my-donation-status').text('REJECTED');
+                    card.find('.my-donation-amount').html('<span class="text-danger small">' + Danation.escHtml(data.reason || 'Verification failed') + '</span>');
+                }
+            }
+        });
     </script>
 }

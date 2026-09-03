@@ -17,28 +17,28 @@
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-blue">
                 <div class="stat-icon"><i class="bi bi-people"></i></div>
-                <div class="stat-value">@Model.TotalUsers</div>
+                <div class="stat-value" id="statTotalUsers">@Model.TotalUsers</div>
                 <div class="stat-label">Total Users</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-purple">
                 <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
-                <div class="stat-value">@Model.TotalCampaigns</div>
+                <div class="stat-value" id="statTotalCampaigns">@Model.TotalCampaigns</div>
                 <div class="stat-label">Total Campaigns</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-orange">
                 <div class="stat-icon"><i class="bi bi-clock"></i></div>
-                <div class="stat-value">@Model.PendingCampaigns</div>
+                <div class="stat-value" id="statPendingCampaigns">@Model.PendingCampaigns</div>
                 <div class="stat-label">Pending Campaigns</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-green">
                 <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-                <div class="stat-value">@Model.OpenCampaigns</div>
+                <div class="stat-value" id="statOpenCampaigns">@Model.OpenCampaigns</div>
                 <div class="stat-label">Open Campaigns</div>
             </div>
         </div>
@@ -49,28 +49,28 @@
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-cyan">
                 <div class="stat-icon"><i class="bi bi-trophy"></i></div>
-                <div class="stat-value">@Model.GoalReachedCampaigns</div>
+                <div class="stat-value" id="statGoalReachedCampaigns">@Model.GoalReachedCampaigns</div>
                 <div class="stat-label">Goal Reached</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-teal">
                 <div class="stat-icon"><i class="bi bi-star"></i></div>
-                <div class="stat-value">@Model.CompletedCampaigns</div>
+                <div class="stat-value" id="statCompletedCampaigns">@Model.CompletedCampaigns</div>
                 <div class="stat-label">Completed</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-pink">
                 <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
-                <div class="stat-value">@Model.PendingDonations</div>
+                <div class="stat-value" id="statPendingDonations">@Model.PendingDonations</div>
                 <div class="stat-label">Pending Donations</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="stat-card stat-green">
                 <div class="stat-icon"><i class="bi bi-currency-exchange"></i></div>
-                <div class="stat-value" style="font-size:1.4rem;">@Model.TotalApprovedAmount.ToString("N0")</div>
+                <div class="stat-value" id="statTotalApprovedAmount" style="font-size:1.4rem;">@Model.TotalApprovedAmount.ToString("N0")</div>
                 <div class="stat-label">Total Approved (MMK)</div>
             </div>
         </div>
@@ -85,7 +85,7 @@
                     <a asp-controller="Admin" asp-action="Campaigns" asp-route-status="PENDING"
                        class="text-decoration-none small fw-semibold">View all</a>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0" id="recentPendingCampaignsContainer">
                     @if (Model.RecentPendingCampaigns.Count == 0)
                     {
                         <div class="p-4 text-center text-muted small">
@@ -130,7 +130,7 @@
                     <a asp-controller="Admin" asp-action="Donations" asp-route-status="PENDING"
                        class="text-decoration-none small fw-semibold">View all</a>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0" id="recentPendingDonationsContainer">
                     @if (Model.RecentPendingDonations.Count == 0)
                     {
                         <div class="p-4 text-center text-muted small">
@@ -205,5 +205,84 @@
             document.getElementById('screenshotModalImg').src = url;
             new bootstrap.Modal(document.getElementById('screenshotModal')).show();
         }
+
+        // Real-time Dashboard listeners
+        $(document).on('adminDashboardStats', function (e, data) {
+            if (data.pendingCampaigns !== undefined) $('#statPendingCampaigns').text(data.pendingCampaigns);
+            if (data.openCampaigns !== undefined) $('#statOpenCampaigns').text(data.openCampaigns);
+            if (data.goalReachedCampaigns !== undefined) $('#statGoalReachedCampaigns').text(data.goalReachedCampaigns);
+            if (data.completedCampaigns !== undefined) $('#statCompletedCampaigns').text(data.completedCampaigns);
+            if (data.pendingDonations !== undefined) $('#statPendingDonations').text(data.pendingDonations);
+            if (data.totalApprovedAmount !== undefined) $('#statTotalApprovedAmount').text(parseFloat(data.totalApprovedAmount).toLocaleString('en-US'));
+        });
+
+        $(document).on('donationCreated', function (e, data) {
+            var cur = parseInt($('#statPendingDonations').text()) || 0;
+            $('#statPendingDonations').text(cur + 1);
+
+            // Prepend to recent list
+            var container = $('#recentPendingDonationsContainer');
+            var list = container.find('.list-group');
+            if (!list.length) {
+                container.html('<div class="list-group list-group-flush"></div>');
+                list = container.find('.list-group');
+            }
+            var item = '<div class="list-group-item px-3 py-2 bg-light-blue" style="transition:background 2s;">' +
+                '<div class="d-flex align-items-start gap-2">' +
+                '<img src="' + Danation.escHtml(data.transferScreenshot) + '" class="rounded" width="40" height="40" style="object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="openScreenshot(\'' + Danation.escHtml(data.transferScreenshot) + '\')" alt="screenshot" />' +
+                '<div class="flex-grow-1 min-width-0">' +
+                '<div class="fw-semibold text-truncate">' + Danation.escHtml(data.donorName) + '</div>' +
+                '<div class="text-muted small text-truncate">for: ' + Danation.escHtml(data.campaignTitle) + '</div>' +
+                '</div>' +
+                '<a href="/Admin/Donations" class="btn btn-sm btn-outline-primary py-0 px-2 flex-shrink-0">Review</a>' +
+                '</div></div>';
+            list.prepend(item);
+            setTimeout(function () { list.find('.bg-light-blue').removeClass('bg-light-blue'); }, 3000);
+        });
+
+        $(document).on('campaignCreated', function (e, data) {
+            var cur = parseInt($('#statPendingCampaigns').text()) || 0;
+            $('#statPendingCampaigns').text(cur + 1);
+
+            var curTotal = parseInt($('#statTotalCampaigns').text()) || 0;
+            $('#statTotalCampaigns').text(curTotal + 1);
+
+            var container = $('#recentPendingCampaignsContainer');
+            var list = container.find('.list-group');
+            if (!list.length) {
+                container.html('<div class="list-group list-group-flush"></div>');
+                list = container.find('.list-group');
+            }
+            var item = '<div class="list-group-item px-3 py-2 bg-light-blue" style="transition:background 2s;">' +
+                '<div class="d-flex align-items-start gap-2">' +
+                '<div class="flex-grow-1 min-width-0">' +
+                '<div class="fw-semibold text-truncate">' + Danation.escHtml(data.title) + '</div>' +
+                '<div class="text-muted small">by ' + Danation.escHtml(data.ownerName) + ' · Goal: ' + Danation.formatMMK(data.goalAmount) + '</div>' +
+                '</div>' +
+                '<div class="flex-shrink-0">' +
+                '<a href="/Admin/CampaignDetail/' + data.id + '" class="btn btn-sm btn-outline-primary py-0 px-2">Review</a>' +
+                '</div></div></div>';
+            list.prepend(item);
+            setTimeout(function () { list.find('.bg-light-blue').removeClass('bg-light-blue'); }, 3000);
+        });
+
+        $(document).on('campaignStatusChanged', function (e, data) {
+            if (data.status === 'OPEN') {
+                var pend = Math.max(0, (parseInt($('#statPendingCampaigns').text()) || 1) - 1);
+                $('#statPendingCampaigns').text(pend);
+                var op = (parseInt($('#statOpenCampaigns').text()) || 0) + 1;
+                $('#statOpenCampaigns').text(op);
+            } else if (data.status === 'REJECTED') {
+                var pend = Math.max(0, (parseInt($('#statPendingCampaigns').text()) || 1) - 1);
+                $('#statPendingCampaigns').text(pend);
+            } else if (data.status === 'CLOSED') {
+                var op = Math.max(0, (parseInt($('#statOpenCampaigns').text()) || 1) - 1);
+                $('#statOpenCampaigns').text(op);
+                var cl = (parseInt($('#statClosedCampaigns')?.text()) || 0) + 1;
+            } else if (data.status === 'COMPLETED') {
+                var comp = (parseInt($('#statCompletedCampaigns').text()) || 0) + 1;
+                $('#statCompletedCampaigns').text(comp);
+            }
+        });
     </script>
 }

@@ -169,8 +169,11 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <!-- Notiflix JS -->
     <script src="https://cdn.jsdelivr.net/npm/notiflix@3.2.6/dist/notiflix-3.2.6.min.js"></script>
+    <!-- Microsoft SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <!-- Custom JS -->
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/signalr-client.js" asp-append-version="true"></script>
 
     @if (User.Identity?.IsAuthenticated == true)
     {

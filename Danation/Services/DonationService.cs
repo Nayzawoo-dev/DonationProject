@@ -1,7 +1,9 @@
 using DatabaseClass.Models;
+using Donation.Hubs;
 using Donation.ViewModels.Admin;
 using Donation.ViewModels.Donation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using DonationEntity = DatabaseClass.Models.Donation;
@@ -13,17 +15,20 @@ public class DonationService
     private readonly AppDbContext _context;
     private readonly FileService _fileService;
     private readonly NotificationService _notificationService;
+    private readonly IHubContext<AppHub> _hubContext;
     private readonly ILogger<DonationService> _logger;
 
     public DonationService(
         AppDbContext context,
         FileService fileService,
         NotificationService notificationService,
+        IHubContext<AppHub> hubContext,
         ILogger<DonationService> logger)
     {
         _context = context;
         _fileService = fileService;
         _notificationService = notificationService;
+        _hubContext = hubContext;
         _logger = logger;
     }
 
@@ -59,6 +64,31 @@ public class DonationService
 
         _context.Donations.Add(donation);
         await _context.SaveChangesAsync();
+
+        // Real-time notify Admins of new pending donation
+        try
+        {
+            var donorName = await _context.Users
+                .Where(u => u.Id == donorId)
+                .Select(u => u.FullName)
+                .FirstOrDefaultAsync() ?? "A Donor";
+            var pendingCount = await _context.Donations.CountAsync(d => d.Status == "PENDING");
+
+            await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("DonationCreated", new
+            {
+                id = donation.Id,
+                campaignId = campaign.Id,
+                campaignTitle = campaign.Title,
+                donorName,
+                transferScreenshot = donation.TransferScreenshot,
+                createdAt = donation.CreatedAt.ToString("o"),
+                pendingCount
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to broadcast DonationCreated for donation {DonationId}", donation.Id);
+        }
 
         return (true, string.Empty);
     }
@@ -162,6 +192,77 @@ public class DonationService
                 "Donation Approved ✅",
                 $"Your donation to \"{campaign.Title}\" has been verified and approved. Verified amount: {verifiedAmount:N0} MMK.");
 
+            // Real-time SignalR broadcasts
+            try
+            {
+                var progressPercent = campaign.GoalAmount > 0
+                    ? (int)Math.Min(100, Math.Round(newTotal / campaign.GoalAmount * 100))
+                    : 0;
+
+                // 1. Update public campaign viewers & campaign listing
+                await _hubContext.Clients.All.SendAsync("CampaignDonationUpdated", new
+                {
+                    campaignId = donation.CampaignId,
+                    raisedAmount = newTotal,
+                    goalAmount = campaign.GoalAmount,
+                    progressPercent,
+                    status = campaign.Status
+                });
+
+                if (campaign.Status == "GOAL_REACHED")
+                {
+                    await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+                    {
+                        campaignId = campaign.Id,
+                        status = "GOAL_REACHED",
+                        title = campaign.Title
+                    });
+                }
+
+                // 2. Notify donor with verified amount and verifier
+                var verifierName = await _context.Users
+                    .Where(u => u.Id == adminId)
+                    .Select(u => u.FullName)
+                    .FirstOrDefaultAsync();
+
+                await _hubContext.Clients.User(donation.DonorId.ToString()).SendAsync("DonationStatusChanged", new
+                {
+                    donationId = donation.Id,
+                    campaignId = donation.CampaignId,
+                    status = "APPROVED",
+                    amount = verifiedAmount,
+                    verifiedAt = donation.VerifiedAt?.ToString("MMM d"),
+                    verifiedByName = verifierName
+                });
+
+                // 3. Update Admins (dashboard stats + donations table)
+                var pendingDonations = await _context.Donations.CountAsync(d => d.Status == "PENDING");
+                var approvedDonations = await _context.Donations.CountAsync(d => d.Status == "APPROVED");
+                var totalApproved = await _context.Donations
+                    .Where(d => d.Status == "APPROVED")
+                    .SumAsync(d => (decimal?)d.Amount) ?? 0;
+
+                await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("AdminDashboardStats", new
+                {
+                    pendingDonations,
+                    approvedDonations,
+                    totalApprovedAmount = totalApproved
+                });
+
+                await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("DonationStatusChanged", new
+                {
+                    donationId = donation.Id,
+                    campaignId = donation.CampaignId,
+                    status = "APPROVED",
+                    amount = verifiedAmount,
+                    verifiedByName = verifierName
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send SignalR updates for approved donation {DonationId}", donationId);
+            }
+
             return (true, string.Empty);
         }
         catch (Exception ex)
@@ -191,6 +292,39 @@ public class DonationService
             donation.DonorId,
             "Donation Not Approved",
             $"Your donation to \"{donation.Campaign.Title}\" could not be verified. Reason: {reason}. Please check your transfer and try again.");
+
+        // Real-time broadcasts for rejection
+        try
+        {
+            await _hubContext.Clients.User(donation.DonorId.ToString()).SendAsync("DonationStatusChanged", new
+            {
+                donationId = donation.Id,
+                campaignId = donation.CampaignId,
+                status = "REJECTED",
+                reason
+            });
+
+            var pendingDonations = await _context.Donations.CountAsync(d => d.Status == "PENDING");
+            var rejectedDonations = await _context.Donations.CountAsync(d => d.Status == "REJECTED");
+
+            await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("AdminDashboardStats", new
+            {
+                pendingDonations,
+                rejectedDonations
+            });
+
+            await _hubContext.Clients.Group(AppHub.AdminGroup).SendAsync("DonationStatusChanged", new
+            {
+                donationId = donation.Id,
+                campaignId = donation.CampaignId,
+                status = "REJECTED",
+                reason
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send SignalR updates for rejected donation {DonationId}", donationId);
+        }
 
         return (true, string.Empty);
     }

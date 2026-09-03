@@ -26,6 +26,9 @@ public static class ServiceCollectionExtension
         // HTTP Context Accessor
         services.AddHttpContextAccessor();
 
+        // SignalR
+        services.AddSignalR();
+
         // Application Services
         services.AddScoped<EmailService>();
         services.AddScoped<LoginService>();
@@ -57,7 +60,7 @@ public static class ServiceCollectionExtension
                 options.ExpireTimeSpan = TimeSpan.FromDays(5);
                 options.SlidingExpiration = true;
                 options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.Name = "Danation.Auth";
             });

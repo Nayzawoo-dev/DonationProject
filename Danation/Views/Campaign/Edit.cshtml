@@ -96,7 +96,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0"><i class="bi bi-images me-2 text-primary"></i>Campaign Images</h5>
                     <button class="btn btn-sm btn-outline-primary" id="addImageBtn" onclick="$('#imageFileInput').click()">
-                        <i class="bi bi-plus-circle me-1"></i>Add Image
+                        <i class="bi bi-plus-circle me-1"></i>ဓာတ်ပုံထည့်ရန်
                     </button>
                 </div>
                 <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
@@ -123,18 +123,23 @@
                 <div class="form-text mt-2">Max 5MB per image. JPG, PNG, WebP, GIF.</div>
             </div>
 
+
+            <div class="alert alert-info border-0">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                မိမိသည်အစိုးရအဖွဲ့အစည်းဖြစ်ပါက အစိုးရကပေး‌အပ်သောထောက်ခံလက်မှတ်ရှိရမည်ဖြစ်ပြီး သာသနာ့အဖွဲ့အစည်းဖြစ်ပါက သာသနာအဖွဲ့အစည်းထောက်ခံစာရှိရမည် မည်သည့်အဖွဲ့အစည်းနှင့်မျှမပတ်သတ်ပါက ရပ်ကွက်ထောက်ခံစာနှင့်ရဲစခန်းထောက်ခံစာကိုမှတ်ပုံနှင့်တကွပေးအပ်ရမည်။
+            </div>
             <!-- Campaign Documents -->
             <div class="card p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark me-2 text-primary"></i>Supporting Documents</h5>
                     <button class="btn btn-sm btn-outline-primary" onclick="$('#docFileInput').click()">
-                        <i class="bi bi-plus-circle me-1"></i>Add Document
+                        <i class="bi bi-plus-circle me-1"></i>ထောက်ခံစာထည့်ရန်
                     </button>
                 </div>
                 <input type="file" id="docFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
                 <div class="mb-2">
                     <input type="text" id="docTypeInput" class="form-control form-control-sm"
-                           placeholder="Document type, e.g. Medical report, ID, Letter" maxlength="100" />
+                           placeholder="အစိုးရထောက်ခံစာ (သို့မဟုတ်) ရပ်ကွက်ထောက်ခံစာနှင့်တကွ မှတ်ပုံတင်ဓာတ်ပုံ" maxlength="100" />
                 </div>
                 <div id="docList">
                     @foreach (var doc in Model.Documents)

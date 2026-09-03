@@ -46,7 +46,7 @@
                     "REJECTED" => "badge-rejected",
                     _ => "badge-pending"
                 };
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 my-campaign-col" data-campaign-id="@c.Id">
                     <div class="card campaign-card h-100">
                         <a href="@Url.Action("Detail", "Campaign", new { id = c.Id })" class="text-decoration-none">
                             @if (!string.IsNullOrEmpty(c.ThumbnailImage))
@@ -62,7 +62,7 @@
                         </a>
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge @statusClass">@c.Status.Replace("_", " ")</span>
+                                <span class="badge @statusClass my-campaign-status">@c.Status.Replace("_", " ")</span>
                                 <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i>@c.CreatedAt.ToString("MMM d")</span>
                             </div>
                             <h5 class="card-title fw-bold">
@@ -80,7 +80,7 @@
                                 <div class="text-muted small">Goal: @c.GoalAmount.ToString("N0") MMK</div>
                             </div>
                             <!-- Action Buttons -->
-                            <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                            <div class="d-flex gap-2 mt-3 pt-3 border-top my-campaign-actions">
                                 <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@c.Id"
                                    class="btn btn-sm btn-outline-primary flex-grow-1">
                                     <i class="bi bi-eye me-1"></i>View
@@ -117,6 +117,39 @@
                     card.fadeOut(400, function () { $(this).remove(); });
                 }
             );
+        });
+
+        // Real-time: Update status and lock actions when admin approves/rejects
+        $(document).on('campaignStatusChanged', function (e, data) {
+            var col = $('.my-campaign-col[data-campaign-id="' + data.campaignId + '"]');
+            if (col.length) {
+                var badgeMap = {
+                    'OPEN': 'badge-open',
+                    'GOAL_REACHED': 'badge-goal',
+                    'CLOSED': 'badge-closed',
+                    'COMPLETED': 'badge-completed',
+                    'REJECTED': 'badge-rejected',
+                    'PENDING': 'badge-pending'
+                };
+                var cls = badgeMap[data.status] || 'bg-secondary';
+                col.find('.my-campaign-status').attr('class', 'badge ' + cls + ' my-campaign-status').text(data.status.replace('_', ' '));
+
+                if (data.status !== 'PENDING') {
+                    col.find('.my-campaign-actions').html(
+                        '<a href="/Campaign/Detail/' + data.campaignId + '" class="btn btn-sm btn-outline-primary flex-grow-1"><i class="bi bi-eye me-1"></i>View</a>'
+                    );
+                }
+            }
+        });
+
+        $(document).on('campaignDonationUpdated', function (e, data) {
+            var col = $('.my-campaign-col[data-campaign-id="' + data.campaignId + '"]');
+            if (col.length) {
+                col.find('.fw-semibold').first().text(Danation.formatMMK(data.raisedAmount));
+                col.find('.progress-bar')
+                    .css('width', data.progressPercent + '%')
+                    .toggleClass('goal-reached', data.progressPercent >= 100);
+            }
         });
     </script>
 }

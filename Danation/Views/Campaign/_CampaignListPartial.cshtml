@@ -52,7 +52,7 @@ else
         {
             <div class="col-md-6 col-lg-4">
                 <a href="@Url.Action("Detail", "Campaign", new { id = c.Id })" class="text-decoration-none">
-                    <div class="card campaign-card h-100">
+                    <div class="card campaign-card h-100" data-campaign-id="@c.Id">
                         @if (!string.IsNullOrEmpty(c.ThumbnailImage))
                         {
                             <img src="@c.ThumbnailImage" class="card-img-top" alt="@c.Title" style="height:200px;object-fit:cover;" />
@@ -65,7 +65,7 @@ else
                         }
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge badge-@c.Status.ToLower().Replace("_", "-")">@c.Status.Replace("_", " ")</span>
+                                <span class="badge badge-@c.Status.ToLower().Replace("_", "-") campaign-card-status">@c.Status.Replace("_", " ")</span>
                                 @if (c.ImageCount > 0)
                                 {
                                     <span class="text-muted small"><i class="bi bi-images me-1"></i>@c.ImageCount</span>
@@ -81,11 +81,11 @@ else
                             </p>
                             <div class="mt-3">
                                 <div class="d-flex justify-content-between small mb-1">
-                                    <span class="fw-semibold">@c.RaisedAmount.ToString("N0") MMK raised</span>
-                                    <span class="text-muted">@c.ProgressPercent%</span>
+                                    <span class="fw-semibold campaign-card-raised">@c.RaisedAmount.ToString("N0") MMK raised</span>
+                                    <span class="text-muted campaign-card-percent">@c.ProgressPercent%</span>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar @(c.ProgressPercent >= 100 ? "goal-reached" : "")"
+                                    <div class="progress-bar campaign-card-bar @(c.ProgressPercent >= 100 ? "goal-reached" : "")"
                                          style="width:@c.ProgressPercent%"></div>
                                 </div>
                                 <div class="text-muted small mt-1">Goal: @c.GoalAmount.ToString("N0") MMK</div>
