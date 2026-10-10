@@ -1,24 +1,24 @@
 @model List<AdminCampaignSummaryViewModel>
 
 <div class="table-responsive">
-    <table class="table table-hover mb-0" id="campaignsTable">
-        <thead>
+    <table class="table table-hover mb-0 align-middle" id="campaignsTable">
+        <thead class="table-light">
             <tr>
                 <th>Campaign</th>
-                <th>Owner</th>
-                <th>Goal & Surplus</th>
-                <th>Schedule</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Files</th>
-                <th class="text-end">Actions</th>
+                <th>ဖန်တီးသူ</th>
+                <th>ပန်းတိုင်နှင့် ပိုလျှံငွေ</th>
+                <th>ကာလ</th>
+                <th>အခြေအနေ</th>
+                <th>ဖန်တီးရက်</th>
+                <th>ဖိုင်များ</th>
+                <th class="text-end">လုပ်ဆောင်ချက်</th>
             </tr>
         </thead>
         <tbody>
             @if (Model.Count == 0)
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">No campaigns found.</td>
+                    <td colspan="8" class="text-center text-muted py-4">Campaign တစ်ခုမျှ မတွေ့ပါ။</td>
                 </tr>
             }
             @foreach (var c in Model)
@@ -32,6 +32,15 @@
                     "REJECTED" => "badge-rejected",
                     _ => "badge-pending"
                 };
+                var statusText = c.Status switch
+                {
+                    "OPEN" => "ဖွင့်လှစ်ဆဲ",
+                    "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+                    "CLOSED" => "ပိတ်သိမ်း",
+                    "COMPLETED" => "ပြီးမြောက်",
+                    "REJECTED" => "ငြင်းပယ်",
+                    _ => "စိစစ်ဆဲ"
+                };
                 <tr data-id="@c.Id">
                     <td>
                         <div class="fw-semibold" style="max-width:200px;">
@@ -41,7 +50,7 @@
                         @if (!string.IsNullOrEmpty(c.CloseReason))
                         {
                             <span class="badge bg-light text-secondary border mt-1" style="font-size:10px;">
-                                Reason: @c.CloseReason
+                                အကြောင်းရင်း: @c.CloseReason
                             </span>
                         }
                     </td>
@@ -62,65 +71,65 @@
                         }
                     </td>
                     <td class="small">
-                        <div><strong>Goal:</strong> @c.GoalAmount.ToString("N0") MMK</div>
+                        <div><strong>ပန်းတိုင်:</strong> @c.GoalAmount.ToString("N0") MMK</div>
                         @if (c.SurplusAmount > 0)
                         {
                             <div class="text-success mt-1">
-                                <i class="bi bi-cash me-1"></i>Surplus: @c.SurplusAmount.ToString("N0") MMK
+                                <i class="bi bi-cash me-1"></i>ပိုလျှံငွေ: @c.SurplusAmount.ToString("N0") MMK
                             </div>
                             <div class="text-muted" style="font-size:11px;">
-                                Avail: @c.AvailableSurplus.ToString("N0") MMK
+                                လက်ကျန်: @c.AvailableSurplus.ToString("N0") MMK
                             </div>
                         }
                     </td>
                     <td class="small">
                         @if (c.StartDate.HasValue || c.EndDate.HasValue)
                         {
-                            <div><i class="bi bi-calendar-event me-1 text-muted"></i>@(c.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "Immediate")</div>
-                            <div class="text-muted"><i class="bi bi-calendar-check me-1"></i>@(c.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "No End Date")</div>
+                            <div><i class="bi bi-calendar-event me-1 text-muted"></i>@(c.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "ချက်ချင်း")</div>
+                            <div class="text-muted"><i class="bi bi-calendar-check me-1"></i>@(c.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "အဆုံးသတ်ရက် မရှိ")</div>
                         }
                         else
                         {
-                            <span class="text-muted">No schedule set</span>
+                            <span class="text-muted">ကာလ မသတ်မှတ်ရသေး</span>
                         }
                     </td>
                     <td>
-                        <span class="badge @statusClass status-badge">@c.Status.Replace("_", " ")</span>
+                        <span class="badge @statusClass status-badge">@statusText</span>
                         @if (c.Status == "OPEN" && c.IsUpcoming)
                         {
-                            <span class="badge bg-info text-dark d-block mt-1" style="font-size:10px;">UPCOMING</span>
+                            <span class="badge bg-info text-dark d-block mt-1" style="font-size:10px;">ကြိုတင်ကြေညာ</span>
                         }
                         @if (c.Status == "OPEN" && c.IsExpired)
                         {
-                            <span class="badge bg-danger d-block mt-1" style="font-size:10px;">OVERDUE</span>
+                            <span class="badge bg-danger d-block mt-1" style="font-size:10px;">ရက်ကျော်လွန်</span>
                         }
                     </td>
                     <td class="small text-muted">@c.CreatedAt.ToString("MMM d, yyyy")</td>
                     <td class="small">
-                        <span title="Images"><i class="bi bi-images me-1"></i>@c.ImageCount</span>
-                        <span class="ms-2" title="Docs"><i class="bi bi-file-earmark me-1"></i>@c.DocumentCount</span>
+                        <span title="ဓာတ်ပုံများ"><i class="bi bi-images me-1 text-primary"></i>@c.ImageCount</span>
+                        <span class="ms-2" title="ထောက်ခံစာများ"><i class="bi bi-file-earmark me-1 text-success"></i>@c.DocumentCount</span>
                     </td>
                     <td class="text-end">
                         <div class="d-flex justify-content-end gap-1 flex-wrap">
                             <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
-                               class="btn btn-sm btn-outline-secondary" title="View Details">
+                               class="btn btn-sm btn-outline-secondary" title="အသေးစိတ် ကြည့်ရှုမည်">
                                 <i class="bi bi-eye"></i>
                             </a>
 
                             @if (c.Status == "CLOSED" || c.Status == "GOAL_REACHED")
                             {
                                 <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@c.Id"
-                                   class="btn btn-sm btn-outline-primary" title="Admin Edit Campaign">
+                                   class="btn btn-sm btn-outline-primary" title="Campaign ပြင်ဆင်မည်">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                             }
 
                             @if (c.Status == "PENDING")
                             {
-                                <button class="btn btn-sm btn-success approve-btn" data-id="@c.Id" title="Approve">
+                                <button class="btn btn-sm btn-success approve-btn" data-id="@c.Id" title="အတည်ပြုမည်">
                                     <i class="bi bi-check-lg"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger reject-btn" data-id="@c.Id" title="Reject">
+                                <button class="btn btn-sm btn-danger reject-btn" data-id="@c.Id" title="ငြင်းပယ်မည်">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             }
@@ -129,13 +138,13 @@
                                 <button class="btn btn-sm btn-outline-info extend-btn" data-id="@c.Id"
                                         data-title="@c.Title"
                                         data-enddate="@(c.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
-                                        title="Extend End Date">
+                                        title="ပြီးဆုံးမည့်ရက် တိုးမြှင့်မည်">
                                     <i class="bi bi-calendar-plus"></i>
                                 </button>
                             }
                             @if (c.Status == "GOAL_REACHED" || c.Status == "OPEN")
                             {
-                                <button class="btn btn-sm btn-warning close-btn" data-id="@c.Id" title="Close Campaign">
+                                <button class="btn btn-sm btn-warning close-btn" data-id="@c.Id" title="Campaign ပိတ်သိမ်းမည်">
                                     <i class="bi bi-lock"></i>
                                 </button>
                             }
@@ -145,21 +154,21 @@
                                         data-title="@c.Title"
                                         data-enddate="@(c.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
                                         data-is-expired="@(c.IsExpired ? "true" : "false")"
-                                        title="Reopen Campaign">
+                                        title="Campaign ပြန်လည်ဖွင့်လှစ်မည်">
                                     <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             }
-                            @if (c.Status == "GOAL_REACHED" || c.Status == "CLOSED")
+                            @if ((c.Status == "GOAL_REACHED" || c.Status == "CLOSED") && c.CloseReason != "EXPIRED")
                             {
                                 <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@c.Id"
-                                   class="btn btn-sm btn-primary" title="Create Completion">
+                                   class="btn btn-sm btn-primary" title="ပြီးမြောက်မှု မှတ်တမ်းတင်မည်">
                                     <i class="bi bi-trophy"></i>
                                 </a>
                             }
                             @if (c.AvailableSurplus > 0)
                             {
                                 <a asp-controller="Admin" asp-action="AllocateSurplus" asp-route-sourceCampaignId="@c.Id"
-                                   class="btn btn-sm btn-success" title="Allocate Available Surplus (@c.AvailableSurplus.ToString("N0") MMK)">
+                                   class="btn btn-sm btn-success" title="ပိုလျှံရန်ပုံငွေ ခွဲဝေမည် (@c.AvailableSurplus.ToString("N0") MMK)">
                                     <i class="bi bi-cash-stack"></i>
                                 </a>
                             }

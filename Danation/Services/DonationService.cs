@@ -271,7 +271,7 @@ public class DonationService
                 {
                     SourceCampaignId = campaign.Id,
                     TargetCampaignId = null,
-                    TransactionType = "SURPLUS_IN",
+                    TransactionType = "SurplusAdded",
                     Amount = deltaSurplus,
                     TransactionDate = DateTime.UtcNow,
                     Notes = $"Surplus generated upon approving donation #{donation.Id} (excess over goal)."

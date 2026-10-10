@@ -1,26 +1,26 @@
 @model MyDonationsViewModel
 @{
-    ViewData["Title"] = "My Donations";
+    ViewData["Title"] = "ကျွန်ုပ်၏ လှူဒါန်းမှုများ — Danation";
     Layout = "_Layout";
 }
 
 <div class="admin-page-header">
     <div class="container">
-        <h1 class="mb-1"><i class="bi bi-heart me-2"></i>My Donations</h1>
-        <p class="mb-0 opacity-75">@Model.Donations.Count donation@(Model.Donations.Count != 1 ? "s" : "") made</p>
+        <h1 class="mb-1"><i class="bi bi-heart me-2"></i>ကျွန်ုပ်၏ လှူဒါန်းမှုများ</h1>
+        <p class="mb-0 opacity-75">လှူဒါန်းမှု စုစုပေါင်း @Model.Donations.Count ကြိမ် ပြုလုပ်ခဲ့သည်</p>
     </div>
 </div>
 
-@await Html.PartialAsync("FlashMessage");
+@await Html.PartialAsync("FlashMessage")
 <div class="container py-4">
     @if (Model.Donations.Count == 0)
     {
         <div class="empty-state">
             <i class="bi bi-heart"></i>
-            <h4>No Donations Yet</h4>
-            <p>Browse our open campaigns and make your first donation today!</p>
+            <h4>လှူဒါန်းမှု မရှိသေးပါ</h4>
+            <p>ဖွင့်လှစ်ထားသော Campaign များကို ကြည့်ရှုပြီး သင်၏ ပထမဆုံး အလှူကို ယနေ့ ပြုလုပ်လိုက်ပါ!</p>
             <a asp-controller="Campaign" asp-action="Index" class="btn btn-primary mt-2">
-                <i class="bi bi-grid-3x3-gap me-2"></i>Browse Campaigns
+                <i class="bi bi-grid-3x3-gap me-2"></i>Campaign များ ရှာဖွေမည်
             </a>
         </div>
     }
@@ -35,16 +35,30 @@
                     "REJECTED" => "badge-rejected",
                     _ => "badge-pending"
                 };
+                var statusText = d.Status switch
+                {
+                    "APPROVED" => "အတည်ပြုပြီး",
+                    "REJECTED" => "ငြင်းပယ်သည်",
+                    _ => "စိစစ်ဆဲ"
+                };
+                var campStatusText = d.CampaignStatus switch
+                {
+                    "OPEN" => "ဖွင့်လှစ်ဆဲ",
+                    "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+                    "CLOSED" => "ပိတ်သိမ်း",
+                    "COMPLETED" => "ပြီးမြောက်",
+                    _ => d.CampaignStatus.Replace("_", " ")
+                };
                 <div class="col-12 my-donation-card" data-donation-id="@d.Id">
-                    <div class="card p-3">
+                    <div class="card p-3 shadow-sm border-0">
                         <div class="row align-items-center g-3">
                             <!-- Screenshot Thumbnail -->
                             <div class="col-auto">
                                 <img src="@d.TransferScreenshot" class="rounded"
                                      style="width:70px;height:70px;object-fit:cover;cursor:pointer;"
-                                     alt="Transfer Screenshot"
+                                     alt="ငွေလွှဲပြေစာ"
                                      onclick="openScreenshot('@d.TransferScreenshot')"
-                                     title="View screenshot" />
+                                     title="ပြေစာ ကြည့်ရှုရန် နှိပ်ပါ" />
                             </div>
 
                             <!-- Campaign Info -->
@@ -54,7 +68,7 @@
                                        class="text-dark text-decoration-none">@d.CampaignTitle</a>
                                 </div>
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <span class="badge @statusClass my-donation-status">@d.Status</span>
+                                    <span class="badge @statusClass my-donation-status">@statusText</span>
                                     <span class="my-donation-amount">
                                         @if (d.Amount.HasValue && d.Status == "APPROVED")
                                         {
@@ -62,11 +76,11 @@
                                         }
                                         else if (d.Status == "PENDING")
                                         {
-                                            <span class="text-muted small">Amount pending verification</span>
+                                            <span class="text-muted small">ငွေပမာဏ စိစစ်ဆဲ</span>
                                         }
                                     </span>
                                     <span class="text-muted small">
-                                        Campaign: <span class="badge badge-@d.CampaignStatus.ToLower().Replace("_","-")">@d.CampaignStatus.Replace("_"," ")</span>
+                                        Campaign: <span class="badge badge-@d.CampaignStatus.ToLower().Replace("_","-")">@campStatusText</span>
                                     </span>
                                 </div>
                             </div>
@@ -79,7 +93,7 @@
                                     {
                                         <div class="mt-1">
                                             <i class="bi bi-check-circle me-1 text-success"></i>
-                                            Verified @d.VerifiedAt.Value.ToString("MMM d") by @d.VerifiedByName
+                                            @d.VerifiedAt.Value.ToString("MMM d") တွင် @d.VerifiedByName မှ အတည်ပြုပြီး
                                         </div>
                                     }
                                 </div>
@@ -97,7 +111,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Transfer Screenshot</h6>
+                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>ငွေလွှဲပြေစာ Screenshot</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
@@ -119,16 +133,16 @@
             var card = $('.my-donation-card[data-donation-id="' + data.donationId + '"]');
             if (card.length) {
                 if (data.status === 'APPROVED') {
-                    card.find('.my-donation-status').attr('class', 'badge badge-approved my-donation-status').text('APPROVED');
+                    card.find('.my-donation-status').attr('class', 'badge badge-approved my-donation-status').text('အတည်ပြုပြီး');
                     if (data.amount) {
                         card.find('.my-donation-amount').html('<span class="fw-semibold text-success">' + parseFloat(data.amount).toLocaleString('en-US') + ' MMK</span>');
                     }
                     if (data.verifiedByName) {
-                        card.find('.my-donation-verified').html('<div class="mt-1"><i class="bi bi-check-circle me-1 text-success"></i>Verified ' + (data.verifiedAt || 'today') + ' by ' + Danation.escHtml(data.verifiedByName) + '</div>');
+                        card.find('.my-donation-verified').html('<div class="mt-1"><i class="bi bi-check-circle me-1 text-success"></i>' + (data.verifiedAt || 'ယနေ့') + ' တွင် ' + Danation.escHtml(data.verifiedByName) + ' မှ အတည်ပြုပြီး</div>');
                     }
                 } else if (data.status === 'REJECTED') {
-                    card.find('.my-donation-status').attr('class', 'badge badge-rejected my-donation-status').text('REJECTED');
-                    card.find('.my-donation-amount').html('<span class="text-danger small">' + Danation.escHtml(data.reason || 'Verification failed') + '</span>');
+                    card.find('.my-donation-status').attr('class', 'badge badge-rejected my-donation-status').text('ငြင်းပယ်သည်');
+                    card.find('.my-donation-amount').html('<span class="text-danger small">' + Danation.escHtml(data.reason || 'စိစစ်မှု မအောင်မြင်ပါ') + '</span>');
                 }
             }
         });

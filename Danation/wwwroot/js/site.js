@@ -20,25 +20,25 @@ Notiflix.Notify.init({
     showOnlyTheLastOne: false,
     clickToClose: true,
     pauseOnHover: true,
-    fontFamily: 'Inter, sans-serif',
+    fontFamily: "'Noto Sans Myanmar', 'Inter', sans-serif",
     fontSize: '14px',
-    success: { background: '#43a047', textColor: '#fff', notiflixIconColor: '#fff' },
-    failure: { background: '#e53935', textColor: '#fff', notiflixIconColor: '#fff' },
-    warning: { background: '#fb8c00', textColor: '#fff', notiflixIconColor: '#fff' },
-    info:    { background: '#5c6bc0', textColor: '#fff', notiflixIconColor: '#fff' }
+    success: { background: '#2e7d32', textColor: '#fff', notiflixIconColor: '#fff' },
+    failure: { background: '#d32f2f', textColor: '#fff', notiflixIconColor: '#fff' },
+    warning: { background: '#ed6c02', textColor: '#fff', notiflixIconColor: '#fff' },
+    info:    { background: '#0288d1', textColor: '#fff', notiflixIconColor: '#fff' }
 });
 
 Notiflix.Confirm.init({
     borderRadius: '10px',
-    fontFamily: 'Inter, sans-serif',
-    titleColor: '#1a1a2e',
-    okButtonBackground: '#e53935',
+    fontFamily: "'Noto Sans Myanmar', 'Inter', sans-serif",
+    titleColor: '#1b3b22',
+    okButtonBackground: '#2e7d32',
     cancelButtonBackground: '#718096'
 });
 
 Notiflix.Loading.init({
-    svgColor: '#5c6bc0',
-    fontFamily: 'Inter, sans-serif',
+    svgColor: '#2e7d32',
+    fontFamily: "'Noto Sans Myanmar', 'Inter', sans-serif",
     backgroundColor: 'rgba(0,0,0,0.5)'
 });
 
@@ -58,14 +58,14 @@ $(function () {
     $(document).ajaxError(function (event, jqXHR) {
         Notiflix.Loading.remove();
         if (jqXHR.status === 401) {
-            Notiflix.Notify.warning('Please log in to continue.');
+            Notiflix.Notify.warning('ကျေးဇူးပြု၍ အကောင့်ဝင်ရောက်ပေးပါ။');
             setTimeout(function () { window.location.href = '/Account/Login'; }, 1500);
         } else if (jqXHR.status === 403) {
-            Notiflix.Notify.failure('You do not have permission to perform this action.');
+            Notiflix.Notify.failure('ဤလုပ်ဆောင်ချက်ကို ဆောင်ရွက်ရန် လုပ်ပိုင်ခွင့်မရှိပါ။');
         } else if (jqXHR.status === 429) {
-            Notiflix.Notify.warning('Too many requests. Please wait a moment.');
+            Notiflix.Notify.warning('တောင်းဆိုမှုများ ပြားလွန်းနေပါသည်။ ခေတ္တစောင့်ဆိုင်းပေးပါ။');
         } else if (jqXHR.status >= 500) {
-            Notiflix.Notify.failure('A server error occurred. Please try again.');
+            Notiflix.Notify.failure('ဆာဗာတွင် ချို့ယွင်းချက် ဖြစ်ပေါ်နေပါသည်။ နောက်တစ်ကြိမ် ထပ်မံကြိုးစားကြည့်ပါ။');
         }
     });
 });
@@ -91,7 +91,7 @@ Danation.getCsrfToken = function () {
  */
 Danation.post = function (url, data, onSuccess, onError) {
     var token = Danation.getCsrfToken();
-    Notiflix.Loading.pulse('Please wait...');
+    Notiflix.Loading.pulse('ခေတ္တစောင့်ဆိုင်းပါ...');
     $.ajax({
         url: url,
         type: 'POST',
@@ -102,13 +102,13 @@ Danation.post = function (url, data, onSuccess, onError) {
         if (res && res.success) {
             if (onSuccess) onSuccess(res);
         } else {
-            var msg = (res && res.message) ? res.message : 'An error occurred.';
+            var msg = (res && res.message) ? res.message : 'မှားယွင်းမှုတစ်ခု ဖြစ်ပေါ်ခဲ့ပါသည်။';
             Notiflix.Notify.failure(msg);
             if (onError) onError(res);
         }
     }).fail(function (jqXHR) {
         Notiflix.Loading.remove();
-        var msg = 'Request failed. Please try again.';
+        var msg = 'တောင်းဆိုမှု မအောင်မြင်ပါ။ နောက်တစ်ကြိမ် ထပ်မံကြိုးစားကြည့်ပါ။';
         try {
             var r = JSON.parse(jqXHR.responseText);
             if (r && r.message) msg = r.message;
@@ -130,7 +130,7 @@ Danation.upload = function (url, formData, onSuccess, onError) {
     if (token && !formData.has('__RequestVerificationToken')) {
         formData.append('__RequestVerificationToken', token);
     }
-    Notiflix.Loading.pulse('Uploading...');
+    Notiflix.Loading.pulse('ဖိုင်တင်နေပါသည်...');
     $.ajax({
         url: url,
         type: 'POST',
@@ -143,13 +143,13 @@ Danation.upload = function (url, formData, onSuccess, onError) {
         if (res && res.success) {
             if (onSuccess) onSuccess(res);
         } else {
-            var msg = (res && res.message) ? res.message : 'Upload failed.';
+            var msg = (res && res.message) ? res.message : 'ဖိုင်တင်ခြင်း မအောင်မြင်ပါ။';
             Notiflix.Notify.failure(msg);
             if (onError) onError(res);
         }
     }).fail(function (jqXHR) {
         Notiflix.Loading.remove();
-        var msg = 'Upload failed. Please try again.';
+        var msg = 'ဖိုင်တင်ခြင်း မအောင်မြင်ပါ။ နောက်တစ်ကြိမ် ထပ်မံကြိုးစားကြည့်ပါ။';
         try {
             var r = JSON.parse(jqXHR.responseText);
             if (r && r.message) msg = r.message;
@@ -178,7 +178,7 @@ Danation.loadPartial = function (url, container, onSuccess, onError) {
         if (onSuccess) onSuccess(html);
     }).fail(function (jqXHR) {
         $el.css('opacity', '1');
-        Notiflix.Notify.failure('Failed to load content. Please refresh.');
+        Notiflix.Notify.failure('အချက်အလက်များ ဆွဲယူခြင်း မအောင်မြင်ပါ။ စာမျက်နှာကို ပြန်လည်ဖွင့်ကြည့်ပါ။');
         if (onError) onError(jqXHR);
     });
 };
@@ -192,10 +192,10 @@ Danation.loadPartial = function (url, container, onSuccess, onError) {
  */
 Danation.confirmPost = function (confirmMessage, url, data, onSuccess) {
     Notiflix.Confirm.show(
-        'Confirm Action',
+        'အတည်ပြုချက် တောင်းခံခြင်း',
         confirmMessage,
-        'Confirm',
-        'Cancel',
+        'အတည်ပြုမည်',
+        'မလုပ်တော့ပါ',
         function () {
             Danation.post(url, data, onSuccess);
         }
@@ -214,7 +214,7 @@ Danation.escHtml = function (str) {
  */
 Danation.formatMMK = function (amount) {
     if (amount === null || amount === undefined) return '—';
-    return parseFloat(amount).toLocaleString('en-US') + ' MMK';
+    return parseFloat(amount).toLocaleString('en-US') + ' ကျပ်';
 };
 
 /**
@@ -230,8 +230,18 @@ Danation.statusBadge = function (status) {
         'REJECTED':   'badge-rejected',
         'APPROVED':   'badge-approved'
     };
+    var textMap = {
+        'PENDING':      'စိစစ်ဆဲ',
+        'OPEN':         'ဖွင့်လှစ်ဆဲ',
+        'GOAL_REACHED': 'ပန်းတိုင်ပြည့်',
+        'CLOSED':       'ပိတ်သိမ်းပြီး',
+        'COMPLETED':    'ပြီးမြောက်ပြီး',
+        'REJECTED':     'ငြင်းပယ်ပြီး',
+        'APPROVED':     'အတည်ပြုပြီး'
+    };
     var cls = map[status] || 'bg-secondary text-white';
-    return '<span class="badge ' + cls + '">' + Danation.escHtml(status) + '</span>';
+    var label = textMap[status] || status;
+    return '<span class="badge ' + cls + '">' + Danation.escHtml(label) + '</span>';
 };
 
 // Expose globally

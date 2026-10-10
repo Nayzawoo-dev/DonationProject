@@ -1,6 +1,6 @@
 @model LoginViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "ဝင်ရောက်ရန်";
     Layout = "_Layout";
 }
 
@@ -10,9 +10,10 @@
             <!-- Logo -->
             <div class="text-center mb-4">
                 <div class="auth-logo mb-2">
-                    <i class="bi bi-heart-fill"></i> Donation Charity
+                    <span class="logo-icon"><i class="bi bi-heart-fill"></i></span>
+                    Danation
                 </div>
-                <p class="text-muted small">Welcome back! Sign in to your account.</p>
+                <p class="text-muted small">ကြိုဆိုပါသည်! သင့်အကောင့်သို့ ဝင်ရောက်ပါ။</p>
             </div>
 
             <!-- Success/Error from TempData -->
@@ -32,7 +33,7 @@
 
                 <!-- Email -->
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email Address</label>
+                    <label asp-for="Email" class="form-label">Email လိပ်စာ</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
                         <input asp-for="Email" class="form-control border-start-0 ps-0" type="email" placeholder="you@example.com" autocomplete="email" />
@@ -42,11 +43,11 @@
 
                 <!-- Password -->
                 <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Password</label>
+                    <label asp-for="Password" class="form-label">စကားဝှက်</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="Enter your password" autocomplete="current-password" />
-                        <button class="input-group-text bg-light border-start-0" type="button" id="togglePassword" title="Show/Hide Password">
+                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="သင့်စကားဝှက် ထည့်ပါ" autocomplete="current-password" />
+                        <button class="input-group-text bg-light border-start-0" type="button" id="togglePassword" title="ပြ/ဝှက်ရန်">
                             <i class="bi bi-eye text-muted" id="toggleIcon"></i>
                         </button>
                     </div>
@@ -57,19 +58,21 @@
                 <div class="mb-4 d-flex justify-content-between align-items-center">
                     <div class="form-check mb-0">
                         <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
-                        <label asp-for="RememberMe" class="form-check-label small text-muted">Keep me signed in</label>
+                        <label asp-for="RememberMe" class="form-check-label small text-muted">ဆက်လက် ဝင်ရောက်ထားမည်</label>
                     </div>
-                    <a asp-controller="Account" asp-action="ForgotPassword" class="small text-decoration-none text-primary fw-medium">Forgot password?</a>
+                    <a asp-controller="Account" asp-action="ForgotPassword" class="small text-decoration-none text-primary fw-medium">
+                        စကားဝှက် မေ့သွားသလား?
+                    </a>
                 </div>
 
                 <!-- Submit -->
                 <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="loginBtn">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    <i class="bi bi-box-arrow-in-right me-2"></i>ဝင်ရောက်မည်
                 </button>
 
                 <div class="text-center">
-                    <span class="text-muted small">Don't have an account?</span>
-                    <a asp-controller="Account" asp-action="Register" class="fw-semibold ms-1 small">Create Account</a>
+                    <span class="text-muted small">အကောင့် မရှိသေးဘူးလား?</span>
+                    <a asp-controller="Account" asp-action="Register" class="fw-semibold ms-1 small text-success">အကောင့် ဖွင့်ရန်</a>
                 </div>
             </form>
         </div>
@@ -102,17 +105,17 @@
             summary.addClass('d-none').empty();
 
             if (btn.prop('disabled')) return;
-            btn.prop('disabled', true);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>ဝင်ရောက်နေသည်...');
 
             Danation.post('/Account/Login', form.serialize(),
                 function (res) {
-                    Notiflix.Notify.success(res.message || 'Login successful!');
+                    Notiflix.Notify.success(res.message || 'အောင်မြင်စွာ ဝင်ရောက်ပြီးပါပြီ!');
                     var target = res.redirectUrl || '/';
                     setTimeout(function () { window.location.href = target; }, 800);
                 },
                 function (err) {
-                    btn.prop('disabled', false);
-                    var msg = (err && err.message) ? err.message : 'Invalid email or password.';
+                    btn.prop('disabled', false).html('<i class="bi bi-box-arrow-in-right me-2"></i>ဝင်ရောက်မည်');
+                    var msg = (err && err.message) ? err.message : 'Email သို့မဟုတ် စကားဝှက် မှားနေသည်။';
                     summary.removeClass('d-none').html('<i class="bi bi-exclamation-triangle-fill me-2"></i>' + Danation.escHtml(msg));
                 }
             );

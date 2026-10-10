@@ -1,17 +1,15 @@
 @model UserProfileViewModel
 @{
-    ViewData["Title"] = "My Profile";
+    ViewData["Title"] = "ကျွန်ုပ်၏ Profile — Danation";
     Layout = "_Layout";
 }
-
-
 
 <div class="container py-5">
     <div class="row g-4 justify-content-center">
 
         <!-- Profile Card -->
         <div class="col-lg-4">
-            <div class="card text-center p-4">
+            <div class="card text-center p-4 shadow-sm border-0">
                 <div class="d-flex justify-content-center mb-3">
                     @if (!string.IsNullOrEmpty(Model.ProfileImage))
                     {
@@ -32,24 +30,24 @@
                     <p class="text-muted small mb-1"><i class="bi bi-telephone me-1"></i>@Model.Phone</p>
                 }
                 <div class="d-flex justify-content-center flex-wrap gap-2 my-3">
-                    <span class="badge @(Model.Role == "ADMIN" ? "bg-danger" : "badge-open")">@Model.Role</span>
+                    <span class="badge @(Model.Role == "ADMIN" ? "bg-danger" : "badge-open")">@(Model.Role == "ADMIN" ? "Admin" : "အသုံးပြုသူ")</span>
                     @if (Model.EmailVerified)
                     {
-                        <span class="badge badge-approved"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                        <span class="badge badge-approved"><i class="bi bi-patch-check-fill me-1"></i>အတည်ပြုပြီး</span>
                     }
                     @if (Model.IsActive)
                     {
-                        <span class="badge badge-open">Active</span>
+                        <span class="badge badge-open">အသုံးပြုဆဲ</span>
                     }
                     else
                     {
-                        <span class="badge badge-rejected">Inactive</span>
+                        <span class="badge badge-rejected">ပိတ်ထားသည်</span>
                     }
                 </div>
-                <p class="text-muted small"><i class="bi bi-calendar3 me-1"></i>Member since @Model.CreatedAt.ToString("MMMM yyyy")</p>
+                <p class="text-muted small"><i class="bi bi-calendar3 me-1"></i>@Model.CreatedAt.ToString("MMMM yyyy") ကတည်းက အဖွဲ့ဝင်ဖြစ်ခဲ့သည်</p>
                 <hr />
                 <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary w-100">
-                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                    <i class="bi bi-pencil-square me-2"></i>Profile ပြင်ဆင်မည်
                 </a>
             </div>
         </div>
@@ -63,23 +61,23 @@
                         <div class="stat-card stat-blue">
                             <div class="stat-icon"><i class="bi bi-megaphone"></i></div>
                             <div class="stat-value">@Model.TotalCampaigns</div>
-                            <div class="stat-label">Campaigns Created</div>
+                            <div class="stat-label">ဖန်တီးထားသော Campaign များ</div>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="stat-card stat-green">
                             <div class="stat-icon"><i class="bi bi-heart"></i></div>
                             <div class="stat-value">@Model.TotalDonations</div>
-                            <div class="stat-label">Donations Made</div>
+                            <div class="stat-label">လှူဒါန်းခဲ့မှုများ</div>
                         </div>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mb-4 flex-wrap">
                     <a asp-controller="Campaign" asp-action="My" class="btn btn-outline-primary">
-                        <i class="bi bi-megaphone me-1"></i>My Campaigns
+                        <i class="bi bi-megaphone me-1"></i>ကျွန်ုပ်၏ Campaign များ
                     </a>
                     <a asp-controller="Donation" asp-action="My" class="btn btn-outline-danger">
-                        <i class="bi bi-heart me-1"></i>My Donations
+                        <i class="bi bi-heart me-1"></i>ကျွန်ုပ်၏ လှူဒါန်းမှုများ
                     </a>
                 </div>
             }
@@ -87,22 +85,24 @@
             <!-- Change Password -->
             @if (Model.Role is not "ADMIN")
             {
-                <div class="card p-4">
-                    <h5 class="fw-bold mb-3">Change Password</h5>
+                <div class="card p-4 shadow-sm border-0">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-key me-2 text-success"></i>စကားဝှက် ပြောင်းလဲမည်</h5>
                     <form id="changePasswordForm">
                         <div class="mb-3">
-                            <label for="currentPassword" class="form-label">Current Password</label>
-                            <input type="password" class="form-control" id="currentPassword" name="CurrentPassword" required />
+                            <label for="currentPassword" class="form-label fw-semibold">လက်ရှိ စကားဝှက်</label>
+                            <input type="password" class="form-control" id="currentPassword" name="CurrentPassword" placeholder="လက်ရှိ စကားဝှက် ရိုက်ထည့်ပါ" required />
                         </div>
                         <div class="mb-3">
-                            <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="newPassword" name="NewPassword" required />
+                            <label for="newPassword" class="form-label fw-semibold">စကားဝှက် အသစ်</label>
+                            <input type="password" class="form-control" id="newPassword" name="NewPassword" placeholder="အနည်းဆုံး စာလုံး ၆ လုံး" minlength="6" required />
                         </div>
                         <div class="mb-3">
-                            <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirmNewPassword" name="ConfirmNewPassword" required />
+                            <label for="confirmNewPassword" class="form-label fw-semibold">စကားဝှက် အသစ် အတည်ပြုမည်</label>
+                            <input type="password" class="form-control" id="confirmNewPassword" name="ConfirmNewPassword" placeholder="စကားဝှက်အသစ်ကို ထပ်မံရိုက်ထည့်ပါ" required />
                         </div>
-                        <button type="submit" id="changePasswordBtn" class="btn btn-primary w-100">Change Password</button>
+                        <button type="submit" id="changePasswordBtn" class="btn btn-primary w-100 py-2">
+                            <i class="bi bi-shield-check me-2"></i>စကားဝှက် ပြောင်းလဲမည်
+                        </button>
                     </form>
                 </div>
             }

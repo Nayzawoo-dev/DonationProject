@@ -7,7 +7,7 @@
 @if (!string.IsNullOrEmpty(Model.TownshipFilter) || !string.IsNullOrEmpty(Model.SearchTerm) || !string.IsNullOrEmpty(Model.StatusFilter))
 {
     <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-        <small class="text-muted">Active filters:</small>
+        <small class="text-muted">စစ်ထုတ်မှုများ:</small>
         @if (!string.IsNullOrEmpty(Model.SearchTerm))
         {
             <span class="badge bg-primary-light text-primary px-3 py-2 d-inline-flex align-items-center gap-1" style="border-radius:50px;font-size:.8rem;">
@@ -24,13 +24,20 @@
         }
         @if (!string.IsNullOrEmpty(Model.StatusFilter))
         {
+            var stLabel = Model.StatusFilter switch {
+                "OPEN" => "ဖွင့်လှစ်ဆဲ",
+                "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+                "CLOSED" => "ပိတ်သိမ်းပြီး",
+                "COMPLETED" => "ပြီးမြောက်ပြီး",
+                _ => Model.StatusFilter.Replace("_", " ")
+            };
             <span class="badge bg-primary-light text-primary px-3 py-2 d-inline-flex align-items-center gap-1" style="border-radius:50px;font-size:.8rem;">
-                <i class="bi bi-funnel me-1"></i>@Model.StatusFilter.Replace("_"," ")
+                <i class="bi bi-funnel me-1"></i>@stLabel
                 <button type="button" class="btn-close btn-close-sm ms-1 clear-filter-btn" data-filter="status" style="font-size:8px;"></button>
             </span>
         }
         <button type="button" class="btn btn-link btn-sm text-muted text-decoration-none py-0 clear-all-filters-btn">
-            Clear all
+            စစ်ထုတ်မှု အားလုံး ရှင်းမည်
         </button>
     </div>
 }
@@ -40,9 +47,9 @@
 {
     <div class="empty-state">
         <i class="bi bi-megaphone"></i>
-        <h4>No Campaigns Found</h4>
-        <p>Try adjusting your search filters or check back later.</p>
-        <button type="button" class="btn btn-outline-primary mt-2 clear-all-filters-btn">Clear All Filters</button>
+        <h4>Campaign တစ်ခုမှ မတွေ့ပါ</h4>
+        <p>ရှာဖွေမှုများ ပြန်စစ်ကြည့်ပါ သို့မဟုတ် နောက်မှ ထပ်ကြည့်ပါ။</p>
+        <button type="button" class="btn btn-outline-primary mt-2 clear-all-filters-btn">စစ်ထုတ်မှုများ ရှင်းမည်</button>
     </div>
 }
 else
@@ -66,7 +73,12 @@ else
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-1">
                                 @{
-                                    var cardStatus = c.IsUpcoming ? "UPCOMING" : (c.Status == "CLOSED" && c.CloseReason == "GOAL_REACHED" ? "GOAL REACHED" : (c.Status == "CLOSED" && c.CloseReason == "EXPIRED" ? "EXPIRED" : c.Status.Replace("_", " ")));
+                                    var cardStatus = c.IsUpcoming ? "ကြိုတင်ကြေညာ" : (c.Status == "CLOSED" && c.CloseReason == "GOAL_REACHED" ? "ပန်းတိုင် ရောက်ပြီ" : (c.Status == "CLOSED" && c.CloseReason == "EXPIRED" ? "သက်တမ်းကုန်ပြီ" : (c.Status switch {
+                                        "OPEN" => "ဖွင့်လှစ်နေသည်",
+                                        "COMPLETED" => "ပြီးမြောက်ပြီး",
+                                        "REJECTED" => "ငြင်းပယ်ခံရပြီ",
+                                        _ => c.Status.Replace("_", " ")
+                                    })));
                                     var cardBadgeClass = c.IsUpcoming ? "badge-pending" : (c.Status switch
                                     {
                                         "OPEN" => "badge-open",
@@ -81,7 +93,7 @@ else
                                     <span class="badge @cardBadgeClass campaign-card-status">@cardStatus</span>
                                     @if (c.SurplusAmount > 0)
                                     {
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle" title="Surplus available">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle" title="Surplus ရှိနေသည်">
                                             <i class="bi bi-gift me-1"></i>Surplus
                                         </span>
                                     }
@@ -101,14 +113,14 @@ else
                             </p>
                             <div class="mt-3">
                                 <div class="d-flex justify-content-between small mb-1">
-                                    <span class="fw-semibold campaign-card-raised">@c.RaisedAmount.ToString("N0") MMK raised</span>
+                                    <span class="fw-semibold campaign-card-raised">@c.RaisedAmount.ToString("N0") MMK</span>
                                     <span class="text-muted campaign-card-percent">@c.ProgressPercent%</span>
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar campaign-card-bar @(c.ProgressPercent >= 100 ? "goal-reached" : "")"
                                          style="width:@c.ProgressPercent%"></div>
                                 </div>
-                                <div class="text-muted small mt-1">Goal: @c.GoalAmount.ToString("N0") MMK</div>
+                                <div class="text-muted small mt-1">ပန်းတိုင်: @c.GoalAmount.ToString("N0") MMK</div>
                             </div>
                             <div class="d-flex align-items-center mt-3 pt-3 border-top">
                                 @if (!string.IsNullOrEmpty(c.OwnerProfileImage))

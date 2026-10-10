@@ -76,7 +76,7 @@
         var itemHtml = '<div class="notif-item px-3 py-2 border-bottom bg-light-blue" data-id="' + data.id + '">' +
             '<div class="d-flex justify-content-between align-items-start">' +
             '<strong class="small">' + Danation.escHtml(data.title) + '</strong>' +
-            '<span class="text-muted" style="font-size:11px;white-space:nowrap;margin-left:8px;">' + Danation.escHtml(data.relativeTime || 'Just now') + '</span>' +
+            '<span class="text-muted" style="font-size:11px;white-space:nowrap;margin-left:8px;">' + Danation.escHtml(data.relativeTime || 'ယခုတင်') + '</span>' +
             '</div>' +
             '<p class="mb-0 small text-muted mt-1">' + Danation.escHtml(data.message) + '</p>' +
             '</div>';
@@ -121,13 +121,13 @@
 
     // 6. Admin: New Donation Created
     connection.on('DonationCreated', function (data) {
-        Notiflix.Notify.warning('New donation submitted by ' + (data.donorName || 'a donor') + ' for "' + (data.campaignTitle || 'Campaign') + '"');
+        Notiflix.Notify.warning('အလှူရှင် ' + (data.donorName || 'တစ်ဦး') + ' မှ "' + (data.campaignTitle || 'Campaign') + '" အတွက် အလှူငွေအသစ် လှူဒါန်းထားပါသည်');
         $(document).trigger('donationCreated', [data]);
     });
 
     // 7. Admin: New Campaign Created
     connection.on('CampaignCreated', function (data) {
-        Notiflix.Notify.info('New campaign submitted: "' + (data.title || 'Campaign') + '" by ' + (data.ownerName || 'User'));
+        Notiflix.Notify.info('Campaign အသစ် တင်သွင်းလာပါသည်: "' + (data.title || 'Campaign') + '" (တင်သွင်းသူ: ' + (data.ownerName || 'အသုံးပြုသူ') + ')');
         $(document).trigger('campaignCreated', [data]);
     });
 

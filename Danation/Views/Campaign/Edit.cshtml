@@ -1,18 +1,18 @@
 @model EditCampaignViewModel
 @{
-    ViewData["Title"] = "Edit Campaign — " + Model.Title;
+    ViewData["Title"] = "Campaign ပြင်ဆင်ရန် — " + Model.Title;
     Layout = "_Layout";
     bool canEditDetails = Model.Status == "PENDING";
 }
 
-@await Html.PartialAsync("FlashMessage");
+@await Html.PartialAsync("FlashMessage")
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
-        <a asp-controller="Campaign" asp-action="My" class="btn btn-sm btn-outline-secondary me-3">
+        <a asp-controller="Campaign" asp-action="My" class="btn btn-sm btn-outline-secondary me-3" title="ပြန်သွားမည်">
             <i class="bi bi-arrow-left"></i>
         </a>
         <div>
-            <h2 class="fw-bold mb-0">Edit Campaign</h2>
+            <h2 class="fw-bold mb-0">Campaign ပြင်ဆင်ရန်</h2>
             <p class="text-muted small mb-0">@Model.Title
                 <span class="badge badge-@Model.Status.ToLower().Replace("_","-") ms-2">@Model.Status.Replace("_"," ")</span>
             </p>
@@ -24,19 +24,19 @@
         <div class="col-lg-8">
             @if (canEditDetails)
             {
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-pencil me-2 text-primary"></i>Campaign Details</h5>
+                <div class="card p-4 mb-4 shadow-sm border-0">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-pencil me-2 text-success"></i>Campaign အချက်အလက်များ</h5>
                     <form id="editCampaignForm">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="Id" value="@Model.Id" />
                         <input type="hidden" name="Status" value="@Model.Status" />
 
                         <div class="mb-3">
-                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">ခေါင်းစဉ် <span class="text-danger">*</span></label>
                             <input type="text" name="Title" value="@Model.Title" class="form-control" maxlength="200" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Goal Amount (MMK) <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">ရန်ပုံငွေ ပန်းတိုင် (ကျပ်) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">MMK</span>
                                 <input type="number" name="GoalAmount" value="@Model.GoalAmount" class="form-control"
@@ -44,23 +44,23 @@
                             </div>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">အသေးစိတ် ဖော်ပြချက် <span class="text-danger">*</span></label>
                             <textarea name="Description" class="form-control" rows="7" maxlength="5000" required>@Model.Description</textarea>
                         </div>
 
                         <!-- Campaign Schedule -->
                         <div class="mb-3">
                             <h6 class="fw-bold text-muted text-uppercase small mb-3">
-                                <i class="bi bi-calendar-range me-1 text-primary"></i>Campaign Schedule
+                                <i class="bi bi-calendar-range me-1 text-success"></i>Campaign ပြုလုပ်မည့် ကာလ
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label" for="editStartDate">Start Date & Time <span class="text-danger">*</span></label>
+                                    <label class="form-label small fw-semibold" for="editStartDate">စတင်မည့် ရက်စွဲနှင့် အချိန် <span class="text-danger">*</span></label>
                                     <input type="datetime-local" id="editStartDate" name="StartDate"
                                            value="@(Model.StartDate?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control" required />
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="editEndDate">End Date & Time <span class="text-danger">*</span></label>
+                                    <label class="form-label small fw-semibold" for="editEndDate">ပြီးဆုံးမည့် ရက်စွဲနှင့် အချိန် <span class="text-danger">*</span></label>
                                     <input type="datetime-local" id="editEndDate" name="EndDate"
                                            value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control" required />
                                 </div>
@@ -70,15 +70,15 @@
                         <!-- Location -->
                         <div class="mb-3">
                             <h6 class="fw-bold text-muted text-uppercase small mb-3">
-                                <i class="bi bi-geo-alt me-1 text-primary"></i>Campaign Location
+                                <i class="bi bi-geo-alt me-1 text-success"></i>Campaign တည်နေရာ
                             </h6>
                             <div class="row g-3">
                                 <div class="col-md-7">
-                                    <label class="form-label">Full Address <span class="text-danger">*</span></label>
+                                    <label class="form-label small fw-semibold">လိပ်စာ အပြည့်အစုံ <span class="text-danger">*</span></label>
                                     <input type="text" name="Address" value="@Model.Address" class="form-control" maxlength="500" required />
                                 </div>
                                 <div class="col-md-5">
-                                    <label class="form-label">Township <span class="text-danger">*</span></label>
+                                    <label class="form-label small fw-semibold">မြို့နယ် <span class="text-danger">*</span></label>
                                     <input type="text" name="Township" value="@Model.Township" class="form-control" maxlength="100" required />
                                 </div>
                             </div>
@@ -86,34 +86,34 @@
 
                         <!-- Contact Phone -->
                         <div class="mb-4">
-                            <label class="form-label">Contact Phone <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">ဆက်သွယ်ရန် ဖုန်းနံပါတ် <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
                                 <input type="text" name="ContactPhone" value="@Model.ContactPhone" class="form-control" maxlength="30" required />
                             </div>
                             <div class="form-text">
                                 <i class="bi bi-lock-fill me-1 text-warning"></i>
-                                This number is <strong>only visible to admins</strong> — not shown publicly.
+                                ဤဖုန်းနံပါတ်ကို <strong>Admin သာလျှင် မြင်တွေ့ရမည်ဖြစ်ပြီး</strong> အများပြည်သူထံ မပြသပါ။
                             </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary" id="saveDetailsBtn">
-                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                            <i class="bi bi-check-circle me-2"></i>ပြောင်းလဲချက်များ သိမ်းဆည်းမည်
                         </button>
                     </form>
                 </div>
             }
             else
             {
-                <div class="alert alert-warning border-0">
-                    <i class="bi bi-lock-fill me-2"></i>Campaign details cannot be edited in <strong>@Model.Status.Replace("_"," ")</strong> status.
+                <div class="alert alert-warning border-0 mb-4">
+                    <i class="bi bi-lock-fill me-2"></i><strong>@Model.Status.Replace("_"," ")</strong> အခြေအနေတွင် Campaign အချက်အလက်များကို ပြင်ဆင်၍မရနိုင်ပါ။
                 </div>
             }
 
             <!-- Campaign Images -->
-            <div class="card p-4 mb-4">
+            <div class="card p-4 mb-4 shadow-sm border-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-images me-2 text-primary"></i>Campaign Images</h5>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-images me-2 text-success"></i>Campaign ဓာတ်ပုံများ</h5>
                     <button class="btn btn-sm btn-outline-primary" id="addImageBtn" onclick="$('#imageFileInput').click()">
                         <i class="bi bi-plus-circle me-1"></i>ဓာတ်ပုံထည့်ရန်
                     </button>
@@ -121,7 +121,7 @@
                 <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
                 <div class="mb-2">
                     <input type="text" id="imageCaptionInput" class="form-control form-control-sm"
-                           placeholder="Caption (optional)" maxlength="500" />
+                           placeholder="ဓာတ်ပုံစာတန်း (ရွေးချယ်ရန်)" maxlength="500" />
                 </div>
                 <div id="imageGallery" class="row g-2">
                     @foreach (var img in Model.Images)
@@ -129,28 +129,28 @@
                         <div class="col-4 col-md-3 position-relative image-item" data-id="@img.Id">
                             <img src="@img.ImageUrl" class="gallery-thumb w-100" alt="@img.Caption" />
                             <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-image-btn rounded-circle p-0"
-                                    style="width:24px;height:24px;line-height:1;" data-id="@img.Id" title="Delete image">
+                                    style="width:24px;height:24px;line-height:1;" data-id="@img.Id" title="ဓာတ်ပုံ ဖျက်မည်">
                                 <i class="bi bi-x" style="font-size:12px;"></i>
                             </button>
                         </div>
                     }
                     @if (Model.Images.Count == 0)
                     {
-                        <div id="noImagesMsg" class="col-12 text-muted small">No images yet. Add campaign images above.</div>
+                        <div id="noImagesMsg" class="col-12 text-muted small">ဓာတ်ပုံ မရှိသေးပါ။ အထက်ပါခလုတ်မှ ဓာတ်ပုံများ ထည့်သွင်းပါ။</div>
                     }
                 </div>
-                <div class="form-text mt-2">Max 5MB per image. JPG, PNG, WebP, GIF.</div>
+                <div class="form-text mt-2">ပုံတစ်ပုံလျှင် အများဆုံး 5MB (JPG, PNG, WebP, GIF)</div>
             </div>
 
-
-            <div class="alert alert-info border-0">
+            <div class="alert alert-info border-0 mb-4">
                 <i class="bi bi-info-circle-fill me-2"></i>
-                မိမိသည်အစိုးရအဖွဲ့အစည်းဖြစ်ပါက အစိုးရကပေး‌အပ်သောထောက်ခံလက်မှတ်ရှိရမည်ဖြစ်ပြီး သာသနာ့အဖွဲ့အစည်းဖြစ်ပါက သာသနာအဖွဲ့အစည်းထောက်ခံစာရှိရမည် မည်သည့်အဖွဲ့အစည်းနှင့်မျှမပတ်သတ်ပါက ရပ်ကွက်ထောက်ခံစာနှင့်ရဲစခန်းထောက်ခံစာကိုမှတ်ပုံနှင့်တကွပေးအပ်ရမည်။
+                မိမိသည် အစိုးရအဖွဲ့အစည်းဖြစ်ပါက အစိုးရက ပေးအပ်သော ထောက်ခံလက်မှတ် ရှိရမည်ဖြစ်ပြီး သာသနာ့အဖွဲ့အစည်းဖြစ်ပါက သာသနာအဖွဲ့အစည်း ထောက်ခံစာ ရှိရမည်။ မည်သည့်အဖွဲ့အစည်းနှင့်မျှ မပတ်သက်ပါက ရပ်ကွက်ထောက်ခံစာနှင့် ရဲစခန်းထောက်ခံစာကို မှတ်ပုံတင်နှင့်တကွ ပေးအပ်ရမည်။
             </div>
+
             <!-- Campaign Documents -->
-            <div class="card p-4">
+            <div class="card p-4 shadow-sm border-0">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark me-2 text-primary"></i>Supporting Documents</h5>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark me-2 text-success"></i>ထောက်ခံစာ အထောက်အထားများ</h5>
                     <button class="btn btn-sm btn-outline-primary" onclick="$('#docFileInput').click()">
                         <i class="bi bi-plus-circle me-1"></i>ထောက်ခံစာထည့်ရန်
                     </button>
@@ -166,31 +166,31 @@
                         <div class="d-flex align-items-center gap-2 mb-2 doc-item" data-id="@doc.Id">
                             <img src="@doc.ImageUrl" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" alt="" />
                             <div class="flex-grow-1">
-                                <div class="small fw-medium">@(doc.DocumentType ?? "Document")</div>
+                                <div class="small fw-medium">@(doc.DocumentType ?? "ထောက်ခံစာ")</div>
                                 <div class="text-muted" style="font-size:11px;">@doc.CreatedAt.ToString("MMM d, yyyy")</div>
                             </div>
-                            <button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="@doc.Id">
+                            <button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="@doc.Id" title="ဖျက်မည်">
                                 <i class="bi bi-trash" style="font-size:12px;"></i>
                             </button>
                         </div>
                     }
                     @if (Model.Documents.Count == 0)
                     {
-                        <div id="noDocsMsg" class="text-muted small">No documents yet.</div>
+                        <div id="noDocsMsg" class="text-muted small">ထောက်ခံစာ မရှိသေးပါ။</div>
                     }
                 </div>
-                <div class="form-text mt-2">Max 10MB per file. Images only (JPG, PNG, WebP, GIF).</div>
+                <div class="form-text mt-2">ဖိုင်တစ်ခုလျှင် အများဆုံး 10MB (JPG, PNG, WebP, GIF)</div>
             </div>
         </div>
 
         <!-- Sidebar Info -->
         <div class="col-lg-4">
-            <div class="card p-3">
-                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Quick Links</h6>
+            <div class="card p-3 shadow-sm border-0">
+                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-success"></i>အမြန်လင့်ခ်များ</h6>
                 <div class="d-grid gap-2">
                     <a asp-controller="Campaign" asp-action="Detail" asp-route-id="@Model.Id"
                        class="btn btn-sm btn-outline-primary" target="_blank">
-                        <i class="bi bi-eye me-1"></i>Preview Campaign
+                        <i class="bi bi-eye me-1"></i>Campaign ကြည့်ရှုမည်
                     </a>
                 </div>
             </div>
@@ -208,11 +208,11 @@
             var start = $('#editStartDate').val();
             var end = $('#editEndDate').val();
             if (!start || !end) {
-                Notiflix.Notify.warning('Please specify both start date and end date.');
+                Notiflix.Notify.warning('စတင်မည့်ရက်နှင့် ပြီးဆုံးမည့်ရက် နှစ်ခုလုံး ထည့်သွင်းပေးပါ။');
                 return;
             }
             if (new Date(end) <= new Date(start)) {
-                Notiflix.Notify.warning('End date must be later than start date.');
+                Notiflix.Notify.warning('ပြီးဆုံးမည့်ရက်သည် စတင်မည့်ရက်ထက် နောက်ကျရပါမည်။');
                 return;
             }
 
@@ -244,10 +244,10 @@
                 var html = '<div class="col-4 col-md-3 position-relative image-item" data-id="' + d.id + '">' +
                     '<img src="' + Danation.escHtml(d.imageUrl) + '" class="gallery-thumb w-100" alt="" />' +
                     '<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1 delete-image-btn rounded-circle p-0" ' +
-                    'style="width:24px;height:24px;line-height:1;" data-id="' + d.id + '" title="Delete image">' +
+                    'style="width:24px;height:24px;line-height:1;" data-id="' + d.id + '" title="ဓာတ်ပုံ ဖျက်မည်">' +
                     '<i class="bi bi-x" style="font-size:12px;"></i></button></div>';
                 $('#imageGallery').append(html);
-                Notiflix.Notify.success('Image uploaded.');
+                Notiflix.Notify.success('ဓာတ်ပုံ တင်ပြီးပါပြီ။');
                 $('#imageCaptionInput').val('');
             });
         });
@@ -256,11 +256,11 @@
         $(document).on('click', '.delete-image-btn', function () {
             var imageId = $(this).data('id');
             var item = $(this).closest('.image-item');
-            Danation.confirmPost('Delete this image?', '/Campaign/DeleteImage',
+            Danation.confirmPost('ဤဓာတ်ပုံကို ဖျက်ရန် သေချာပါသလား?', '/Campaign/DeleteImage',
                 { imageId: imageId },
                 function () {
                     item.remove();
-                    Notiflix.Notify.success('Image deleted.');
+                    Notiflix.Notify.success('ဓာတ်ပုံ ဖျက်ပြီးပါပြီ။');
                 }
             );
         });
@@ -281,12 +281,12 @@
                 var html = '<div class="d-flex align-items-center gap-2 mb-2 doc-item" data-id="' + d.id + '">' +
                     '<img src="' + Danation.escHtml(d.imageUrl) + '" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" alt="" />' +
                     '<div class="flex-grow-1">' +
-                    '<div class="small fw-medium">' + Danation.escHtml(d.documentType || 'Document') + '</div>' +
+                    '<div class="small fw-medium">' + Danation.escHtml(d.documentType || 'ထောက်ခံစာ') + '</div>' +
                     '</div>' +
-                    '<button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="' + d.id + '">' +
+                    '<button class="btn btn-sm btn-outline-danger delete-doc-btn" data-id="' + d.id + '" title="ဖျက်မည်">' +
                     '<i class="bi bi-trash" style="font-size:12px;"></i></button></div>';
                 $('#docList').append(html);
-                Notiflix.Notify.success('Document uploaded.');
+                Notiflix.Notify.success('ထောက်ခံစာ တင်ပြီးပါပြီ။');
                 $('#docTypeInput').val('');
             });
         });
@@ -295,11 +295,11 @@
         $(document).on('click', '.delete-doc-btn', function () {
             var docId = $(this).data('id');
             var item = $(this).closest('.doc-item');
-            Danation.confirmPost('Delete this document?', '/Campaign/DeleteDocument',
+            Danation.confirmPost('ဤထောက်ခံစာကို ဖျက်ရန် သေချာပါသလား?', '/Campaign/DeleteDocument',
                 { documentId: docId },
                 function () {
                     item.remove();
-                    Notiflix.Notify.success('Document deleted.');
+                    Notiflix.Notify.success('ထောက်ခံစာ ဖျက်ပြီးပါပြီ။');
                 }
             );
         });

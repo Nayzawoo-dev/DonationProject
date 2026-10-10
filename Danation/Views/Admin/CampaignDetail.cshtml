@@ -1,6 +1,6 @@
 @model CampaignDetailViewModel
 @{
-    ViewData["Title"] = "Campaign Review — " + Model.Title;
+    ViewData["Title"] = "Campaign ပြန်လည်စိစစ်ခြင်း — " + Model.Title;
     Layout = "_Layout";
     var statusClass = Model.Status switch
     {
@@ -11,19 +11,28 @@
         "REJECTED" => "badge-rejected",
         _ => "badge-pending"
     };
+    var statusText = Model.Status switch
+    {
+        "OPEN" => "ဖွင့်လှစ်ဆဲ",
+        "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+        "CLOSED" => "ပိတ်သိမ်းပြီး",
+        "COMPLETED" => "ပြီးမြောက်ပြီး",
+        "REJECTED" => "ငြင်းပယ်ခံရသည်",
+        _ => "စိစစ်ဆဲ"
+    };
 }
 
 <div class="admin-page-header">
     <div class="container">
         <div class="d-flex align-items-center gap-3">
-            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light">
+            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light" title="ရှေ့သို့ပြန်သွားရန်">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
                 <h1 class="mb-1 fs-4">@Model.Title</h1>
                 <p class="mb-0 opacity-75">
-                    Campaign by @Model.OwnerName (@@@Model.OwnerUsername) ·
-                    <span class="badge @statusClass">@Model.Status.Replace("_", " ")</span>
+                    ဦးစီးသူ @Model.OwnerName (@@@Model.OwnerUsername) ·
+                    <span class="badge @statusClass">@statusText</span>
                 </p>
             </div>
         </div>
@@ -36,7 +45,7 @@
         <div class="col-lg-8">
             <!-- Description -->
             <div class="card p-4 mb-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-file-text me-2 text-primary"></i>Campaign Description</h5>
+                <h5 class="fw-bold mb-3"><i class="bi bi-file-text me-2 text-primary"></i>Campaign အကြောင်းအရာ</h5>
                 <div style="white-space:pre-line;line-height:1.8;">@Model.Description</div>
             </div>
 
@@ -44,7 +53,7 @@
             @if (Model.Images.Count > 0)
             {
                 <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-images me-2 text-primary"></i>Campaign Images (@Model.Images.Count)</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-images me-2 text-primary"></i>Campaign ဓာတ်ပုံများ (@Model.Images.Count)</h5>
                     <div class="row g-2">
                         @foreach (var img in Model.Images)
                         {
@@ -66,7 +75,7 @@
             @if (Model.Documents.Count > 0)
             {
                 <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark me-2 text-primary"></i>Supporting Documents (@Model.Documents.Count)</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark me-2 text-primary"></i>ထောက်ခံချက် အထောက်အထားများ (@Model.Documents.Count)</h5>
                     <div class="row g-3">
                         @foreach (var doc in Model.Documents)
                         {
@@ -76,7 +85,7 @@
                                     <img src="@doc.ImageUrl" class="w-100" alt=""
                                          style="height:140px;object-fit:cover;" />
                                     <div class="p-2">
-                                        <div class="small fw-medium">@(doc.DocumentType ?? "Document")</div>
+                                        <div class="small fw-medium">@(doc.DocumentType ?? "အထောက်အထား စာရွက်စာတမ်း")</div>
                                         <div class="text-muted" style="font-size:11px;">@doc.CreatedAt.ToString("MMM d, yyyy")</div>
                                     </div>
                                 </div>
@@ -88,7 +97,7 @@
             else
             {
                 <div class="alert alert-warning border-0 mb-4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>No supporting documents uploaded for this campaign.
+                    <i class="bi bi-exclamation-triangle me-2"></i>ဤ Campaign အတွက် အထောက်အထား စာရွက်စာတမ်းများ တင်ထားခြင်း မရှိသေးပါ။
                 </div>
             }
         </div>
@@ -97,79 +106,79 @@
         <div class="col-lg-4">
             <!-- Progress -->
             <div class="card p-4 mb-3">
-                <div class="campaign-amount">@Model.RaisedAmount.ToString("N0") MMK</div>
-                <div class="campaign-goal mb-3">raised of @Model.GoalAmount.ToString("N0") MMK goal</div>
+                <div class="campaign-amount">@Model.RaisedAmount.ToString("N0") ကျပ်</div>
+                <div class="campaign-goal mb-3">ရရှိပြီး / ရည်မှန်းချက် @Model.GoalAmount.ToString("N0") ကျပ်</div>
                 <div class="progress mb-2">
                     <div class="progress-bar @(Model.ProgressPercent >= 100 ? "goal-reached" : "")"
                          style="width:@Model.ProgressPercent%"></div>
                 </div>
-                <div class="text-muted small">@Model.ProgressPercent% funded</div>
+                <div class="text-muted small">@Model.ProgressPercent% ရရှိပြီး</div>
             </div>
 
             <!-- Campaign Info -->
             <div class="card p-3 mb-3">
-                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Campaign Info</h6>
+                <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>Campaign အချက်အလက်</h6>
                 <ul class="list-unstyled small mb-0">
-                    <li class="mb-2"><span class="text-muted">Owner:</span> <span class="fw-medium">@Model.OwnerName (@@@Model.OwnerUsername)</span></li>
+                    <li class="mb-2"><span class="text-muted">ဦးစီးသူ:</span> <span class="fw-medium">@Model.OwnerName (@@@Model.OwnerUsername)</span></li>
                     @if (ViewBag.ContactPhone != null)
                     {
                         <li class="mb-2">
-                            <span class="text-muted">Contact Phone:</span>
+                            <span class="text-muted">ဆက်သွယ်ရန်ဖုန်း:</span>
                             <a href="tel:@ViewBag.ContactPhone" class="fw-semibold text-primary ms-1 text-decoration-none">
                                 <i class="bi bi-telephone-fill me-1"></i>@ViewBag.ContactPhone
                             </a>
-                            <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Admin Only</span>
+                            <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Admin သာ ကြည့်နိုင်</span>
                         </li>
                     }
                     @if (!string.IsNullOrEmpty(Model.Township))
                     {
                         <li class="mb-2">
-                            <span class="text-muted">Township:</span>
+                            <span class="text-muted">မြို့နယ်:</span>
                             <span class="fw-medium ms-1"><i class="bi bi-geo-alt me-1 text-muted"></i>@Model.Township</span>
                         </li>
                     }
                     @if (!string.IsNullOrEmpty(Model.Address))
                     {
                         <li class="mb-2">
-                            <span class="text-muted">Address:</span>
+                            <span class="text-muted">လိပ်စာ:</span>
                             <span class="fw-medium ms-1"><i class="bi bi-pin-map me-1 text-muted"></i>@Model.Address</span>
                         </li>
                     }
                     <li class="mb-2">
-                        <span class="text-muted">Start Date:</span>
-                        <span class="fw-medium ms-1">@(Model.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "Immediate")</span>
+                        <span class="text-muted">စတင်သည့်ရက်:</span>
+                        <span class="fw-medium ms-1">@(Model.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "ချက်ချင်း")</span>
                     </li>
                     <li class="mb-2">
-                        <span class="text-muted">End Date:</span>
-                        <span class="fw-medium ms-1">@(Model.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "Open-ended")</span>
+                        <span class="text-muted">ပြီးဆုံးမည့်ရက်:</span>
+                        <span class="fw-medium ms-1">@(Model.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "သတ်မှတ်မထား")</span>
                     </li>
                     <li class="mb-2">
-                        <span class="text-muted">Status:</span>
-                        <span class="badge @statusClass ms-1">@Model.Status</span>
+                        <span class="text-muted">အခြေအနေ:</span>
+                        <span class="badge @statusClass ms-1">@statusText</span>
                         @if (Model.IsUpcoming)
                         {
-                            <span class="badge bg-info text-dark ms-1">UPCOMING</span>
+                            <span class="badge bg-info text-dark ms-1">မကြာမီစတင်မည်</span>
                         }
                         @if (Model.IsExpired)
                         {
-                            <span class="badge bg-danger ms-1">EXPIRED</span>
+                            <span class="badge bg-danger ms-1">သက်တမ်းကုန်ပြီ</span>
                         }
                     </li>
                     @if (!string.IsNullOrEmpty(Model.CloseReason))
                     {
                         <li class="mb-2">
-                            <span class="text-muted">Close Reason:</span>
+                            <span class="text-muted">ပိတ်သိမ်းရသည့် အကြောင်းရင်း:</span>
                             <span class="badge bg-secondary ms-1">@Model.CloseReason</span>
                         </li>
                     }
-                    <li class="mb-2"><span class="text-muted">Created:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
+                    <li class="mb-2"><span class="text-muted">ဖန်တီးခဲ့သည့်ရက်:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
                     @if (Model.ClosedAt.HasValue)
                     {
-                        <li class="mb-2"><span class="text-muted">Closed:</span> <span class="fw-medium">@Model.ClosedAt.Value.ToString("MMM d, yyyy")</span></li>
+                        <li class="mb-2"><span class="text-muted">ပိတ်သိမ်းခဲ့သည့်ရက်:</span> <span class="fw-medium">@Model.ClosedAt.Value.ToString("MMM d, yyyy")</span></li>
                     }
                     @if (Model.CompletedAt.HasValue)
                     {
-                        <li><span class="text-muted">Completed:</span> <span class="fw-medium text-success">@Model.CompletedAt.Value.ToString("MMM d, yyyy")</span></li>
+                        <li><span class="text-muted">ပြီးမြောက်ခဲ့သည့်ရက်:</span> <span class="fw-medium text-success">@Model.CompletedAt.Value.ToString("MMM d, yyyy")</span></li>
                     }
                 </ul>
             </div>
@@ -180,25 +189,25 @@
             @if (surplusDetails != null && (surplusDetails.SurplusGenerated > 0 || surplusDetails.AllocatedReceived > 0))
             {
                 <div class="card p-3 mb-3 border-success bg-light">
-                    <h6 class="fw-bold mb-2 text-success"><i class="bi bi-piggy-bank me-1"></i>Surplus & Allocation Ledger</h6>
+                    <h6 class="fw-bold mb-2 text-success"><i class="bi bi-piggy-bank me-1"></i>Surplus & Allocation စာရင်း</h6>
                     <ul class="list-unstyled small mb-2">
                         <li class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Surplus Generated:</span>
-                            <span class="fw-bold text-success">@surplusDetails.SurplusGenerated.ToString("N0") MMK</span>
+                            <span class="text-muted">ပိုလျှံငွေ စုစုပေါင်း:</span>
+                            <span class="fw-bold text-success">@surplusDetails.SurplusGenerated.ToString("N0") ကျပ်</span>
                         </li>
                         <li class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Allocated to Others:</span>
-                            <span class="text-danger">-@surplusDetails.AllocatedOut.ToString("N0") MMK</span>
+                            <span class="text-muted">အခြားသို့ ခွဲဝေပေးမှု:</span>
+                            <span class="text-danger">-@surplusDetails.AllocatedOut.ToString("N0") ကျပ်</span>
                         </li>
                         <li class="d-flex justify-content-between border-top pt-1 mb-1">
-                            <span class="fw-semibold">Remaining Available:</span>
-                            <span class="fw-bold text-primary">@surplusDetails.AvailableSurplus.ToString("N0") MMK</span>
+                            <span class="fw-semibold">ကျန်ရှိသော ခွဲဝေနိုင်ငွေ:</span>
+                            <span class="fw-bold text-primary">@surplusDetails.AvailableSurplus.ToString("N0") ကျပ်</span>
                         </li>
                         @if (surplusDetails.AllocatedReceived > 0)
                         {
                             <li class="d-flex justify-content-between text-info border-top pt-1 mt-1">
-                                <span>Surplus Received as Target:</span>
-                                <span class="fw-bold">+@surplusDetails.AllocatedReceived.ToString("N0") MMK</span>
+                                <span>အခြားမှ ခွဲဝေရရှိငွေ:</span>
+                                <span class="fw-bold">+@surplusDetails.AllocatedReceived.ToString("N0") ကျပ်</span>
                             </li>
                         }
                     </ul>
@@ -206,7 +215,7 @@
                     {
                         <a asp-controller="Admin" asp-action="AllocateSurplus" asp-route-sourceCampaignId="@Model.Id"
                            class="btn btn-sm btn-success w-100 mt-2">
-                            <i class="bi bi-cash-stack me-1"></i>Allocate This Surplus
+                            <i class="bi bi-cash-stack me-1"></i>ဤပိုလျှံငွေအား ခွဲဝေမည်
                         </a>
                     }
                 </div>
@@ -214,13 +223,13 @@
 
             <!-- Admin Actions -->
             <div class="card p-3 border-warning">
-                <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin Management Actions</h6>
+                <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin စီမံခန့်ခွဲမှု လုပ်ဆောင်ချက်များ</h6>
                 <div class="d-grid gap-2">
 
                     @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
                     {
                         <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@Model.Id" class="btn btn-outline-primary">
-                            <i class="bi bi-pencil me-2"></i>Edit Campaign Details
+                            <i class="bi bi-pencil me-2"></i>Campaign အချက်အလက် ပြင်ဆင်မည်
                         </a>
                     }
 
@@ -228,7 +237,7 @@
                     @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
                     {
                         <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#extendDetailModal">
-                            <i class="bi bi-calendar-plus me-2"></i>Extend End Date
+                            <i class="bi bi-calendar-plus me-2"></i>ပြီးဆုံးမည့်ရက် တိုးမြှင့်မည်
                         </button>
                     }
 
@@ -236,31 +245,31 @@
                     @if (Model.Status == "PENDING")
                     {
                         <button class="btn btn-success" id="adminApproveBtn" data-id="@Model.Id">
-                            <i class="bi bi-check-circle me-2"></i>Approve Campaign
+                            <i class="bi bi-check-circle me-2"></i>Campaign အတည်ပြုမည်
                         </button>
                         <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                            <i class="bi bi-x-circle me-2"></i>Reject Campaign
+                            <i class="bi bi-x-circle me-2"></i>Campaign ငြင်းပယ်မည်
                         </button>
                     }
                     else if (Model.Status == "GOAL_REACHED" || Model.Status == "OPEN")
                     {
                         <button class="btn btn-warning" id="adminCloseBtn" data-id="@Model.Id">
-                            <i class="bi bi-lock me-2"></i>Close Campaign
+                            <i class="bi bi-lock me-2"></i>Campaign ပိတ်သိမ်းမည်
                         </button>
                     }
 
                     @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
                     {
                         <button class="btn btn-outline-success" id="adminReopenBtn" data-id="@Model.Id">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Reopen Campaign
+                            <i class="bi bi-arrow-clockwise me-2"></i>Campaign ပြန်လည်ဖွင့်လှစ်မည်
                         </button>
                     }
 
-                    @if (Model.Status == "GOAL_REACHED" || Model.Status == "CLOSED")
+                    @if ((Model.Status == "GOAL_REACHED" || Model.Status == "CLOSED") && Model.CloseReason != "EXPIRED")
                     {
                         <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@Model.Id"
                            class="btn btn-primary">
-                            <i class="bi bi-trophy me-2"></i>Create Completion
+                            <i class="bi bi-trophy me-2"></i>ပြီးမြောက်မှု မှတ်တမ်းတင်မည်
                         </a>
                     }
                 </div>
@@ -274,18 +283,18 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Reject Campaign</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Campaign ငြင်းပယ်ခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small mb-3">Provide a reason. The owner will be notified.</p>
+                <p class="text-muted small mb-3">ငြင်းပယ်ရသည့် အကြောင်းရင်းကို ထည့်သွင်းပါ။ ဖန်တီးသူထံ အသိပေးချက် ပို့ပါမည်။</p>
                 <textarea id="rejectReason" class="form-control" rows="4"
-                          placeholder="Reason for rejection…" maxlength="1000"></textarea>
+                          placeholder="ငြင်းပယ်ရသည့် အကြောင်းရင်း ရေးသားပါ..." maxlength="1000"></textarea>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-danger" id="confirmRejectBtn">
-                    <i class="bi bi-x-circle me-1"></i>Reject
+                    <i class="bi bi-x-circle me-1"></i>ငြင်းပယ်မည်
                 </button>
             </div>
         </div>
@@ -297,27 +306,27 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Extend Campaign End Date</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Campaign ပြီးဆုံးမည့်ရက် တိုးမြှင့်ခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small mb-3">Update the campaign end date. You can also reopen the campaign if it was previously closed or expired.</p>
+                <p class="text-muted small mb-3">Campaign ပြီးဆုံးမည့်ရက်ကို ပြင်ဆင်ပါ။ ပိတ်သိမ်းထားခြင်း သို့မဟုတ် သက်တမ်းကုန်နေပါက ပြန်လည်ဖွင့်လှစ်နိုင်ပါသည်။</p>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">New End Date & Time</label>
+                    <label class="form-label small fw-semibold">ပြီးဆုံးမည့်ရက်စွဲနှင့် အချိန်အသစ်</label>
                     <input type="datetime-local" id="extendDetailEndDate" class="form-control"
                            value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="extendDetailReopenCheck" checked>
                     <label class="form-check-label small" for="extendDetailReopenCheck">
-                        Reopen campaign for donations if currently closed or expired
+                        ပိတ်သိမ်းထားခြင်း သို့မဟုတ် သက်တမ်းကုန်နေပါက လှူဒါန်းမှုများ ပြန်လည်လက်ခံရန် ဖွင့်လှစ်မည်
                     </label>
                 </div>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-primary" id="confirmExtendDetailBtn">
-                    <i class="bi bi-save me-1"></i>Confirm Extension
+                    <i class="bi bi-save me-1"></i>ရက်တိုးမြှင့်မှု အတည်ပြုမည်
                 </button>
             </div>
         </div>
@@ -350,7 +359,7 @@
         $('#confirmExtendDetailBtn').on('click', function() {
             var newEndDate = $('#extendDetailEndDate').val();
             if (!newEndDate) {
-                Notiflix.Notify.warning('Please select a valid new end date.');
+                Notiflix.Notify.warning('ကျေးဇူးပြု၍ တရားဝင်သော ရက်စွဲအသစ်ကို ရွေးချယ်ပါ။');
                 return;
             }
             var reopen = $('#extendDetailReopenCheck').is(':checked');
@@ -371,11 +380,11 @@
             if (isExpired) {
                 $('#extendDetailReopenCheck').prop('checked', true);
                 new bootstrap.Modal(document.getElementById('extendDetailModal')).show();
-                Notiflix.Notify.info('This campaign has expired. Please select a new future end date to reopen.');
+                Notiflix.Notify.info('ဤ Campaign သည် သက်တမ်းကုန်ဆုံးသွားပါပြီ။ ပြန်လည်ဖွင့်လှစ်ရန် အနာဂတ်ရက်စွဲအသစ် ရွေးချယ်ပေးပါ။');
                 return;
             }
 
-            Danation.confirmPost('Reopen this campaign for donations?',
+            Danation.confirmPost('ဤ Campaign အား လှူဒါန်းမှုများ ပြန်လည်လက်ခံရန် ဖွင့်လှစ်မည်မှာ သေချာပါသလား?',
                 '/Admin/ReopenCampaign', { id: campaignId },
                 function(res) {
                     Notiflix.Notify.success(res.message);
@@ -386,7 +395,7 @@
 
         // Close Campaign
         $('#adminCloseBtn').on('click', function() {
-            Danation.confirmPost('Close this campaign? It will stop accepting donations.',
+            Danation.confirmPost('ဤ Campaign အား ပိတ်သိမ်းမည်မှာ သေချာပါသလား? လှူဒါန်းမှုများ ဆက်လက်လက်ခံတော့မည် မဟုတ်ပါ။',
                 '/Admin/CloseCampaign', { id: campaignId },
                 function(res) {
                     Notiflix.Notify.success(res.message);
@@ -396,30 +405,30 @@
         });
 
         @if (Model.Status == "PENDING")
-            {
-                <text>
-                        $('#adminApproveBtn').on('click', function () {
-                            Danation.confirmPost('Approve this campaign? It will go OPEN for donations.',
-                                '/Admin/ApproveCampaign', { id: campaignId },
-                                function(res) {
-                                    Notiflix.Notify.success(res.message);
-                                    setTimeout(function() { window.location.href = '/Admin/Campaigns'; }, 1200);
-                                }
-                            );
-                                            });
+        {
+            <text>
+                $('#adminApproveBtn').on('click', function () {
+                    Danation.confirmPost('ဤ Campaign အား အတည်ပြုမည်မှာ သေချာပါသလား? အလှူငွေများ လက်ခံရန် ချက်ချင်းဖွင့်လှစ်သွားပါမည်။',
+                        '/Admin/ApproveCampaign', { id: campaignId },
+                        function(res) {
+                            Notiflix.Notify.success(res.message);
+                            setTimeout(function() { window.location.href = '/Admin/Campaigns'; }, 1200);
+                        }
+                    );
+                });
 
-                        document.getElementById('confirmRejectBtn').addEventListener('click', function () {
-                                                var reason = document.getElementById('rejectReason').value.trim();
-                        if (!reason) {Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
-                        bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
-                        Danation.post('/Admin/RejectCampaign', {id: campaignId, reason: reason },
+                document.getElementById('confirmRejectBtn').addEventListener('click', function () {
+                    var reason = document.getElementById('rejectReason').value.trim();
+                    if (!reason) { Notiflix.Notify.warning('ကျေးဇူးပြု၍ ငြင်းပယ်ရသည့် အကြောင်းရင်း ထည့်သွင်းပါ။'); return; }
+                    bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                    Danation.post('/Admin/RejectCampaign', { id: campaignId, reason: reason },
                         function (res) {
                             Notiflix.Notify.success(res.message);
-                        setTimeout(function () {window.location.href = '/Admin/Campaigns'; }, 1200);
-                                                    }
-                        );
-                                            });
-                </text>
+                            setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
+                        }
+                    );
+                });
+            </text>
         }
     </script>
 }

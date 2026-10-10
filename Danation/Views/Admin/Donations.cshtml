@@ -1,14 +1,14 @@
 @model List<AdminDonationSummaryViewModel>
 @{
-    ViewData["Title"] = "Manage Donations — Admin";
+    ViewData["Title"] = "အလှူငွေများ စီမံခန့်ခွဲခြင်း — Admin";
     Layout = "_Layout";
     var statusFilter = ViewBag.StatusFilter as string;
 }
 
 <div class="admin-page-header">
     <div class="container">
-        <h1 class="mb-1"><i class="bi bi-cash-stack me-2"></i>Manage Donations</h1>
-        <p class="mb-0 opacity-75">Verify and approve/reject donor payment transfers</p>
+        <h1 class="mb-1"><i class="bi bi-cash-stack me-2"></i>အလှူငွေများ စီမံခန့်ခွဲခြင်း</h1>
+        <p class="mb-0 opacity-75">အလှူရှင်များ၏ လွှဲငွေဖြတ်ပိုင်းများကို စိစစ်၍ အတည်ပြုခြင်း သို့မဟုတ် ငြင်းပယ်ခြင်း ပြုလုပ်နိုင်သည်</p>
     </div>
 </div>
 
@@ -17,18 +17,18 @@
     <!-- Filter Tabs -->
     <div class="d-flex gap-2 mb-4 flex-wrap" id="donationFilterTabs">
         <button type="button" data-status=""
-           class="btn btn-sm don-filter-btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-secondary")">All</button>
+           class="btn btn-sm don-filter-btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-secondary")">အားလုံး</button>
         <button type="button" data-status="PENDING"
            class="btn btn-sm don-filter-btn @(statusFilter == "PENDING" ? "btn-warning" : "btn-outline-secondary")">
-            <i class="bi bi-clock me-1"></i>Pending
+            <i class="bi bi-clock me-1"></i>စိစစ်ဆဲ
         </button>
         <button type="button" data-status="APPROVED"
            class="btn btn-sm don-filter-btn @(statusFilter == "APPROVED" ? "btn-success" : "btn-outline-secondary")">
-            <i class="bi bi-check-circle me-1"></i>Approved
+            <i class="bi bi-check-circle me-1"></i>အတည်ပြုပြီး
         </button>
         <button type="button" data-status="REJECTED"
            class="btn btn-sm don-filter-btn @(statusFilter == "REJECTED" ? "btn-danger" : "btn-outline-secondary")">
-            <i class="bi bi-x-circle me-1"></i>Rejected
+            <i class="bi bi-x-circle me-1"></i>ငြင်းပယ်ပြီး
         </button>
     </div>
 
@@ -42,7 +42,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Transfer Screenshot</h6>
+                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>ငွေလွှဲဖြတ်ပိုင်း ဓာတ်ပုံ</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
@@ -57,24 +57,24 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle me-2 text-success"></i>Approve Donation</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle me-2 text-success"></i>အလှူငွေ အတည်ပြုခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <p class="text-muted small mb-3">
-                    Enter the actual verified transfer amount in MMK. This will be recorded as the official donation amount.
+                    စိစစ်တွေ့ရှိရသော အမှန်တကယ် လွှဲပြောင်းငွေပမာဏ (ကျပ်) ကို ထည့်သွင်းပါ။ ဤပမာဏသည် တရားဝင် အလှူငွေအဖြစ် မှတ်တမ်းတင်သွားမည်ဖြစ်ပါသည်။
                 </p>
-                <label class="form-label">Verified Amount (MMK) <span class="text-danger">*</span></label>
+                <label class="form-label">စိစစ်ပြီး အလှူငွေပမာဏ (ကျပ်) <span class="text-danger">*</span></label>
                 <div class="input-group">
-                    <span class="input-group-text bg-light">MMK</span>
+                    <span class="input-group-text bg-light">ကျပ်</span>
                     <input type="number" id="verifiedAmount" class="form-control" min="1" step="1"
-                           placeholder="Enter the actual transferred amount" />
+                           placeholder="အမှန်တကယ် လွှဲပြောင်းထားသော ပမာဏ ထည့်ပါ" />
                 </div>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-success" id="confirmApproveBtn">
-                    <i class="bi bi-check-circle me-1"></i>Approve
+                    <i class="bi bi-check-circle me-1"></i>အတည်ပြုမည်
                 </button>
             </div>
         </div>
@@ -86,18 +86,18 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Reject Donation</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>အလှူငွေ ငြင်းပယ်ခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small mb-3">Provide a reason for rejection. The donor will be notified.</p>
+                <p class="text-muted small mb-3">ငြင်းပယ်ရသည့် အကြောင်းရင်းကို ထည့်သွင်းပါ။ အလှူရှင်ထံ အသိပေးချက် ပို့ပါမည်။</p>
                 <textarea id="donRejectReason" class="form-control" rows="3"
-                          placeholder="Reason for rejection…" maxlength="1000"></textarea>
+                          placeholder="ငြင်းပယ်ရသည့် အကြောင်းရင်း ရေးသားပါ..." maxlength="1000"></textarea>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-danger" id="confirmDonRejectBtn">
-                    <i class="bi bi-x-circle me-1"></i>Reject
+                    <i class="bi bi-x-circle me-1"></i>ငြင်းပယ်မည်
                 </button>
             </div>
         </div>
@@ -137,15 +137,15 @@
 
         $('#confirmApproveBtn').on('click', function () {
             var amount = parseFloat($('#verifiedAmount').val());
-            if (!amount || amount <= 0) { Notiflix.Notify.warning('Please enter a valid amount.'); return; }
+            if (!amount || amount <= 0) { Notiflix.Notify.warning('ကျေးဇူးပြု၍ တရားဝင်သော ပမာဏ ထည့်သွင်းပါ။'); return; }
             var row = $('tr[data-id="' + approvingId + '"]');
             bootstrap.Modal.getInstance(document.getElementById('approveModal')).hide();
             Danation.post('/Admin/ApproveDonation', { id: approvingId, amount: amount },
                 function (res) {
                     Notiflix.Notify.success(res.message);
-                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('APPROVED');
-                    row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(amount).toLocaleString('en-US') + ' MMK</span>');
-                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">Verified</span>');
+                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('အတည်ပြုပြီး');
+                    row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(amount).toLocaleString('en-US') + ' ကျပ်</span>');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">စိစစ်ပြီး</span>');
                 }
             );
         });
@@ -159,14 +159,14 @@
 
         $('#confirmDonRejectBtn').on('click', function () {
             var reason = $('#donRejectReason').val().trim();
-            if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
+            if (!reason) { Notiflix.Notify.warning('ကျေးဇူးပြု၍ ငြင်းပယ်ရသည့် အကြောင်းရင်း ထည့်သွင်းပါ။'); return; }
             var row = $('tr[data-id="' + rejectingDonId + '"]');
             bootstrap.Modal.getInstance(document.getElementById('rejectDonModal')).hide();
             Danation.post('/Admin/RejectDonation', { id: rejectingDonId, reason: reason },
                 function (res) {
                     Notiflix.Notify.success(res.message);
-                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('REJECTED');
-                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">Rejected</span>');
+                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('ငြင်းပယ်ပြီး');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').html('<span class="text-muted small">ငြင်းပယ်ပြီး</span>');
                 }
             );
         });
@@ -185,14 +185,14 @@
             var row = $('#donationsTable tr[data-id="' + data.donationId + '"]');
             if (row.length) {
                 if (data.status === 'APPROVED') {
-                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('APPROVED');
+                    row.find('.don-status-badge').attr('class', 'badge badge-approved don-status-badge').text('အတည်ပြုပြီး');
                     if (data.amount) {
-                        row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(data.amount).toLocaleString('en-US') + ' MMK</span>');
+                        row.find('td:nth-child(4)').html('<span class="text-success fw-semibold small">' + parseFloat(data.amount).toLocaleString('en-US') + ' ကျပ်</span>');
                     }
-                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">' + Danation.escHtml(data.verifiedByName || 'Verified') + '</span>');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">' + Danation.escHtml(data.verifiedByName || 'စိစစ်ပြီး') + '</span>');
                 } else if (data.status === 'REJECTED') {
-                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('REJECTED');
-                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">Rejected</span>');
+                    row.find('.don-status-badge').attr('class', 'badge badge-rejected don-status-badge').text('ငြင်းပယ်ပြီး');
+                    row.find('.approve-don-btn, .reject-don-btn').closest('div').replaceWith('<span class="text-muted small">ငြင်းပယ်ပြီး</span>');
                 }
             }
         });

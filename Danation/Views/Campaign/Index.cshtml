@@ -1,6 +1,6 @@
 @model CampaignListViewModel
 @{
-    ViewData["Title"] = "Campaigns — Danation";
+    ViewData["Title"] = "Campaign များ — Danation";
     Layout = "_Layout";
 }
 
@@ -9,14 +9,16 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col">
-                <h1 class="mb-1"><i class="bi bi-grid-3x3-gap me-2"></i>All Campaigns</h1>
-                <p class="mb-0 opacity-75" id="campaignHeaderCount">@Model.TotalCount campaign@(Model.TotalCount != 1 ? "s" : "") found</p>
+                <h1 class="mb-1"><i class="bi bi-grid-3x3-gap me-2"></i>Campaign များ</h1>
+                <p class="mb-0 opacity-75" id="campaignHeaderCount">
+                    @Model.TotalCount ခု တွေ့ရှိသည်
+                </p>
             </div>
             @if (User.Identity?.IsAuthenticated == true && !User.IsInRole("ADMIN"))
             {
                 <div class="col-auto">
                     <a asp-controller="Campaign" asp-action="Create" class="btn btn-warning fw-bold">
-                        <i class="bi bi-plus-circle me-2"></i>Start a Campaign
+                        <i class="bi bi-plus-circle me-2"></i>Campaign ဖွင့်မည်
                     </a>
                 </div>
             }
@@ -32,22 +34,22 @@
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" id="searchInput" value="@Model.SearchTerm"
-                       class="form-control border-start-0 ps-0" placeholder="Search campaigns…" autocomplete="off" />
+                       class="form-control border-start-0 ps-0" placeholder="Campaign ရှာဖွေပါ…" autocomplete="off" />
             </div>
         </div>
         <div class="col-md-3">
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt text-muted"></i></span>
                 <input type="text" name="township" id="townshipInput" value="@Model.TownshipFilter"
-                       class="form-control border-start-0 ps-0" placeholder="Filter by township…" autocomplete="off" />
+                       class="form-control border-start-0 ps-0" placeholder="မြို့နယ်ဖြင့် စစ်ထုတ်ပါ…" autocomplete="off" />
             </div>
         </div>
         <div class="col-md-2">
             <select name="status" id="statusSelect" class="form-select">
-                <option value="">All Statuses</option>
+                <option value="">အခြေအနေ အားလုံး</option>
                 @{
                     string[] pubStatuses = { "OPEN", "GOAL_REACHED", "CLOSED", "COMPLETED" };
-                    string[] pubLabels   = { "Open", "Goal Reached", "Closed", "Completed" };
+                    string[] pubLabels   = { "ဖွင့်လှစ်နေသည်", "ပန်းတိုင် ရောက်ပြီ", "ပိတ်ပြီး", "ပြီးမြောက်ပြီး" };
                     for (int si = 0; si < pubStatuses.Length; si++)
                     {
                         if (Model.StatusFilter == pubStatuses[si])
@@ -64,9 +66,9 @@
         </div>
         <div class="col-md-3">
             <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>Search</button>
+                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>ရှာဖွေမည်</button>
                 <button type="button" id="clearFiltersBtn" class="btn btn-outline-secondary @(string.IsNullOrEmpty(Model.SearchTerm) && string.IsNullOrEmpty(Model.StatusFilter) && string.IsNullOrEmpty(Model.TownshipFilter) ? "d-none" : "")">
-                    <i class="bi bi-x-circle me-1"></i>Clear
+                    <i class="bi bi-x-circle me-1"></i>ရှင်းမည်
                 </button>
             </div>
         </div>
@@ -94,8 +96,7 @@
             Danation.loadPartial(url, '#campaignResultsContainer', function () {
                 var totalCount = $('#partialTotalCount').val();
                 if (totalCount !== undefined) {
-                    var s = totalCount === '1' ? '' : 's';
-                    $('#campaignHeaderCount').text(totalCount + ' campaign' + s + ' found');
+                    $('#campaignHeaderCount').text(totalCount + ' ခု တွေ့ရှိသည်');
                 }
 
                 var hasFilters = $('#searchInput').val() || $('#townshipInput').val() || $('#statusSelect').val();
@@ -175,7 +176,7 @@
         $(document).on('campaignDonationUpdated', function (e, data) {
             var card = $('.campaign-card[data-campaign-id="' + data.campaignId + '"]');
             if (card.length) {
-                card.find('.campaign-card-raised').text(Danation.formatMMK(data.raisedAmount) + ' raised');
+                card.find('.campaign-card-raised').text(Danation.formatMMK(data.raisedAmount) + ' MMK');
                 card.find('.campaign-card-percent').text(data.progressPercent + '%');
                 card.find('.campaign-card-bar')
                     .css('width', data.progressPercent + '%')
@@ -184,7 +185,7 @@
                 if (data.status === 'GOAL_REACHED') {
                     card.find('.campaign-card-status')
                         .attr('class', 'badge badge-goal-reached campaign-card-status')
-                        .text('GOAL REACHED');
+                        .text('ပန်းတိုင် ရောက်ပြီ');
                 }
             }
         });
@@ -196,12 +197,16 @@
                 var text = data.status.replace('_', ' ');
                 if (data.status === 'CLOSED') {
                     if (data.closeReason === 'EXPIRED') {
-                        text = 'EXPIRED';
+                        text = 'သက်တမ်းကုန်ပြီ';
                         badgeCls = 'badge-closed';
                     } else if (data.closeReason === 'GOAL_REACHED') {
-                        text = 'GOAL REACHED';
+                        text = 'ပန်းတိုင် ရောက်ပြီ';
                         badgeCls = 'badge-goal';
                     }
+                } else if (data.status === 'OPEN') {
+                    text = 'ဖွင့်လှစ်နေသည်';
+                } else if (data.status === 'COMPLETED') {
+                    text = 'ပြီးမြောက်ပြီး';
                 }
                 card.find('.campaign-card-status')
                     .attr('class', 'badge ' + badgeCls + ' campaign-card-status')

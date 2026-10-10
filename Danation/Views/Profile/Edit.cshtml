@@ -1,21 +1,20 @@
 @model EditProfileViewModel
 @{
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "Profile ပြင်ဆင်ရန် — Danation";
     Layout = "_Layout";
 }
-
 
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <div class="card p-4">
+            <div class="card p-4 shadow-sm border-0">
                 <div class="d-flex align-items-center mb-4">
-                    <a asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-outline-secondary me-3">
+                    <a asp-controller="Profile" asp-action="Index" class="btn btn-sm btn-outline-secondary me-3" title="ပြန်သွားမည်">
                         <i class="bi bi-arrow-left"></i>
                     </a>
                     <div>
-                        <h4 class="fw-bold mb-0">Edit Profile</h4>
-                        <p class="text-muted small mb-0">Update your personal information</p>
+                        <h4 class="fw-bold mb-0">Profile ပြင်ဆင်ရန်</h4>
+                        <p class="text-muted small mb-0">မိမိ၏ ကိုယ်ရေးအချက်အလက်များကို ပြင်ဆင်ပါ</p>
                     </div>
                 </div>
 
@@ -40,42 +39,42 @@
                             }
                             <label for="profileImageInput"
                                    class="position-absolute bottom-0 end-0 btn btn-sm btn-primary rounded-circle p-1"
-                                   style="width:32px;height:32px;cursor:pointer;" title="Change photo">
+                                   style="width:32px;height:32px;cursor:pointer;" title="ဓာတ်ပုံ ပြောင်းလဲရန်">
                                 <i class="bi bi-camera-fill" style="font-size:14px;"></i>
                             </label>
                         </div>
                         <input type="file" id="profileImageInput" name="NewProfileImage"
                                accept="image/jpeg,image/png,image/webp,image/gif" class="d-none" />
-                        <div class="text-muted small mt-2">Max 2MB. JPG, PNG, WebP, GIF.</div>
+                        <div class="text-muted small mt-2">အများဆုံး 2MB (JPG, PNG, WebP, GIF)</div>
                     </div>
 
                     <!-- Full Name -->
                     <div class="mb-3">
-                        <label class="form-label" for="fullNameInput">Full Name <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold" for="fullNameInput">အမည်အပြည့်အစုံ <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
                             <input type="text" id="fullNameInput" name="FullName" value="@Model.FullName"
                                    class="form-control border-start-0 ps-0"
-                                   placeholder="Your full name" maxlength="150" required />
+                                   placeholder="သင့်အမည်အပြည့်အစုံ" maxlength="150" required />
                         </div>
                     </div>
 
                     <!-- Phone -->
                     <div class="mb-4">
-                        <label class="form-label" for="phoneInput">Phone Number</label>
+                        <label class="form-label fw-semibold" for="phoneInput">ဖုန်းနံပါတ်</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0"><i class="bi bi-telephone text-muted"></i></span>
                             <input type="text" id="phoneInput" name="Phone" value="@Model.Phone"
                                    class="form-control border-start-0 ps-0"
-                                   placeholder="e.g. 09xxxxxxxxx" maxlength="30" />
+                                   placeholder="ဥပမာ - 09xxxxxxxxx" maxlength="30" />
                         </div>
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary" id="saveProfileBtn">
-                            <i class="bi bi-check-circle me-2"></i>Save Changes
+                        <button type="submit" class="btn btn-primary px-4" id="saveProfileBtn">
+                            <i class="bi bi-check-circle me-2"></i>သိမ်းဆည်းမည်
                         </button>
-                        <a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <a asp-controller="Profile" asp-action="Index" class="btn btn-outline-secondary">မလုပ်တော့ပါ</a>
                     </div>
                 </form>
             </div>
@@ -90,7 +89,7 @@
             var file = this.files[0];
             if (!file) return;
             if (file.size > 2 * 1024 * 1024) {
-                Notiflix.Notify.warning('Image must be under 2MB.');
+                Notiflix.Notify.warning('ဓာတ်ပုံအရွယ်အစားသည် 2MB ထက် မကျော်ရပါ။');
                 this.value = '';
                 return;
             }

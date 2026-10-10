@@ -53,6 +53,9 @@ public class CampaignController : Controller
                 return NotFound();
         }
 
+        var surplus = await _campaignService.GetCampaignSurplusDetailsAsync(id);
+        ViewBag.SurplusDetails = surplus;
+
         return View(campaign);
     }
 

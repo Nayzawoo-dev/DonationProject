@@ -1,0 +1,460 @@
+@{
+    ViewData["Title"] = "အသုံးပြုနည်း လမ်းညွှန် — Danation";
+    Layout = "_Layout";
+}
+
+<!-- Page Header -->
+<div class="admin-page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 mb-2 text-white-50 small">
+                    <i class="bi bi-book-half"></i>
+                    <span>အသုံးပြုသူ လမ်းညွှန်လက်စွဲ</span>
+                </div>
+                <h1 class="mb-2"><i class="bi bi-question-circle me-2"></i>Donation အသုံးပြုနည်း လမ်းညွှန်</h1>
+                <p class="mb-0 opacity-75">
+                    Danation ပရဟိတ Platform အား အလွယ်တကူ အသုံးပြုနိုင်ရန် အသေးစိတ် ရှင်းလင်းချက်များနှင့် လမ်းညွှန်ချက်များ
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a asp-controller="Campaign" asp-action="Index" class="btn btn-warning fw-bold">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>Campaign များ ကြည့်ရှုမည်
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Table of Contents Sidebar -->
+        <div class="col-lg-3">
+            <div class="card p-3 doc-sidebar shadow-sm border-0">
+                <h6 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+                    <i class="bi bi-list-nested me-2 text-success"></i>မာတိကာ
+                </h6>
+                <nav class="nav flex-column gap-1">
+                    <a class="nav-link" href="#sec-intro">၁။ မိတ်ဆက်</a>
+                    <a class="nav-link" href="#sec-navigation">၂။ အသုံးပြုနည်း အကျဉ်း</a>
+                    <a class="nav-link" href="#sec-auth">၃။ အကောင့်ဖွင့်ခြင်းနှင့် ဝင်ရောက်ခြင်း</a>
+                    <a class="nav-link" href="#sec-search">၄။ Campaign များ ရှာဖွေခြင်း</a>
+                    <a class="nav-link" href="#sec-create">၅။ Campaign ဖန်တီးခြင်း</a>
+                    <a class="nav-link" href="#sec-lifecycle">၆။ အတည်ပြုခြင်းနှင့် အခြေအနေများ</a>
+                    <a class="nav-link" href="#sec-donate">၇။ လှူဒါန်းခြင်း လုပ်ငန်းစဉ်</a>
+                    <a class="nav-link" href="#sec-profile">၈။ Profile နှင့် မှတ်တမ်းများ</a>
+                    <a class="nav-link" href="#sec-notifications">၉။ အသိပေးချက်များ</a>
+                    <a class="nav-link" href="#sec-forgot-pwd">၁၀။ စကားဝှက် မေ့သွားပါက</a>
+                    <a class="nav-link" href="#sec-admin">၁၁။ Admin အသုံးပြုနည်း</a>
+                    <a class="nav-link" href="#sec-troubleshoot">၁၂။ ပြဿနာ ဖြေရှင်းနည်းများ</a>
+                    <a class="nav-link" href="#sec-security">၁၃။ လုံခြုံရေးနှင့် သတိပြုရန်များ</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+
+            <!-- Section 1: Intro -->
+            <section id="sec-intro" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-heart-pulse me-2 text-success"></i>၁။ မိတ်ဆက်</h2>
+                <p>
+                    <strong>Danation</strong> သည် အမှန်တကယ် အကူအညီလိုအပ်နေသော လူမှုရေး၊ ပညာရေး၊ ကျန်းမာရေးနှင့် သဘာဝဘေးအန္တရာယ်ဆိုင်ရာ ပရဟိတ ကိစ္စရပ်များအတွက်
+                    စေတနာရှင် အလှူရှင်များနှင့် ကူညီစောင့်ရှောက်သူများကို တိုက်ရိုက်ချိတ်ဆက်ပေးသည့် ယုံကြည်စိတ်ချရသော Platform တစ်ခုဖြစ်ပါသည်။
+                </p>
+                <div class="row g-3 my-2">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-light border text-center h-100">
+                            <i class="bi bi-shield-check text-success fs-2 d-block mb-2"></i>
+                            <h6 class="fw-bold">စိစစ်အတည်ပြုမှု</h6>
+                            <p class="small text-muted mb-0">တင်သွင်းလာသော Campaign များနှင့် အလှူငွေပြေစာများကို တိကျစွာ စိစစ်ပါသည်။</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-light border text-center h-100">
+                            <i class="bi bi-eye text-primary fs-2 d-block mb-2"></i>
+                            <h6 class="fw-bold">ပွင့်လင်းမြင်သာမှု</h6>
+                            <p class="small text-muted mb-0">ရရှိငွေ၊ ပန်းတိုင်၊ ပြီးမြောက်မှုနှင့် ပိုလျှံရန်ပုံငွေ (Surplus) များကို အချိန်နှင့်တပြေးညီ ပြသပေးပါသည်။</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded bg-light border text-center h-100">
+                            <i class="bi bi-arrow-repeat text-warning fs-2 d-block mb-2"></i>
+                            <h6 class="fw-bold">Surplus ရန်ပုံငွေခွဲဝေမှု</h6>
+                            <p class="small text-muted mb-0">ပန်းတိုင်ပြည့်ပြီး ပိုလျှံငွေများကို အမှန်တကယ် လိုအပ်သော Campaign များထံ ပြန်လည်ခွဲဝေကူညီပါသည်။</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Navigation -->
+            <section id="sec-navigation" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-compass me-2 text-success"></i>၂။ အသုံးပြုနည်း အကျဉ်း (ဝဘ်ဆိုက် လမ်းညွှန်)</h2>
+                <p>ဝဘ်ဆိုက်၏ အဓိကနေရာများကို အပေါ်ဘက် Navigation Bar မှတဆင့် အလွယ်တကူ သွားရောက်နိုင်ပါသည် -</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-house-door me-2 text-success"></i><strong>ပင်မစာမျက်နှာ (Home) -</strong> Platform အကြောင်း၊ မကြာသေးမီက ဖွင့်လှစ်ထားသော Campaign များနှင့် အသုံးပြုပုံ အဆင့်ဆင့်ကို ကြည့်ရှုနိုင်ပါသည်။
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-grid-3x3-gap me-2 text-success"></i><strong>Campaign များ -</strong> လက်ရှိ လှူဒါန်းနိုင်သော Campaign များကို ခေါင်းစဉ်၊ မြို့နယ်၊ အခြေအနေအလိုက် ရှာဖွေနိုင်ပါသည်။
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-book me-2 text-success"></i><strong>အသုံးပြုနည်း (Documentation) -</strong> ဤလမ်းညွှန်စာမျက်နှာကို ဖတ်ရှုနိုင်ပါသည်။
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-bell me-2 text-success"></i><strong>အသိပေးချက် ခေါင်းလောင်း -</strong> မိမိ၏ လှူဒါန်းမှုနှင့် Campaign အခြေအနေ အပြောင်းအလဲများကို ချက်ချင်းသိရှိနိုင်ပါသည်။
+                    </li>
+                    <li class="mb-2">
+                        <i class="bi bi-person-circle me-2 text-success"></i><strong>User Profile Menu -</strong> မိမိ၏ ကိုယ်ရေးမှတ်တမ်း၊ Campaign များ၊ လှူဒါန်းမှုမှတ်တမ်းများနှင့် စကားဝှက် ပြောင်းလဲခြင်းတို့ကို ဆောင်ရွက်နိုင်ပါသည်။
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Section 3: Auth -->
+            <section id="sec-auth" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-person-badge me-2 text-success"></i>၃။ အကောင့်ဖွင့်ခြင်းနှင့် ဝင်ရောက်ခြင်း</h2>
+                
+                <h3 class="h5 fw-bold text-dark mb-3">က။ အကောင့်ဖွင့်ခြင်း (Register)</h3>
+                <div class="doc-step">
+                    <div class="doc-step-num">၁</div>
+                    <div>
+                        <strong>အကောင့်ဖွင့်ရန် စာမျက်နှာသို့ သွားပါ -</strong> အပေါ်ဘက် ညာဘက်ထောင့်ရှိ <code>အကောင့်ဖွင့်ရန်</code> ခလုတ်ကို နှိပ်ပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၂</div>
+                    <div>
+                        <strong>အချက်အလက်များ ဖြည့်စွက်ပါ -</strong> အမည်အပြည့်အစုံ၊ အသုံးပြုမည့် Username (စာလုံး ၃-၅၀ အတွင်း)၊ မှန်ကန်သော Email လိပ်စာ၊ ဆက်သွယ်ရန် ဖုန်းနံပါတ် (မဖြစ်မနေ မဟုတ်ပါ) နှင့် စကားဝှက် (အနည်းဆုံး စာလုံး ၆ လုံး) တို့ကို ဖြည့်ပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၃</div>
+                    <div>
+                        <strong>Email သို့ ပို့ထားသော OTP အတည်ပြုကုဒ် ရိုက်ထည့်ပါ -</strong> စနစ်မှ သင်၏ Email သို့ ဂဏန်း ၆ လုံးပါ အတည်ပြုကုဒ် (OTP) ပေးပို့ပါမည်။ ၎င်းကုဒ်ကို ရိုက်ထည့်ပြီး အတည်ပြုချက် ရယူပါ။ ကုဒ်မရောက်ပါက ၆၀ စက္ကန့်အကြာတွင် <code>OTP ထပ်ပို့မည်</code> ကို နှိပ်နိုင်ပါသည်။
+                    </div>
+                </div>
+
+                <div class="doc-note">
+                    <i class="bi bi-info-circle me-2"></i><strong>မှတ်ချက် -</strong> Email အတည်ပြုပြီးမှသာ အကောင့်ဝင်ရောက်၍ Campaign ဖန်တီးခြင်းနှင့် လှူဒါန်းခြင်းများကို ဆောင်ရွက်နိုင်ပါမည်။
+                </div>
+
+                <h3 class="h5 fw-bold text-dark mt-4 mb-3">ခ။ အကောင့်ဝင်ရောက်ခြင်း (Login)</h3>
+                <div class="doc-step">
+                    <div class="doc-step-num">၁</div>
+                    <div>
+                        <code>ဝင်ရောက်ရန်</code> ခလုတ်ကို နှိပ်၍ မှတ်ပုံတင်ထားသော Email နှင့် စကားဝှက်ကို ထည့်သွင်းပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၂</div>
+                    <div>
+                        <code>ဆက်လက် ဝင်ရောက်ထားမည် (Remember Me)</code> ကို အမှန်ခြစ်ထားပါက နောင်တစ်ကြိမ်တွင် အလိုအလျောက် မှတ်မိနေမည်ဖြစ်ပါသည်။
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Search -->
+            <section id="sec-search" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-search me-2 text-success"></i>၄။ Campaign များ ရှာဖွေခြင်းနှင့် စစ်ထုတ်ခြင်း</h2>
+                <p>
+                    <a asp-controller="Campaign" asp-action="Index">Campaign များ</a> စာမျက်နှာတွင် လိုအပ်သော Campaign ကို အလွယ်တကူ ရှာဖွေနိုင်ရန် စစ်ထုတ်စနစ်များ ထည့်သွင်းထားပါသည် -
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold"><i class="bi bi-fonts me-1 text-primary"></i>ခေါင်းစဉ်ဖြင့် ရှာဖွေခြင်း</h6>
+                            <p class="small text-muted mb-0">ရှာဖွေလိုသော စကားလုံး သို့မဟုတ် Campaign အမည်ကို ရိုက်ထည့်ပါက ချက်ချင်း စစ်ထုတ်ပြသပေးပါသည်။</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold"><i class="bi bi-geo-alt me-1 text-danger"></i>မြို့နယ်ဖြင့် စစ်ထုတ်ခြင်း</h6>
+                            <p class="small text-muted mb-0">မိမိ ကူညီလိုသော မြို့နယ်အမည် (ဥပမာ - ကမာရွတ်၊ မန္တလေး) ကို ထည့်သွင်းစစ်ထုတ်နိုင်ပါသည်။</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold"><i class="bi bi-funnel me-1 text-success"></i>အခြေအနေဖြင့် ရွေးချယ်ခြင်း</h6>
+                            <p class="small text-muted mb-0">ဖွင့်လှစ်နေသည် (OPEN)၊ ပန်းတိုင်ရောက်ပြီ (GOAL_REACHED)၊ ပိတ်ပြီး (CLOSED)၊ ပြီးမြောက်ပြီး (COMPLETED) စသည်ဖြင့် ရွေးချယ်နိုင်ပါသည်။</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                    စစ်ထုတ်ထားမှုများကို ပြန်လည်ရှင်းလင်းလိုပါက <code>ရှင်းမည် (Clear Filters)</code> ခလုတ်ကို နှိပ်ပါ။
+                </p>
+            </section>
+
+            <!-- Section 5: Create Campaign -->
+            <section id="sec-create" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-plus-circle me-2 text-success"></i>၅။ Campaign ဖန်တီးခြင်း လုပ်ငန်းစဉ်</h2>
+                <p>အကောင့်ဝင်ရောက်ထားသော အသုံးပြုသူ မည်သူမဆို ပရဟိတ Campaign တစ်ခုကို အောက်ပါအဆင့်များအတိုင်း တင်သွင်းနိုင်ပါသည် -</p>
+
+                <div class="doc-step">
+                    <div class="doc-step-num">၁</div>
+                    <div>
+                        <strong>Campaign ဖွင့်ရန် စာမျက်နှာသို့ သွားပါ -</strong> Navbar ရှိ <code>Campaign ဖွင့်မည်</code> ခလုတ်ကို နှိပ်ပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၂</div>
+                    <div>
+                        <strong>အဓိက အချက်အလက်များ ဖြည့်စွက်ပါ -</strong>
+                        <ul class="mt-2 mb-0 small text-muted">
+                            <li><strong>ခေါင်းစဉ် (Title) -</strong> ရှင်းလင်းထိရောက်သော ခေါင်းစဉ် (အများဆုံး စာလုံး ၂၀၀)။</li>
+                            <li><strong>ရန်ပုံငွေ ပန်းတိုင် (Goal Amount) -</strong> လိုအပ်သော ရန်ပုံငွေ ပမာဏ (အနည်းဆုံး ၁,၀၀၀ ကျပ်)။</li>
+                            <li><strong>အသေးစိတ် ဖော်ပြချက် (Description) -</strong> ရန်ပုံငွေ အသုံးပြုမည့် အစီအစဉ်နှင့် အကြောင်းရင်း (အနည်းဆုံး စာလုံး ၅၀)။</li>
+                            <li><strong>ကာလ သတ်မှတ်ချက် (Schedule) -</strong> အလှူငွေ စတင်လက်ခံမည့်ရက်နှင့် အဆုံးသတ်ရက် (End Date သည် Start Date ထက် နောက်ကျရမည်)။</li>
+                            <li><strong>တည်နေရာ (Location) -</strong> လိပ်စာ အပြည့်အစုံနှင့် မြို့နယ်။</li>
+                            <li><strong>ဆက်သွယ်ရန် ဖုန်းနံပါတ် -</strong> Admin မှ ဆက်သွယ်မေးမြန်းနိုင်ရန် ဖုန်းနံပါတ် (လူထုထံ မပြသပါ)။</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၃</div>
+                    <div>
+                        <strong>ဓာတ်ပုံနှင့် ထောက်ခံစာ အထောက်အထားများ တင်သွင်းပါ -</strong>
+                        Campaign တင်သွင်းပြီးနောက် မိမိ၏ Campaign Edit စာမျက်နှာတွင် ဆက်စပ်ဓာတ်ပုံများ (အများဆုံး 5MB) နှင့် အဖွဲ့အစည်း/ရပ်ကွက်/ရဲစခန်း ထောက်ခံစာ ဓာတ်ပုံများ (အများဆုံး 10MB) ကို ထည့်သွင်းပေးရမည်ဖြစ်ပါသည်။
+                    </div>
+                </div>
+
+                <div class="doc-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i><strong>အရေးကြီး အသိပေးချက် -</strong>
+                    Campaign အသစ်တစ်ခု တင်သွင်းပြီးပါက အခြေအနေသည် <code>အတည်ပြုချက် စောင့်ဆိုင်းဆဲ (PENDING)</code> ဖြစ်နေမည်ဖြစ်ပြီး Admin မှ စိစစ်အတည်ပြုပြီးမှသာ အများပြည်သူထံ ပေါ်ပေါက်၍ အလှူငွေများ လက်ခံနိုင်မည်ဖြစ်ပါသည်။
+                </div>
+            </section>
+
+            <!-- Section 6: Lifecycle -->
+            <section id="sec-lifecycle" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-diagram-3 me-2 text-success"></i>၆။ Campaign အတည်ပြုခြင်းနှင့် အခြေအနေများ (Status Lifecycle)</h2>
+                <p>စနစ်အတွင်းရှိ Campaign တစ်ခုစီတွင် ရှင်းလင်းသော အခြေအနေသတ်မှတ်ချက်များ ရှိပါသည် -</p>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered status-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>အတွင်းပိုင်းတန်ဖိုး</th>
+                                <th>ဖော်ပြချက် (Burmese)</th>
+                                <th>ရှင်းလင်းချက်</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>PENDING</code></td>
+                                <td><span class="badge badge-pending">အတည်ပြုချက် စောင့်ဆိုင်းဆဲ</span></td>
+                                <td>Campaign တင်သွင်းထားပြီး Admin ၏ စိစစ်မှုကို စောင့်ဆိုင်းနေသော အခြေအနေ။</td>
+                            </tr>
+                            <tr>
+                                <td><code>OPEN</code></td>
+                                <td><span class="badge badge-open">ဖွင့်လှစ်နေသည်</span></td>
+                                <td>Admin မှ အတည်ပြုပြီးဖြစ်၍ အလှူရှင်များ လှူဒါန်းနိုင်သော အခြေအနေ။ (စတင်ရက် မရောက်သေးပါက UPCOMING အဖြစ် ပြသသည်)။</td>
+                            </tr>
+                            <tr>
+                                <td><code>GOAL_REACHED</code></td>
+                                <td><span class="badge badge-goal">ပန်းတိုင် ရောက်ပြီ</span></td>
+                                <td>ရရှိသော အလှူငွေစုစုပေါင်းသည် ရည်မှန်းထားသော ပန်းတိုင်ပမာဏသို့ ရောက်ရှိသွားသော အခြေအနေ။</td>
+                            </tr>
+                            <tr>
+                                <td><code>CLOSED</code></td>
+                                <td><span class="badge badge-closed">ပိတ်သိမ်းပြီး</span></td>
+                                <td>သတ်မှတ်ရက်စွဲ ကျော်လွန်သွားခြင်း (EXPIRED) သို့မဟုတ် Admin မှ ပိတ်သိမ်းလိုက်ခြင်း။ အလှူငွေ ထပ်မံလက်မခံတော့ပါ။</td>
+                            </tr>
+                            <tr>
+                                <td><code>COMPLETED</code></td>
+                                <td><span class="badge badge-completed">ပြီးမြောက်ပြီး</span></td>
+                                <td>ရန်ပုံငွေများ အသုံးပြုမှု အထောက်အထားများနှင့်တကွ အောင်မြင်စွာ ဆောင်ရွက်ပြီးစီးကြောင်း မှတ်တမ်းတင်ပြီးသော အခြေအနေ။</td>
+                            </tr>
+                            <tr>
+                                <td><code>REJECTED</code></td>
+                                <td><span class="badge badge-rejected">ငြင်းပယ်ခံရသည်</span></td>
+                                <td>အချက်အလက် မပြည့်စုံခြင်း သို့မဟုတ် မမှန်ကန်မှုကြောင့် Admin မှ ငြင်းပယ်ထားသော အခြေအနေ။</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Section 7: Donate -->
+            <section id="sec-donate" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-heart-fill me-2 text-danger"></i>၇။ လှူဒါန်းခြင်း လုပ်ငန်းစဉ်</h2>
+                <p>ဖွင့်လှစ်ထားသော Campaign တစ်ခုသို့ လှူဒါန်းလိုပါက အောက်ပါအတိုင်း ဆောင်ရွက်နိုင်ပါသည် -</p>
+
+                <div class="doc-step">
+                    <div class="doc-step-num">၁</div>
+                    <div>
+                        <strong>Campaign အသေးစိတ် စာမျက်နှာသို့ သွားပါ -</strong> Campaign ကတ်ပြားကို နှိပ်၍ အသေးစိတ် အချက်အလက်များ ဖတ်ရှုပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၂</div>
+                    <div>
+                        <strong><code>ယခု လှူဒါန်းမည် (Donate Now)</code> ကို နှိပ်ပါ -</strong> လှူဒါန်းရေး စာမျက်နှာသို့ ရောက်ရှိပါမည်။ (အကောင့်ဝင်ထားရန် လိုအပ်ပါသည်)။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၃</div>
+                    <div>
+                        <strong>ငွေလွှဲပြောင်းပါ -</strong> ပြသထားသော KPay/WavePay ဖုန်းနံပါတ်နှင့် အကောင့်အမည်သို့ မိမိလှူဒါန်းလိုသော ပမာဏကို လွှဲပြောင်းပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၄</div>
+                    <div>
+                        <strong>ငွေလွှဲပြေစာ Screenshot တင်သွင်းပါ -</strong> ငွေလွှဲအောင်မြင်ကြောင်း Screenshot ဓာတ်ပုံကို ရွေးချယ်တင်သွင်းပြီး <code>လှူဒါန်းလွှာ တင်သွင်းမည်</code> ကို နှိပ်ပါ။
+                    </div>
+                </div>
+
+                <div class="doc-note">
+                    <i class="bi bi-clock me-2"></i><strong>ငွေပမာဏ အတည်ပြုခြင်း -</strong>
+                    လှူဒါန်းလွှာ တင်ပြီးပါက အခြေအနေသည် <code>စိစစ်ဆဲ (PENDING)</code> ဖြစ်နေပါမည်။ Admin မှ ငွေလက်ခံရရှိမှုကို စစ်ဆေးပြီး အတည်ပြုငွေပမာဏ ထည့်သွင်းအတည်ပြုပေးမှသာ Campaign ရန်ပုံငွေထဲသို့ တရားဝင် ပေါင်းထည့်ပေးမည်ဖြစ်ပါသည်။
+                </div>
+            </section>
+
+            <!-- Section 8: Profile -->
+            <section id="sec-profile" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-person-lines-fill me-2 text-success"></i>၈။ ကိုယ်ပိုင် Profile နှင့် မှတ်တမ်းများ</h2>
+                <p>အသုံးပြုသူများသည် မိမိ၏ မှတ်တမ်းများကို စနစ်တကျ ပြန်လည်ကြည့်ရှုနိုင်ပါသည် -</p>
+                <ul>
+                    <li><strong>ကျွန်ုပ်၏ Profile -</strong> ကိုယ်ရေးအချက်အလက်၊ အမည်၊ ဖုန်းနံပါတ်၊ Profile ဓာတ်ပုံ ပြောင်းလဲခြင်းနှင့် စကားဝှက် ပြောင်းလဲခြင်း။</li>
+                    <li><strong>ကျွန်ုပ်၏ Campaign များ -</strong> မိမိဖန်တီးထားသော Campaign စာရင်း၊ လက်ရှိ အခြေအနေ၊ ရရှိငွေ ပမာဏတို့ကို စောင့်ကြည့်စစ်ဆေးနိုင်ပြီး PENDING အခြေအနေတွင် ပြင်ဆင်ခြင်း/ဖျက်ခြင်း ပြုလုပ်နိုင်ပါသည်။</li>
+                    <li><strong>ကျွန်ုပ်၏ လှူဒါန်းမှုများ -</strong> မိမိလှူဒါန်းခဲ့သော အလှူစာရင်းများ၊ ငွေလွှဲပြေစာ Screenshot များနှင့် Admin မှ အတည်ပြုပေးခဲ့သည့် ရက်စွဲ/ပမာဏတို့ကို ကြည့်ရှုနိုင်ပါသည်။</li>
+                </ul>
+            </section>
+
+            <!-- Section 9: Notifications -->
+            <section id="sec-notifications" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-bell-fill me-2 text-success"></i>၉။ အသိပေးချက်များ (Notifications)</h2>
+                <p>
+                    Danation တွင် အချိန်နှင့်တပြေးညီ အသိပေးစနစ် (Real-time updates) ပါဝင်ပါသည် -
+                </p>
+                <ul>
+                    <li>မိမိ၏ Campaign ကို Admin မှ အတည်ပြုလိုက်ပါက သို့မဟုတ် ငြင်းပယ်လိုက်ပါက ချက်ချင်း အသိပေးချက် ရရှိပါမည်။</li>
+                    <li>မိမိ လှူဒါန်းထားသော ငွေလွှဲပြေစာကို Admin မှ စိစစ်အတည်ပြုပြီးပါက အတည်ပြုငွေပမာဏနှင့်တကွ အသိပေးချက် ရရှိပါမည်။</li>
+                    <li>အပေါ်ဘက် Navbar ရှိ ခေါင်းလောင်းအိုင်ကွန်တွင် မဖတ်ရသေးသော အသိပေးချက် အရေအတွက်ကို နီနီရဲရဲ ပြသပေးထားပါသည်။</li>
+                    <li><code>အားလုံးဖတ်ပြီးဟု မှတ်မည်</code> ကို နှိပ်၍ အသိပေးချက်အားလုံးကို တစ်ပြိုင်နက် ဖတ်ရှုပြီးအဖြစ် ပြောင်းလဲနိုင်ပါသည်။</li>
+                </ul>
+            </section>
+
+            <!-- Section 10: Forgot Password -->
+            <section id="sec-forgot-pwd" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-key-fill me-2 text-warning"></i>၁၀။ စကားဝှက် မေ့သွားပါက ပြန်လည်သတ်မှတ်ခြင်း</h2>
+                <div class="doc-step">
+                    <div class="doc-step-num">၁</div>
+                    <div>
+                        Login စာမျက်နှာရှိ <code>စကားဝှက် မေ့သွားသလား?</code> ကို နှိပ်ပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၂</div>
+                    <div>
+                        မိမိ၏ မှတ်ပုံတင်ထားသော Email လိပ်စာကို ထည့်သွင်းပြီး <code>အတည်ပြုကုဒ် ပို့မည်</code> ကို နှိပ်ပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၃</div>
+                    <div>
+                        Email သို့ ရောက်ရှိလာသော ဂဏန်း ၆ လုံးပါ ကုဒ်ကို ရိုက်ထည့်၍ အတည်ပြုပါ။
+                    </div>
+                </div>
+                <div class="doc-step">
+                    <div class="doc-step-num">၄</div>
+                    <div>
+                        စကားဝှက် အသစ် (အနည်းဆုံး စာလုံး ၆ လုံး) ကို ရိုက်ထည့်ပြီး အတည်ပြု သိမ်းဆည်းပါ။
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 11: Admin Guide -->
+            <section id="sec-admin" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-shield-shaded me-2 text-danger"></i>၁၁။ Admin အသုံးပြုနည်း (စီမံခန့်ခွဲသူများအတွက်)</h2>
+                <div class="doc-note mb-3">
+                    <i class="bi bi-lock me-1"></i>ဤလုပ်ဆောင်ချက်များသည် <strong>ADMIN</strong> ခွင့်ပြုချက် ရရှိထားသော အကောင့်များအတွက်သာ ဖြစ်ပါသည်။
+                </div>
+                
+                <h4 class="h6 fw-bold text-dark mt-3">က။ Campaign များ စိစစ်အတည်ပြုခြင်း</h4>
+                <p class="small text-muted">
+                    Admin Dashboard သို့မဟုတ် Campaign စီမံခန့်ခွဲမှု စာမျက်နှာတွင် <code>PENDING</code> ဖြစ်နေသော Campaign များကို ကြည့်ရှုပြီး
+                    ထောက်ခံစာ၊ အချက်အလက် ပြည့်စုံပါက <code>အတည်ပြုမည် (Approve)</code> နိုင်ပြီး၊ အချက်အလက် မမှန်ပါက အကြောင်းပြချက် ရေးသားကာ <code>ငြင်းပယ်မည် (Reject)</code> နိုင်ပါသည်။
+                </p>
+
+                <h4 class="h6 fw-bold text-dark mt-3">ခ။ အလှူငွေ စိစစ်အတည်ပြုခြင်း</h4>
+                <p class="small text-muted">
+                    လှူဒါန်းမှု စီမံခန့်ခွဲမှု စာမျက်နှာတွင် ငွေလွှဲ Screenshot ဓာတ်ပုံကို စစ်ဆေးပြီး အမှန်တကယ် လက်ခံရရှိသော ပမာဏကို ရိုက်ထည့်ကာ <code>အတည်ပြုမည် (Approve)</code> နိုင်ပါသည်။
+                    အတုအပဖြစ်ပါက အကြောင်းပြချက် ဖော်ပြပြီး <code>ငြင်းပယ်မည် (Reject)</code> နိုင်ပါသည်။
+                </p>
+
+                <h4 class="h6 fw-bold text-dark mt-3">ဂ။ ရက်တိုးခြင်းနှင့် ပြန်လည်ဖွင့်လှစ်ခြင်း (Extend & Reopen)</h4>
+                <p class="small text-muted">
+                    ပိတ်သိမ်းပြီး သို့မဟုတ် သက်တမ်းကုန်ဆုံးသွားသော Campaign များကို ရက်စွဲအသစ် သတ်မှတ်ပေးပြီး အလှူငွေများ ထပ်မံလက်ခံနိုင်စေရန် ပြန်လည်ဖွင့်လှစ်ပေးနိုင်ပါသည်။
+                </p>
+
+                <h4 class="h6 fw-bold text-dark mt-3">ဃ။ ပိုလျှံရန်ပုံငွေ ခွဲဝေမှု (Surplus Allocation)</h4>
+                <p class="small text-muted">
+                    ပန်းတိုင်ကျော်လွန် ရရှိထားသော Campaign များမှ ပိုလျှံငွေ (Available Surplus) များကို အလှူငွေ လိုအပ်နေသော အခြား <code>OPEN</code> Campaign များထံ တရားဝင် ခွဲဝေပေးနိုင်ပါသည်။
+                    ခွဲဝေမှု မှတ်တမ်းအားလုံးကို ဘဏ္ဍာရေး စာရင်းအင်းတွင် စနစ်တကျ မှတ်တမ်းတင်ထားပါသည်။
+                </p>
+
+                <h4 class="h6 fw-bold text-dark mt-3">င။ ပြီးမြောက်မှု မှတ်တမ်းတင်ခြင်း (Create Completion)</h4>
+                <p class="small text-muted">
+                    Campaign ပိတ်သိမ်းပြီးနောက် ရန်ပုံငွေများ အသုံးပြုမှု အကျဉ်းချုပ်နှင့် သက်သေခံဓာတ်ပုံများ တင်သွင်းကာ <code>COMPLETED</code> အဖြစ် အတည်ပြု မှတ်တမ်းတင်ပေးနိုင်ပါသည်။
+                </p>
+            </section>
+
+            <!-- Section 12: Troubleshooting -->
+            <section id="sec-troubleshoot" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-wrench-adjustable me-2 text-warning"></i>၁၂။ အဖြစ်များသော ပြဿနာများနှင့် ဖြေရှင်းနည်းများ</h2>
+                <div class="accordion" id="troubleshootAccordion">
+                    <div class="accordion-item mb-2 border rounded">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                Email သို့ OTP အတည်ပြုကုဒ် ရောက်မလာပါက မည်သို့လုပ်ဆောင်ရမည်နည်း?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#troubleshootAccordion">
+                            <div class="accordion-body small text-muted">
+                                ၁။ သင့် Email ၏ Spam သို့မဟုတ် Junk folder ကို စစ်ဆေးပါ။<br />
+                                ၂။ ဖြည့်စွက်ထားသော Email လိပ်စာ စာလုံးပေါင်း မှန်ကန်မှု ရှိမရှိ စစ်ဆေးပါ။<br />
+                                ၃။ ၆၀ စက္ကန့် စောင့်ဆိုင်းပြီးနောက် <code>OTP ထပ်ပို့မည်</code> ခလုတ်ကို နှိပ်ပါ။
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item mb-2 border rounded">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                ငွေလွှဲပြေစာ Screenshot တင်မရပါက မည်သို့လုပ်ဆောင်ရမည်နည်း?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#troubleshootAccordion">
+                            <div class="accordion-body small text-muted">
+                                ဓာတ်ပုံဖိုင် အရွယ်အစားသည် အများဆုံး 5MB အတွင်း ရှိရမည်ဖြစ်ပြီး ဖိုင်အမျိုးအစားသည် JPG, PNG, WebP သို့မဟုတ် GIF ဖြစ်ရပါမည်။ ဖိုင်ဆိုဒ် ကြီးလွန်းပါက ဓာတ်ပုံကို crop ပြုလုပ်၍ အရွယ်အစား လျှော့ချပြီး ပြန်လည်တင်သွင်းပါ။
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item mb-2 border rounded">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                Campaign အတည်ပြုချက် မရရှိခြင်း သို့မဟုတ် ငြင်းပယ်ခံရခြင်း အကြောင်းရင်း
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#troubleshootAccordion">
+                            <div class="accordion-body small text-muted">
+                                အဖွဲ့အစည်း/ရပ်ကွက် ထောက်ခံစာ မပါရှိခြင်း၊ အချက်အလက် မပြည့်စုံခြင်း သို့မဟုတ် ဆက်သွယ်ရန် ဖုန်းနံပါတ် မှားယွင်းနေခြင်းတို့ကြောင့် ဖြစ်နိုင်ပါသည်။ လိုအပ်သော အထောက်အထားများ ပြည့်စုံစွာ ဖြည့်စွက်၍ ပြန်လည်တင်သွင်းနိုင်ပါသည်။
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 13: Security -->
+            <section id="sec-security" class="card p-4 mb-4 shadow-sm border-0 doc-section">
+                <h2><i class="bi bi-shield-check me-2 text-success"></i>၁၃။ လုံခြုံရေးနှင့် သတိပြုရန် အချက်များ</h2>
+                <ul>
+                    <li class="mb-2"><strong>စစ်မှန်သော ငွေလွှဲပြေစာသာ တင်ပါ -</strong> Screenshot အတုများ သို့မဟုတ် သူတစ်ပါး ငွေလွှဲပြေစာများဖြင့် လိမ်လည်တင်သွင်းပါက အကောင့်ကို ပိတ်သိမ်း (Deactivate) အရေးယူပါမည်။</li>
+                    <li class="mb-2"><strong>ကိုယ်ရေးအချက်အလက် လုံခြုံမှု -</strong> မိမိ၏ အကောင့် စကားဝှက်ကို မည်သူ့ကိုမျှ မျှဝေခြင်း မပြုပါနှင့်။</li>
+                    <li class="mb-2"><strong>ဖုန်းနံပါတ် လုံခြုံမှု -</strong> Campaign တင်သွင်းရာတွင် ထည့်သွင်းသော ဆက်သွယ်ရန်ဖုန်းနံပါတ်ကို Admin မှသာ မြင်တွေ့နိုင်ပြီး လူထုထံ လျှို့ဝှက်ထိန်းသိမ်းပေးထားပါသည်။</li>
+                    <li class="mb-2"><strong>တရားဝင် အကောင့်များသို့သာ လှူဒါန်းပါ -</strong> စနစ်တွင် ဖော်ပြထားသော တရားဝင် KPay/WavePay နံပါတ်များသို့သာ တိုက်ရိုက် လွှဲပြောင်းလှူဒါန်းပါ။</li>
+                </ul>
+            </section>
+
+        </div>
+    </div>
+</div>

@@ -1,6 +1,53 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
+@{
+    ViewData["Title"] = "ကိုယ်ရေးလုံခြုံမှု မူဝါဒ — Danation";
+    Layout = "_Layout";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="admin-page-header">
+    <div class="container">
+        <h1 class="mb-1"><i class="bi bi-shield-check me-2"></i>ကိုယ်ရေးလုံခြုံမှု မူဝါဒ (Privacy Policy)</h1>
+        <p class="mb-0 opacity-75">Danation ပရဟိတ Platform ၏ အသုံးပြုသူ ကိုယ်ရေးအချက်အလက် လုံခြုံရေးဆိုင်ရာ မူဝါဒများ</p>
+    </div>
+</div>
+
+<div class="container py-5" style="max-width:860px;">
+    <div class="card p-4 p-md-5 shadow-sm border-0">
+        <h4 class="fw-bold text-success mb-3">၁။ မိတ်ဆက်နှင့် ရည်ရွယ်ချက်</h4>
+        <p class="text-muted">
+            Danation ပရဟိတ Platform သို့ ဝင်ရောက်အသုံးပြုသူများ၏ ကိုယ်ရေးအချက်အလက်များ လုံခြုံမှုရှိစေရေးသည် ကျွန်ုပ်တို့၏ အဓိက ဦးစားပေးဖြစ်ပါသည်။
+            ဤမူဝါဒသည် အသုံးပြုသူများထံမှ မည်သည့်အချက်အလက်များကို ကောက်ယူထိန်းသိမ်းပြီး မည်သို့ ကာကွယ်ထားသည်ကို ရှင်းလင်းဖော်ပြထားခြင်း ဖြစ်ပါသည်။
+        </p>
+
+        <hr class="my-4" />
+
+        <h4 class="fw-bold text-success mb-3">၂။ ကောက်ယူသော အချက်အလက်များ</h4>
+        <p class="text-muted">ကျွန်ုပ်တို့သည် အောက်ပါ အချက်အလက်များကိုသာ ကောက်ယူထိန်းသိမ်းပါသည် -</p>
+        <ul class="text-muted">
+            <li><strong>အကောင့်ဖွင့်ရာတွင် -</strong> အမည်အပြည့်အစုံ၊ Username၊ Email လိပ်စာ၊ ဖုန်းနံပါတ်။</li>
+            <li><strong>Campaign တင်သွင်းရာတွင် -</strong> Campaign ခေါင်းစဉ်၊ ရည်ရွယ်ချက်၊ သက်သေခံဓာတ်ပုံများ၊ ထောက်ခံစာများနှင့် တည်နေရာ မြို့နယ်။</li>
+            <li><strong>လှူဒါန်းမှု ပြုလုပ်ရာတွင် -</strong> ငွေလွှဲပြေစာ Screenshot နှင့် အလှူရှင်၏ အမည်။</li>
+        </ul>
+
+        <hr class="my-4" />
+
+        <h4 class="fw-bold text-success mb-3">၃။ အချက်အလက်များကို အသုံးပြုပုံ</h4>
+        <p class="text-muted">
+            ကောက်ယူရရှိသော အချက်အလက်များကို Campaign စိစစ်အတည်ပြုခြင်း၊ အလှူငွေရရှိမှု စစ်မှန်ကြောင်း စိစစ်ခြင်း၊ အရေးကြီး အသိပေးချက်များ ပေးပို့ခြင်းနှင့်
+            Platform ၏ လုံခြုံရေးကို ကာကွယ်ခြင်းများအတွက်သာ အသုံးပြုပြီး ပြင်ပသို့ မည်သည့်အခါမျှ ရောင်းချခြင်း သို့မဟုတ် အလွဲသုံးစားပြုခြင်း မရှိပါ။
+        </p>
+
+        <hr class="my-4" />
+
+        <h4 class="fw-bold text-success mb-3">၄။ လုံခြုံရေး အကာအကွယ်များ</h4>
+        <p class="text-muted">
+            စနစ်အတွင်း အသုံးပြုသူများ၏ စကားဝှက်များကို လုံခြုံသော Cryptographic Hashing စနစ်ဖြင့် သိမ်းဆည်းထားပြီး၊
+            CSRF Anti-Forgery ကာကွယ်မှုများနှင့် Rate Limiting စနစ်များကို စနစ်တကျ အသုံးပြုထားပါသည်။
+        </p>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <a asp-controller="Home" asp-action="Documentation" class="btn btn-outline-success px-4">
+                <i class="bi bi-book me-1"></i>အသုံးပြုနည်း လမ်းညွှန် ဖတ်ရှုမည်
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,14 +1,14 @@
 @model List<AdminUserViewModel>
 @{
-    ViewData["Title"] = "Manage Users — Admin";
+    ViewData["Title"] = "အသုံးပြုသူများ စီမံခန့်ခွဲခြင်း — Admin";
     Layout = "_Layout";
     var search = ViewBag.Search as string;
 }
 
 <div class="admin-page-header">
     <div class="container">
-        <h1 class="mb-1"><i class="bi bi-people me-2"></i>Manage Users</h1>
-        <p class="mb-0 opacity-75">@Model.Count user@(Model.Count != 1 ? "s" : "") registered</p>
+        <h1 class="mb-1"><i class="bi bi-people me-2"></i>အသုံးပြုသူများ စီမံခန့်ခွဲခြင်း</h1>
+        <p class="mb-0 opacity-75">မှတ်ပုံတင်ထားသူ စုစုပေါင်း @Model.Count ဦး</p>
     </div>
 </div>
 <div class="container py-4">
@@ -18,15 +18,15 @@
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" id="adminUserSearchInput" value="@search" class="form-control border-start-0 ps-0"
-                       placeholder="Search name, email, or username…" autocomplete="off" />
+                       placeholder="အမည်၊ အီးမေးလ် သို့မဟုတ် username ဖြင့် ရှာဖွေပါ..." autocomplete="off" />
             </div>
         </div>
         <div class="col-auto">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Search</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>ရှာဖွေမည်</button>
         </div>
         <div class="col-auto">
             <button type="button" id="clearAdminUsersBtn" class="btn btn-outline-secondary @(string.IsNullOrEmpty(search) ? "d-none" : "")">
-                Clear
+                ရှင်းလင်းမည်
             </button>
         </div>
     </form>
@@ -76,7 +76,7 @@
             var btn = $(this);
             var id = btn.data('id');
             var isActive = btn.data('active') === true || btn.data('active') === 'true';
-            var msg = isActive ? 'Deactivate this user? They will not be able to log in.' : 'Activate this user?';
+            var msg = isActive ? 'ဤအသုံးပြုသူအား ပိတ်ပင် (Deactivate) မည်မှာ သေချာပါသလား? အကောင့်ဝင်ရောက်နိုင်တော့မည် မဟုတ်ပါ။' : 'ဤအသုံးပြုသူအား ပြန်လည်အသုံးပြုခွင့် (Activate) ပေးမည်မှာ သေချာပါသလား?';
             var row = btn.closest('tr');
 
             Danation.confirmPost(msg, '/Admin/ToggleUserActive', { id: id },
@@ -85,15 +85,15 @@
                     if (res.isActive) {
                         btn.data('active', 'true')
                            .attr('class', 'btn btn-sm btn-outline-danger toggle-btn')
-                           .attr('title', 'Deactivate')
-                           .html('<i class="bi bi-person-slash"></i><span class="ms-1 d-none d-md-inline">Deactivate</span>');
-                        row.find('.user-status-badge').attr('class', 'badge user-status-badge badge-approved').text('Active');
+                           .attr('title', 'ပိတ်ပင်မည်')
+                           .html('<i class="bi bi-person-slash"></i><span class="ms-1 d-none d-md-inline">ပိတ်ပင်မည်</span>');
+                        row.find('.user-status-badge').attr('class', 'badge user-status-badge badge-approved').text('အသုံးပြုနိုင်');
                     } else {
                         btn.data('active', 'false')
                            .attr('class', 'btn btn-sm btn-outline-success toggle-btn')
-                           .attr('title', 'Activate')
-                           .html('<i class="bi bi-person-check"></i><span class="ms-1 d-none d-md-inline">Activate</span>');
-                        row.find('.user-status-badge').attr('class', 'badge user-status-badge badge-rejected').text('Inactive');
+                           .attr('title', 'ခွင့်ပြုမည်')
+                           .html('<i class="bi bi-person-check"></i><span class="ms-1 d-none d-md-inline">ခွင့်ပြုမည်</span>');
+                        row.find('.user-status-badge').attr('class', 'badge user-status-badge badge-rejected').text('ပိတ်ပင်ထား');
                     }
                 }
             );

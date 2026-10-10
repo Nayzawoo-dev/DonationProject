@@ -1,6 +1,6 @@
 @model RegisterViewModel
 @{
-    ViewData["Title"] = "Create Account";
+    ViewData["Title"] = "အကောင့် ဖွင့်ရန်";
     Layout = "_Layout";
 }
 
@@ -10,9 +10,10 @@
             <!-- Logo -->
             <div class="text-center mb-4">
                 <div class="auth-logo mb-2">
-                    <i class="bi bi-heart-fill"></i> Danation
+                    <span class="logo-icon"><i class="bi bi-heart-fill"></i></span>
+                    Danation
                 </div>
-                <p class="text-muted small">Join our charity platform and make a difference.</p>
+                <p class="text-muted small">ပရဟိတ Platform သို့ ဝင်ရောက်ပြီး ကမ္ဘာကို ပိုမိုကောင်းမွန်အောင် ပြောင်းလဲပါ။</p>
             </div>
 
             <form id="registerForm" asp-action="Register" asp-controller="Account" method="post">
@@ -23,10 +24,10 @@
 
                 <!-- Full Name -->
                 <div class="mb-3">
-                    <label asp-for="FullName" class="form-label">Full Name</label>
+                    <label asp-for="FullName" class="form-label">အမည်အပြည့်အစုံ</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
-                        <input asp-for="FullName" class="form-control border-start-0 ps-0" placeholder="Your full name" autocomplete="name" />
+                        <input asp-for="FullName" class="form-control border-start-0 ps-0" placeholder="သင့်အမည်အပြည့်အစုံ" autocomplete="name" />
                     </div>
                     <span asp-validation-for="FullName" class="text-danger small"></span>
                 </div>
@@ -36,15 +37,15 @@
                     <label asp-for="Username" class="form-label">Username</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-at text-muted"></i></span>
-                        <input asp-for="Username" class="form-control border-start-0 ps-0" placeholder="Choose a unique username" autocomplete="username" />
+                        <input asp-for="Username" class="form-control border-start-0 ps-0" placeholder="သင့် Username ရွေးချယ်ပါ" autocomplete="username" />
                     </div>
                     <span asp-validation-for="Username" class="text-danger small"></span>
-                    <div class="form-text small">3–50 characters, letters/numbers/underscore only.</div>
+                    <div class="form-text">စာလုံး ၃–၅၀ ကြား၊ ဂဏန်းနှင့် underscore သာ ခွင့်ပြုသည်။</div>
                 </div>
 
                 <!-- Email -->
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email Address</label>
+                    <label asp-for="Email" class="form-label">Email လိပ်စာ</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
                         <input asp-for="Email" class="form-control border-start-0 ps-0" type="email" placeholder="you@example.com" autocomplete="email" />
@@ -54,20 +55,20 @@
 
                 <!-- Phone (Optional) -->
                 <div class="mb-3">
-                    <label asp-for="Phone" class="form-label">Phone Number <span class="text-muted fw-normal">(optional)</span></label>
+                    <label asp-for="Phone" class="form-label">ဖုန်းနံပါတ် <span class="text-muted fw-normal">(မဖြစ်မနေ မဟုတ်)</span></label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-phone text-muted"></i></span>
-                        <input asp-for="Phone" class="form-control border-start-0 ps-0" placeholder="e.g. 09xxxxxxxxx" autocomplete="tel" />
+                        <input asp-for="Phone" class="form-control border-start-0 ps-0" placeholder="ဥပမာ: 09xxxxxxxxx" autocomplete="tel" />
                     </div>
                     <span asp-validation-for="Phone" class="text-danger small"></span>
                 </div>
 
                 <!-- Password -->
                 <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Password</label>
+                    <label asp-for="Password" class="form-label">စကားဝှက်</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
-                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="At least 6 characters" autocomplete="new-password" />
+                        <input asp-for="Password" class="form-control border-start-0 ps-0" type="password" id="passwordInput" placeholder="အနည်းဆုံး စာလုံး ၆ လုံး" autocomplete="new-password" />
                         <button class="input-group-text bg-light border-start-0" type="button" id="togglePassword">
                             <i class="bi bi-eye text-muted" id="toggleIcon"></i>
                         </button>
@@ -77,22 +78,22 @@
 
                 <!-- Confirm Password -->
                 <div class="mb-4">
-                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <label asp-for="ConfirmPassword" class="form-label">စကားဝှက် အတည်ပြုမည်</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock-fill text-muted"></i></span>
-                        <input asp-for="ConfirmPassword" class="form-control border-start-0 ps-0" type="password" placeholder="Re-enter your password" autocomplete="new-password" />
+                        <input asp-for="ConfirmPassword" class="form-control border-start-0 ps-0" type="password" placeholder="စကားဝှက် ထပ်မံ ထည့်ပါ" autocomplete="new-password" />
                     </div>
                     <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                 </div>
 
                 <!-- Submit -->
                 <button type="submit" class="btn btn-primary w-100 py-2 mb-3" id="registerBtn">
-                    <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                    <i class="bi bi-person-plus-fill me-2"></i>အကောင့် ဖွင့်မည်
                 </button>
 
                 <div class="text-center">
-                    <span class="text-muted small">Already have an account?</span>
-                    <a asp-controller="Account" asp-action="Login" class="fw-semibold ms-1 small">Sign In</a>
+                    <span class="text-muted small">အကောင့် ရှိပြီးသားလား?</span>
+                    <a asp-controller="Account" asp-action="Login" class="fw-semibold ms-1 small text-success">ဝင်ရောက်ရန်</a>
                 </div>
             </form>
         </div>
@@ -124,17 +125,17 @@
             summary.addClass('d-none').empty();
 
             if (btn.prop('disabled')) return;
-            btn.prop('disabled', true);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>ဖွင့်နေသည်...');
 
             Danation.post('/Account/Register', form.serialize(),
                 function (res) {
-                    Notiflix.Notify.success(res.message || 'Registration successful!');
+                    Notiflix.Notify.success(res.message || 'အကောင့် အောင်မြင်စွာ ဖွင့်ပြီးပါပြီ!');
                     var target = res.redirectUrl || '/Account/Login';
                     setTimeout(function () { window.location.href = target; }, 1000);
                 },
                 function (err) {
-                    btn.prop('disabled', false);
-                    var msg = (err && err.message) ? err.message : 'Registration failed. Please check the form.';
+                    btn.prop('disabled', false).html('<i class="bi bi-person-plus-fill me-2"></i>အကောင့် ဖွင့်မည်');
+                    var msg = (err && err.message) ? err.message : 'မှတ်ပုံတင်ခြင်း မအောင်မြင်ပါ။ ထည့်သွင်းမှုများ စစ်ဆေးပါ။';
                     summary.removeClass('d-none').html('<i class="bi bi-exclamation-triangle-fill me-2"></i>' + Danation.escHtml(msg));
                 }
             );

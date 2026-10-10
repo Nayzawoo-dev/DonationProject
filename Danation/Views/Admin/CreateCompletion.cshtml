@@ -1,17 +1,17 @@
 @model AdminCreateCompletionViewModel
 @{
-    ViewData["Title"] = "Create Completion — " + Model.CampaignTitle;
+    ViewData["Title"] = "Campaign ပြီးမြောက်မှု မှတ်တမ်းတင်ခြင်း — " + Model.CampaignTitle;
     Layout = "_Layout";
 }
 
 <div class="admin-page-header">
     <div class="container">
         <div class="d-flex align-items-center gap-3">
-            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light">
+            <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-sm btn-outline-light" title="Campaign စာရင်းသို့ ပြန်သွားရန်">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h1 class="mb-1 fs-4"><i class="bi bi-trophy me-2"></i>Create Campaign Completion</h1>
+                <h1 class="mb-1 fs-4"><i class="bi bi-trophy me-2"></i>Campaign ပြီးမြောက်မှု မှတ်တမ်းတင်ခြင်း</h1>
                 <p class="mb-0 opacity-75">@Model.CampaignTitle</p>
             </div>
         </div>
@@ -24,12 +24,11 @@
 
             <div class="alert alert-info border-0 mb-4">
                 <i class="bi bi-info-circle-fill me-2"></i>
-                Creating a completion record will set this campaign's status to <strong>COMPLETED</strong>.
-                The campaign owner and donors will be notified.
+                ပြီးမြောက်မှု မှတ်တမ်းတင်ခြင်း ပြုလုပ်ပါက ဤ Campaign ၏ အခြေအနေသည် <strong>ပြီးမြောက်ပြီး (COMPLETED)</strong> သို့ ပြောင်းလဲသွားမည်ဖြစ်ပြီး ဦးစီးသူနှင့် အလှူရှင်များထံသို့ အသိပေးချက် ပို့ပေးပါမည်။
             </div>
 
             <div class="card p-4">
-                <h5 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-primary"></i>Completion Details</h5>
+                <h5 class="fw-bold mb-4"><i class="bi bi-trophy me-2 text-primary"></i>ပြီးမြောက်မှု အသေးစိတ် အချက်အလက်</h5>
 
                 <form id="createCompletionForm" asp-action="CreateCompletion" asp-controller="Admin" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
@@ -39,10 +38,10 @@
                     <!-- Caption -->
                     <div class="mb-4">
                         <label class="form-label" for="captionInput">
-                            Completion Summary <span class="text-danger">*</span>
+                            ပြီးမြောက်မှု အကျဉ်းချုပ် <span class="text-danger">*</span>
                         </label>
                         <textarea asp-for="Caption" id="captionInput" class="form-control" rows="6"
-                                  placeholder="Describe how the campaign funds were used and the outcome achieved. Include dates, amounts spent, and beneficiaries. (minimum 10 characters)"
+                                  placeholder="အလှူငွေများကို မည်သို့ အသုံးပြုခဲ့ပုံနှင့် ရရှိခဲ့သော ရလဒ်များကို ဖော်ပြပါ။ အသုံးပြုခဲ့သည့်ရက်စွဲ၊ ကုန်ကျငွေနှင့် အကျိုးခံစားရသူများကို ထည့်သွင်းဖော်ပြပါ (အနည်းဆုံး စာလုံး ၁၀ လုံး)..."
                                   maxlength="2000"></textarea>
                         <span asp-validation-for="Caption" class="text-danger small"></span>
                         <div class="form-text text-end"><span id="captionCount">@(Model.Caption?.Length ?? 0)</span>/2000</div>
@@ -50,10 +49,10 @@
 
                     <!-- Evidence Images -->
                     <div class="mb-4">
-                        <label class="form-label">Evidence Images</label>
+                        <label class="form-label">ပြီးမြောက်မှု အထောက်အထား ဓာတ်ပုံများ</label>
                         <p class="text-muted small mb-2">
-                            Upload photos showing how funds were used (optional but recommended).
-                            Max 5MB per image.
+                            အလှူငွေများ အသုံးပြုမှု အထောက်အထား ဓာတ်ပုံများ တင်ပါ (ရွေးချယ်နိုင်သည်၊ သို့သော် တင်ရန် အကြံပြုပါသည်)။
+                            ပုံတစ်ပုံလျှင် အများဆုံး 5MB။
                         </p>
 
                         <!-- Drop zone -->
@@ -61,8 +60,8 @@
                              style="border-color:var(--border);border-style:dashed;cursor:pointer;"
                              id="evidenceDropZone">
                              <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
-                             <div class="fw-medium">Click to select images or drag & drop</div>
-                             <div class="text-muted small">JPG, PNG, WebP, GIF — Multiple files allowed</div>
+                             <div class="fw-medium">ဓာတ်ပုံများ ရွေးချယ်ရန် နှိပ်ပါ သို့မဟုတ် ဖိုင်ဆွဲထည့်ပါ</div>
+                             <div class="text-muted small">JPG, PNG, WebP, GIF — ဖိုင်အများအပြား တစ်ပြိုင်နက် တင်နိုင်သည်</div>
                         </div>
                         <input type="file" id="evidenceFileInput" name="CompletionImages"
                                accept="image/jpeg,image/png,image/webp,image/gif"
@@ -75,9 +74,9 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary px-4" id="submitCompletionBtn">
-                            <i class="bi bi-trophy me-2"></i>Create Completion Record
+                            <i class="bi bi-trophy me-2"></i>ပြီးမြောက်မှု မှတ်တမ်း အတည်ပြုမည်
                         </button>
-                        <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-outline-secondary">Cancel</a>
+                        <a asp-controller="Admin" asp-action="Campaigns" class="btn btn-outline-secondary">မလုပ်တော့ပါ</a>
                     </div>
                 </form>
             </div>
@@ -103,7 +102,7 @@
             var previews = $('#evidencePreviews').empty();
             Array.from(this.files).forEach(function (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    Notiflix.Notify.warning(file.name + ' exceeds 5MB and will be skipped.');
+                    Notiflix.Notify.warning(file.name + ' သည် 5MB ထက်ကျော်လွန်နေသဖြင့် ချန်လှပ်ထားပါမည်။');
                     return;
                 }
                 var reader = new FileReader();
@@ -134,24 +133,24 @@
             e.preventDefault();
             var caption = $('#captionInput').val().trim();
             if (caption.length < 10) {
-                Notiflix.Notify.warning('Please enter at least 10 characters for the completion summary.');
+                Notiflix.Notify.warning('ကျေးဇူးပြု၍ ပြီးမြောက်မှု အကျဉ်းချုပ်အတွက် အနည်းဆုံး စာလုံး ၁၀ လုံး ထည့်သွင်းပါ။');
                 return;
             }
 
             var btn = $('#submitCompletionBtn');
             if (btn.prop('disabled')) return;
-            btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Saving…');
+            btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>သိမ်းဆည်းနေပါသည်...');
 
             var formData = new FormData(this);
 
             Danation.upload('/Admin/CreateCompletion', formData,
                 function (res) {
-                    Notiflix.Notify.success(res.message || 'Completion record created successfully!');
+                    Notiflix.Notify.success(res.message || 'ပြီးမြောက်မှု မှတ်တမ်း အောင်မြင်စွာ တင်ပြီးပါပြီ။');
                     var target = res.redirectUrl || '/Admin/Campaigns';
                     setTimeout(function () { window.location.href = target; }, 1000);
                 },
                 function (err) {
-                    btn.prop('disabled', false).html('<i class="bi bi-trophy me-2"></i>Create Completion Record');
+                    btn.prop('disabled', false).html('<i class="bi bi-trophy me-2"></i>ပြီးမြောက်မှု မှတ်တမ်း အတည်ပြုမည်');
                 }
             );
         });

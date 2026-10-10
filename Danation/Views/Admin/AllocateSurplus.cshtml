@@ -1,6 +1,6 @@
 @model AdminSurplusAllocationViewModel
 @{
-    ViewData["Title"] = "Surplus Fund Allocation — Admin";
+    ViewData["Title"] = "ပိုလျှံရန်ပုံငွေ ခွဲဝေမှု — Admin";
     Layout = "_Layout";
     var sourceCandidates = ViewBag.SourceCandidates as List<AdminCampaignSummaryViewModel> ?? new List<AdminCampaignSummaryViewModel>();
     var targetCampaigns = ViewBag.TargetCampaigns as List<CampaignListItemViewModel> ?? new List<CampaignListItemViewModel>();
@@ -9,12 +9,12 @@
 <div class="admin-page-header">
     <div class="container">
         <div class="d-flex align-items-center gap-3">
-            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-light">
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-light" title="ဒက်ရှ်ဘုတ်သို့ ပြန်သွားရန်">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h1 class="mb-1 fs-4"><i class="bi bi-cash-stack me-2"></i>Allocate Surplus Funds</h1>
-                <p class="mb-0 opacity-75">Transfer excess campaign donations to other open campaigns in need</p>
+                <h1 class="mb-1 fs-4"><i class="bi bi-cash-stack me-2"></i>ပိုလျှံရန်ပုံငွေ ခွဲဝေမှုစနစ်</h1>
+                <p class="mb-0 opacity-75">ရည်မှန်းချက်ကျော်လွန်ရရှိထားသော Campaign မှ ပိုလျှံငွေများကို အကူအညီလိုအပ်နေသော အခြား Campaign များထံ လွှဲပြောင်းပေးအပ်ခြင်း</p>
             </div>
         </div>
     </div>
@@ -28,11 +28,11 @@
                 <div class="d-flex align-items-start">
                     <i class="bi bi-info-circle-fill fs-5 me-3 text-primary mt-1"></i>
                     <div>
-                        <div class="fw-bold">Surplus Accounting Rules</div>
+                        <div class="fw-bold">ပိုလျှံငွေ စာရင်းကိုင် စည်းမျဉ်းများ</div>
                         <div class="small">
-                            Surplus funds represent money received above a completed or goal-reached campaign's target.
-                            Allocating surplus transfers funding directly to another eligible campaign towards its goal.
-                            All allocations are atomic, auditable, and cannot exceed the source campaign's available surplus.
+                            ပိုလျှံငွေဆိုသည်မှာ ပန်းတိုင်ပြည့် သို့မဟုတ် ပြီးမြောက်သွားသော Campaign တစ်ခုတွင် ရည်မှန်းချက်ထက် ကျော်လွန်လက်ခံရရှိထားသော အလှူငွေဖြစ်ပါသည်။
+                            ပိုလျှံငွေခွဲဝေခြင်းဖြင့် အကူအညီလိုအပ်နေသော အခြားဖွင့်လှစ်ဆဲ Campaign များထံ တိုက်ရိုက်လွှဲပြောင်းပေးနိုင်ပါသည်။
+                            ခွဲဝေမှုအားလုံးကို စနစ်တကျ မှတ်တမ်းတင်ထားပြီး ရရှိနိုင်သော ပိုလျှံငွေပမာဏထက် ကျော်လွန်ခွဲဝေ၍ မရပါ။
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                     <!-- Source Campaign Selection -->
                     <div class="mb-4">
                         <label class="form-label fw-bold">
-                            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i>Source Campaign (Funds Provider)
+                            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i>မူလ Campaign (ပိုလျှံငွေ ထုတ်ပေးမည့် Campaign)
                         </label>
                         <select id="sourceCampaignSelect" class="form-select form-select-lg mb-2" onchange="changeSourceCampaign(this.value)">
                             @foreach (var src in sourceCandidates)
@@ -54,13 +54,13 @@
                                 if (src.Id == Model.SourceCampaignId)
                                 {
                                     <option value="@src.Id" selected="selected">
-                                        @src.Title — Available: @src.AvailableSurplus.ToString("N0") MMK
+                                        @src.Title — ခွဲဝေနိုင်ငွေ: @src.AvailableSurplus.ToString("N0") ကျပ်
                                     </option>
                                 }
                                 else
                                 {
                                     <option value="@src.Id">
-                                        @src.Title — Available: @src.AvailableSurplus.ToString("N0") MMK
+                                        @src.Title — ခွဲဝေနိုင်ငွေ: @src.AvailableSurplus.ToString("N0") ကျပ်
                                     </option>
                                 }
                             }
@@ -71,13 +71,13 @@
 
                         <div class="p-3 bg-light rounded-xl border d-flex justify-content-between align-items-center">
                             <div>
-                                <span class="text-muted small">Available Surplus for Allocation:</span>
+                                <span class="text-muted small">ခွဲဝေနိုင်သော ပိုလျှံငွေ စုစုပေါင်း:</span>
                                 <div class="fs-4 fw-bold text-success" id="availableSurplusDisplay">
-                                    @Model.SourceAvailableSurplus.ToString("N0") MMK
+                                    @Model.SourceAvailableSurplus.ToString("N0") ကျပ်
                                 </div>
                             </div>
                             <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
-                                <i class="bi bi-check2-circle me-1"></i>Verified Funds
+                                <i class="bi bi-check2-circle me-1"></i>စိစစ်ပြီး ရန်ပုံငွေ
                             </span>
                         </div>
                     </div>
@@ -85,39 +85,39 @@
                     <!-- Target Campaign Selection -->
                     <div class="mb-4">
                         <label asp-for="TargetCampaignId" class="form-label fw-bold">
-                            <i class="bi bi-box-arrow-in-down-left me-1 text-success"></i>Target Campaign (Recipient) <span class="text-danger">*</span>
+                            <i class="bi bi-box-arrow-in-down-left me-1 text-success"></i>လက်ခံမည့် Campaign (အလှူငွေ လိုအပ်နေသော Campaign) <span class="text-danger">*</span>
                         </label>
                         @if (targetCampaigns.Count == 0)
                         {
                             <div class="alert alert-warning border-0 mb-0">
-                                <i class="bi bi-exclamation-triangle me-2"></i>No open target campaigns available to receive funds.
+                                <i class="bi bi-exclamation-triangle me-2"></i>အလှူငွေ လက်ခံနိုင်သော ဖွင့်လှစ်ဆဲ Campaign မရှိသေးပါ။
                             </div>
                         }
                         else
                         {
                             <select asp-for="TargetCampaignId" class="form-select" required>
-                                <option value="">-- Select Target Campaign --</option>
+                                <option value="">-- လက်ခံမည့် Campaign ရွေးချယ်ပါ --</option>
                                 @foreach (var tgt in targetCampaigns)
                                 {
                                     <option value="@tgt.Id">
-                                        @tgt.Title (Goal: @tgt.GoalAmount.ToString("N0") MMK | Raised: @tgt.RaisedAmount.ToString("N0") MMK | Remaining: @tgt.RemainingAmount.ToString("N0") MMK)
+                                        @tgt.Title (ရည်မှန်းချက်: @tgt.GoalAmount.ToString("N0") ကျပ် | ရရှိပြီး: @tgt.RaisedAmount.ToString("N0") ကျပ် | လိုအပ်ငွေ: @tgt.RemainingAmount.ToString("N0") ကျပ်)
                                     </option>
                                 }
                             </select>
                         }
                         <span asp-validation-for="TargetCampaignId" class="text-danger small"></span>
-                        <div class="form-text">Only approved, active OPEN campaigns can receive surplus allocations.</div>
+                        <div class="form-text">အတည်ပြုပြီး၍ ဖွင့်လှစ်နေဆဲ (OPEN) ဖြစ်သော Campaign များသာ ပိုလျှံငွေ လက်ခံနိုင်ပါသည်။</div>
                     </div>
 
                     <!-- Allocation Amount -->
                     <div class="mb-4">
                         <label asp-for="Amount" class="form-label fw-bold">
-                            <i class="bi bi-cash me-1 text-primary"></i>Allocation Amount (MMK) <span class="text-danger">*</span>
+                            <i class="bi bi-cash me-1 text-primary"></i>ခွဲဝေမည့် ငွေပမာဏ (ကျပ်) <span class="text-danger">*</span>
                         </label>
                         <div class="input-group input-group-lg">
                             <input asp-for="Amount" type="number" step="1000" min="1" max="@Model.SourceAvailableSurplus"
                                    id="allocationAmountInput" class="form-control fw-bold" placeholder="0" required />
-                            <span class="input-group-text">MMK</span>
+                            <span class="input-group-text">ကျပ်</span>
                         </div>
                         <span asp-validation-for="Amount" class="text-danger small"></span>
 
@@ -125,28 +125,28 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.25)">25%</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.50)">50%</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.75)">75%</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setAllocationPercent(1.0)">100% (Max)</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setAllocationPercent(1.0)">100% (အများဆုံး)</button>
                         </div>
                     </div>
 
                     <!-- Notes -->
                     <div class="mb-4">
                         <label asp-for="Notes" class="form-label fw-semibold">
-                            Administrative Notes & Justification (Optional)
+                            စီမံခန့်ခွဲမှု မှတ်ချက်နှင့် အကြောင်းပြချက် (ရွေးချယ်နိုင်သည်)
                         </label>
                         <textarea asp-for="Notes" class="form-control" rows="3"
-                                  placeholder="Document why this allocation was approved (e.g., urgent community emergency, medical need)…"
+                                  placeholder="ဤခွဲဝေမှုကို အတည်ပြုရသည့် အကြောင်းရင်း (ဥပမာ - အရေးပေါ်ကယ်ဆယ်ရေး၊ ဆေးကုသမှု လိုအပ်ချက် စသည်)..."
                                   maxlength="500"></textarea>
                         <span asp-validation-for="Notes" class="text-danger small"></span>
-                        <div class="form-text">This will be preserved in the financial transaction audit ledger.</div>
+                        <div class="form-text">ဤမှတ်ချက်ကို ဘဏ္ဍာရေး စာရင်းစစ်မှတ်တမ်းတွင် ထိန်းသိမ်းထားမည်ဖြစ်ပါသည်။</div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                         <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary">
-                            Cancel
+                            မလုပ်တော့ပါ
                         </a>
                         <button type="submit" class="btn btn-primary px-4 py-2" id="submitAllocationBtn" @(targetCampaigns.Count == 0 || Model.SourceAvailableSurplus <= 0 ? "disabled" : "")>
-                            <i class="bi bi-arrow-left-right me-2"></i>Execute Surplus Allocation
+                            <i class="bi bi-arrow-left-right me-2"></i>ပိုလျှံငွေ ခွဲဝေမှု အတည်ပြုဆောင်ရွက်မည်
                         </button>
                     </div>
                 </form>
@@ -173,18 +173,18 @@
             var amt = parseFloat($('#allocationAmountInput').val());
             if (isNaN(amt) || amt <= 0) {
                 e.preventDefault();
-                Notiflix.Notify.warning('Please enter a valid allocation amount greater than zero.');
+                Notiflix.Notify.warning('ကျေးဇူးပြု၍ သုညထက် ကြီးသော တရားဝင်ငွေပမာဏ ထည့်သွင်းပါ။');
                 return false;
             }
             if (amt > maxSurplus) {
                 e.preventDefault();
-                Notiflix.Notify.failure('Allocation amount cannot exceed the available surplus balance of ' + maxSurplus.toLocaleString() + ' MMK.');
+                Notiflix.Notify.failure('ခွဲဝေမည့်ငွေပမာဏသည် ရရှိနိုင်သော ပိုလျှံငွေ ' + maxSurplus.toLocaleString() + ' ကျပ်ထက် မကျော်လွန်ရပါ။');
                 return false;
             }
             var targetId = $('#TargetCampaignId').val();
             if (!targetId) {
                 e.preventDefault();
-                Notiflix.Notify.warning('Please select a target campaign.');
+                Notiflix.Notify.warning('ကျေးဇူးပြု၍ လက်ခံမည့် Campaign ကို ရွေးချယ်ပါ။');
                 return false;
             }
         });

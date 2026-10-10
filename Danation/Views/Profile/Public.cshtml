@@ -5,19 +5,18 @@
 }
 
 <!-- Profile Header -->
-<div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:3.5rem 0 2rem;position:relative;overflow:hidden;">
-    <!-- Background decoration -->
-    <div style="position:absolute;top:-40%;right:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(92,107,192,.3) 0%,transparent 70%);pointer-events:none;"></div>
+<div style="background:linear-gradient(135deg,#1b5e20 0%,#2e7d32 50%,#388e3c 100%);padding:3.5rem 0 2rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-40%;right:-5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15) 0%,transparent 70%);pointer-events:none;"></div>
     <div class="container position-relative">
         <div class="row align-items-center gy-3">
             <div class="col-auto">
                 @if (!string.IsNullOrEmpty(Model.ProfileImage))
                 {
-                    <img src="@Model.ProfileImage" class="profile-avatar" alt="@Model.FullName" />
+                    <img src="@Model.ProfileImage" class="profile-avatar border border-3 border-white shadow" alt="@Model.FullName" />
                 }
                 else
                 {
-                    <div class="profile-avatar-placeholder">
+                    <div class="profile-avatar-placeholder border border-3 border-white shadow">
                         <i class="bi bi-person-fill"></i>
                     </div>
                 }
@@ -26,7 +25,7 @@
                 <h1 class="fw-bold text-white mb-1" style="font-size:1.8rem;">@Model.FullName</h1>
                 <p class="text-white-50 mb-2">@@@Model.Username</p>
                 <p class="text-white-50 small mb-0">
-                    <i class="bi bi-calendar3 me-1"></i>Member since @Model.MemberSince.ToString("MMMM yyyy")
+                    <i class="bi bi-calendar3 me-1"></i>@Model.MemberSince.ToString("MMMM yyyy") ကတည်းက အဖွဲ့ဝင်ဖြစ်ခဲ့သည်
                 </p>
             </div>
         </div>
@@ -34,15 +33,15 @@
         <!-- Stats row -->
         <div class="row g-3 mt-3">
             <div class="col-6 col-md-3">
-                <div style="background:rgba(255,255,255,.08);border-radius:var(--radius);padding:1rem;text-align:center;">
+                <div style="background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border-radius:var(--radius);padding:1rem;text-align:center;">
                     <div class="fw-bold fs-3 text-white">@Model.TotalCampaignsCreated</div>
-                    <div class="text-white-50 small">Campaigns Created</div>
+                    <div class="text-white-50 small">ဖန်တီးထားသော Campaign များ</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
-                <div style="background:rgba(255,255,255,.08);border-radius:var(--radius);padding:1rem;text-align:center;">
+                <div style="background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border-radius:var(--radius);padding:1rem;text-align:center;">
                     <div class="fw-bold fs-3 text-white">@Model.TotalCampaignsDonated</div>
-                    <div class="text-white-50 small">Campaigns Supported</div>
+                    <div class="text-white-50 small">ကူညီလှူဒါန်းထားသော Campaign များ</div>
                 </div>
             </div>
         </div>
@@ -54,9 +53,9 @@
 
         <!-- Campaigns Created -->
         <div class="col-lg-6">
-            <div class="card p-4 h-100">
+            <div class="card p-4 h-100 shadow-sm border-0">
                 <h5 class="fw-bold mb-4">
-                    <i class="bi bi-megaphone me-2 text-primary"></i>Campaigns Created
+                    <i class="bi bi-megaphone me-2 text-success"></i>ဖန်တီးထားသော Campaign များ
                     <span class="badge bg-primary-light text-primary ms-2" style="font-size:.75rem;border-radius:50px;">@Model.TotalCampaignsCreated</span>
                 </h5>
 
@@ -64,7 +63,7 @@
                 {
                     <div class="empty-state py-3">
                         <i class="bi bi-megaphone" style="font-size:2.5rem;"></i>
-                        <p class="mt-2 mb-0">No active campaigns yet.</p>
+                        <p class="mt-2 mb-0">ဖွင့်လှစ်ထားသော Campaign မရှိသေးပါ။</p>
                     </div>
                 }
                 else
@@ -72,6 +71,14 @@
                     <div class="d-flex flex-column gap-3">
                         @foreach (var c in Model.CampaignsCreated)
                         {
+                            var cStatus = c.Status switch
+                            {
+                                "OPEN" => "ဖွင့်လှစ်ဆဲ",
+                                "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+                                "CLOSED" => "ပိတ်သိမ်း",
+                                "COMPLETED" => "ပြီးမြောက်",
+                                _ => c.Status.Replace("_", " ")
+                            };
                             <a href="@Url.Action("Detail", "Campaign", new { id = c.Id })"
                                class="d-flex align-items-center gap-3 text-decoration-none p-2 rounded-xl"
                                style="transition:var(--transition);" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background=''">
@@ -83,7 +90,7 @@
                                 {
                                     <div class="rounded-xl d-flex align-items-center justify-content-center"
                                          style="width:56px;height:56px;min-width:56px;background:var(--primary-light);">
-                                        <i class="bi bi-heart-fill text-primary" style="font-size:1.3rem;opacity:.5;"></i>
+                                        <i class="bi bi-heart-fill text-success" style="font-size:1.3rem;opacity:.5;"></i>
                                     </div>
                                 }
                                 <div class="min-w-0">
@@ -93,7 +100,7 @@
                                         <div class="text-muted" style="font-size:.78rem;"><i class="bi bi-geo-alt me-1"></i>@c.Township</div>
                                     }
                                     <div class="mt-1">
-                                        <span class="badge badge-@c.Status.ToLower().Replace("_","-")" style="font-size:.68rem;">@c.Status.Replace("_"," ")</span>
+                                        <span class="badge badge-@c.Status.ToLower().Replace("_","-")" style="font-size:.68rem;">@cStatus</span>
                                         <span class="text-muted ms-2" style="font-size:.72rem;"><i class="bi bi-calendar3 me-1"></i>@c.CreatedAt.ToString("MMM yyyy")</span>
                                     </div>
                                 </div>
@@ -105,8 +112,8 @@
                     {
                         <div class="text-center mt-3">
                             <a asp-controller="Campaign" asp-action="Index"
-                               class="text-primary small text-decoration-none fw-semibold">
-                                View all @Model.TotalCampaignsCreated campaigns <i class="bi bi-arrow-right"></i>
+                               class="text-success small text-decoration-none fw-semibold">
+                                Campaign @Model.TotalCampaignsCreated ခုလုံး ကြည့်ရှုမည် <i class="bi bi-arrow-right"></i>
                             </a>
                         </div>
                     }
@@ -116,17 +123,17 @@
 
         <!-- Campaigns Supported (Donated) -->
         <div class="col-lg-6">
-            <div class="card p-4 h-100">
+            <div class="card p-4 h-100 shadow-sm border-0">
                 <h5 class="fw-bold mb-4">
-                    <i class="bi bi-heart me-2 text-danger"></i>Campaigns Supported
-                    <span class="badge bg-danger text-white ms-2" style="font-size:.75rem;border-radius:50px;background:#fce4ec!important;color:#c62828!important;">@Model.TotalCampaignsDonated</span>
+                    <i class="bi bi-heart me-2 text-danger"></i>ကူညီလှူဒါန်းထားသော Campaign များ
+                    <span class="badge bg-danger-subtle text-danger ms-2" style="font-size:.75rem;border-radius:50px;">@Model.TotalCampaignsDonated</span>
                 </h5>
 
                 @if (Model.CampaignsDonated.Count == 0)
                 {
                     <div class="empty-state py-3">
                         <i class="bi bi-heart" style="font-size:2.5rem;"></i>
-                        <p class="mt-2 mb-0">No campaigns supported yet.</p>
+                        <p class="mt-2 mb-0">လှူဒါန်းမှု မရှိသေးပါ။</p>
                     </div>
                 }
                 else
@@ -151,7 +158,7 @@
                                 <div class="min-w-0">
                                     <div class="fw-semibold text-dark small text-truncate">@d.CampaignTitle</div>
                                     <div class="text-muted" style="font-size:.75rem;">
-                                        <i class="bi bi-calendar3 me-1"></i>Supported @d.DonatedAt.ToString("MMM d, yyyy")
+                                        <i class="bi bi-calendar3 me-1"></i>@d.DonatedAt.ToString("MMM d, yyyy") တွင် လှူဒါန်းခဲ့သည်
                                     </div>
                                 </div>
                                 <i class="bi bi-chevron-right ms-auto text-muted" style="flex-shrink:0;"></i>

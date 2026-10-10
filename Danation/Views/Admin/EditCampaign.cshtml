@@ -1,18 +1,27 @@
 @model AdminEditCampaignViewModel
 @{
-    ViewData["Title"] = "Admin Edit Campaign — " + Model.Title;
+    ViewData["Title"] = "Admin Campaign ပြင်ဆင်ခြင်း — " + Model.Title;
     Layout = "_Layout";
+    var statusDisplay = Model.Status switch
+    {
+        "OPEN" => "ဖွင့်လှစ်ဆဲ",
+        "GOAL_REACHED" => "ပန်းတိုင်ပြည့်",
+        "CLOSED" => "ပိတ်သိမ်းပြီး",
+        "COMPLETED" => "ပြီးမြောက်ပြီး",
+        "REJECTED" => "ငြင်းပယ်ခံရသည်",
+        _ => "စိစစ်ဆဲ"
+    };
 }
 
 <div class="admin-page-header">
     <div class="container">
         <div class="d-flex align-items-center gap-3">
-            <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-light">
+            <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-light" title="ရှေ့သို့ပြန်သွားရန်">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h1 class="mb-1 fs-4"><i class="bi bi-pencil-square me-2"></i>Admin Campaign Editor</h1>
-                <p class="mb-0 opacity-75">Modify campaign properties, schedule, contact info, or re-open status</p>
+                <h1 class="mb-1 fs-4"><i class="bi bi-pencil-square me-2"></i>Admin Campaign ပြင်ဆင်ရေးစနစ်</h1>
+                <p class="mb-0 opacity-75">Campaign ၏ အချက်အလက်များ၊ သတ်မှတ်ရက်၊ ဆက်သွယ်ရန်နှင့် ပြန်လည်ဖွင့်လှစ်ခြင်း အခြေအနေကို ပြင်ဆင်နိုင်သည်</p>
             </div>
         </div>
     </div>
@@ -24,11 +33,11 @@
             <div class="card p-4 shadow-sm border-0">
                 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
                     <div>
-                        <span class="badge bg-secondary mb-1">Status: @Model.Status</span>
-                        <div class="small text-muted">Owner: <strong>@Model.OwnerName</strong> · Raised: <strong>@Model.RaisedAmount.ToString("N0") MMK</strong></div>
+                        <span class="badge bg-secondary mb-1">အခြေအနေ: @statusDisplay</span>
+                        <div class="small text-muted">ဦးစီးသူ: <strong>@Model.OwnerName</strong> · ရရှိပြီး: <strong>@Model.RaisedAmount.ToString("N0") ကျပ်</strong></div>
                     </div>
                     <span class="badge bg-warning text-dark px-3 py-2">
-                        <i class="bi bi-shield-lock me-1"></i>Admin Authorized
+                        <i class="bi bi-shield-lock me-1"></i>Admin သီးသန့် လုပ်ပိုင်ခွင့်
                     </span>
                 </div>
 
@@ -43,44 +52,44 @@
 
                     <!-- Title -->
                     <div class="mb-3">
-                        <label asp-for="Title" class="form-label fw-semibold">Campaign Title <span class="text-danger">*</span></label>
-                        <input asp-for="Title" class="form-control" placeholder="Enter campaign title…" maxlength="200" required />
+                        <label asp-for="Title" class="form-label fw-semibold">Campaign ခေါင်းစဉ် <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="Campaign ခေါင်းစဉ် ရေးသားပါ..." maxlength="200" required />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
 
                     <!-- Description -->
                     <div class="mb-3">
-                        <label asp-for="Description" class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
-                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Full campaign details…" required></textarea>
+                        <label asp-for="Description" class="form-label fw-semibold">အသေးစိတ် ဖော်ပြချက် <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Campaign ၏ ပြည့်စုံသော အချက်အလက်များကို ရှင်းလင်းစွာ ရေးသားပါ..." required></textarea>
                         <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
 
                     <!-- Goal Amount -->
                     <div class="mb-3">
-                        <label asp-for="GoalAmount" class="form-label fw-semibold">Goal Amount (MMK) <span class="text-danger">*</span></label>
+                        <label asp-for="GoalAmount" class="form-label fw-semibold">ရည်မှန်းငွေပမာဏ (ကျပ်) <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input asp-for="GoalAmount" type="number" step="1000" min="10000" max="1000000000" class="form-control" required />
-                            <span class="input-group-text">MMK</span>
+                            <span class="input-group-text">ကျပ်</span>
                         </div>
-                        <div class="form-text">Current raised total: @Model.RaisedAmount.ToString("N0") MMK</div>
+                        <div class="form-text">လက်ရှိ ရရှိထားသော အလှူငွေ: @Model.RaisedAmount.ToString("N0") ကျပ်</div>
                         <span asp-validation-for="GoalAmount" class="text-danger small"></span>
                     </div>
 
                     <!-- Schedule -->
                     <div class="card bg-light border-0 p-3 mb-3">
-                        <h6 class="fw-bold mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>Campaign Scheduling</h6>
+                        <h6 class="fw-bold mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>Campaign ကာလ သတ်မှတ်ချက်</h6>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label asp-for="StartDate" class="form-label small fw-semibold">Start Date & Time</label>
+                                <label asp-for="StartDate" class="form-label small fw-semibold">စတင်မည့်ရက်စွဲနှင့် အချိန်</label>
                                 <input asp-for="StartDate" type="datetime-local" class="form-control" id="adminStartDateInput" />
                                 <span asp-validation-for="StartDate" class="text-danger small"></span>
-                                <div class="form-text">Donations will not be accepted before this date.</div>
+                                <div class="form-text">ဤရက်မတိုင်မီ အလှူငွေများ လက်ခံမည် မဟုတ်ပါ။</div>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="EndDate" class="form-label small fw-semibold">End Date & Time</label>
+                                <label asp-for="EndDate" class="form-label small fw-semibold">ပြီးဆုံးမည့်ရက်စွဲနှင့် အချိန်</label>
                                 <input asp-for="EndDate" type="datetime-local" class="form-control" id="adminEndDateInput" />
                                 <span asp-validation-for="EndDate" class="text-danger small"></span>
-                                <div class="form-text">Campaign will auto-close when this date is reached.</div>
+                                <div class="form-text">ဤရက်စွဲသို့ ရောက်ရှိပါက Campaign အလိုအလျောက် ပိတ်သိမ်းပါမည်။</div>
                             </div>
                         </div>
                     </div>
@@ -88,20 +97,20 @@
                     <!-- Location & Contact -->
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label asp-for="Township" class="form-label fw-semibold">Township</label>
-                            <input asp-for="Township" class="form-control" placeholder="e.g. Hlaing, Kamayut…" maxlength="100" />
+                            <label asp-for="Township" class="form-label fw-semibold">မြို့နယ်</label>
+                            <input asp-for="Township" class="form-control" placeholder="ဥပမာ - လှိုင်၊ ကမာရွတ်..." maxlength="100" />
                             <span asp-validation-for="Township" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="ContactPhone" class="form-label fw-semibold">
-                                Contact Phone <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Admin Only</span>
+                                ဆက်သွယ်ရန်ဖုန်း <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Admin သာ ကြည့်နိုင်</span>
                             </label>
-                            <input asp-for="ContactPhone" class="form-control" placeholder="e.g. 09123456789" maxlength="20" />
+                            <input asp-for="ContactPhone" class="form-control" placeholder="ဥပမာ - 09123456789" maxlength="20" />
                             <span asp-validation-for="ContactPhone" class="text-danger small"></span>
                         </div>
                         <div class="col-12">
-                            <label asp-for="Address" class="form-label fw-semibold">Specific Address</label>
-                            <input asp-for="Address" class="form-control" placeholder="Detailed address or location…" maxlength="255" />
+                            <label asp-for="Address" class="form-label fw-semibold">တိကျသော လိပ်စာ</label>
+                            <input asp-for="Address" class="form-control" placeholder="အသေးစိတ် လိပ်စာ သို့မဟုတ် တည်နေရာ..." maxlength="255" />
                             <span asp-validation-for="Address" class="text-danger small"></span>
                         </div>
                     </div>
@@ -113,22 +122,21 @@
                             <div class="form-check">
                                 <input asp-for="ReopenCampaign" class="form-check-input" type="checkbox" id="reopenCampaignCheck" />
                                 <label asp-for="ReopenCampaign" class="form-check-label fw-bold" for="reopenCampaignCheck">
-                                    Reopen this campaign for donations
+                                    ဤ Campaign အား အလှူငွေများ ပြန်လည်လက်ခံရန် ဖွင့်လှစ်မည်
                                 </label>
                             </div>
                             <div class="small text-muted mt-1">
-                                Checking this will set the campaign status back to <strong>OPEN</strong> so it can accept new donations.
-                                Please ensure the End Date is set in the future.
+                                ဤအကွက်ကို အမှန်ခြစ်ပါက Campaign အခြေအနေသည် <strong>ဖွင့်လှစ်ဆဲ (OPEN)</strong> သို့ ပြန်လည်ပြောင်းလဲသွားမည်ဖြစ်ပြီး အလှူငွေများ ဆက်လက်လက်ခံနိုင်ပါမည်။ ကျေးဇူးပြု၍ ပြီးဆုံးမည့်ရက်စွဲကို အနာဂတ်ရက်စွဲအဖြစ် သတ်မှတ်ပေးထားပါ။
                             </div>
                         </div>
                     }
 
                     <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                         <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
-                            Cancel
+                            မလုပ်တော့ပါ
                         </a>
                         <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-save me-2"></i>Save Changes
+                            <i class="bi bi-save me-2"></i>ပြင်ဆင်မှုများ သိမ်းဆည်းမည်
                         </button>
                     </div>
                 </form>
@@ -148,7 +156,7 @@
                 var eDate = new Date(end);
                 if (eDate <= sDate) {
                     e.preventDefault();
-                    Notiflix.Notify.warning('Campaign end date must be later than start date.');
+                    Notiflix.Notify.warning('Campaign ပြီးဆုံးမည့်ရက်သည် စတင်သည့်ရက်ထက် နောက်ကျရပါမည်။');
                     return false;
                 }
             }

@@ -1,6 +1,6 @@
 @model List<AdminCampaignSummaryViewModel>
 @{
-    ViewData["Title"] = "Manage Campaigns — Admin";
+    ViewData["Title"] = "Campaign များ စီမံရန် — Admin";
     Layout = "_Layout";
     var statusFilter = ViewBag.StatusFilter as string;
     var search = ViewBag.Search as string;
@@ -8,12 +8,12 @@
 
 <div class="admin-page-header">
     <div class="container">
-        <h1 class="mb-1"><i class="bi bi-megaphone me-2"></i>Manage Campaigns</h1>
-        <p class="mb-0 opacity-75">Review, approve, reject, and close campaigns</p>
+        <h1 class="mb-1"><i class="bi bi-megaphone me-2"></i>Campaign များ စီမံရန်</h1>
+        <p class="mb-0 opacity-75">Campaign များကို စိစစ်ခြင်း၊ အတည်ပြုခြင်း၊ ငြင်းပယ်ခြင်းနှင့် ပိတ်သိမ်းခြင်း</p>
     </div>
 </div>
 
-@await Html.PartialAsync("FlashMessage");
+@await Html.PartialAsync("FlashMessage")
 
 <div class="container py-4">
     <!-- Filters Form -->
@@ -22,15 +22,15 @@
             <div class="input-group">
                 <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
                 <input type="text" name="search" id="adminCampaignSearch" value="@search" class="form-control border-start-0 ps-0"
-                       placeholder="Search title or owner…" autocomplete="off" />
+                       placeholder="ခေါင်းစဉ် သို့မဟုတ် ဖန်တီးသူဖြင့် ရှာဖွေပါ…" autocomplete="off" />
             </div>
         </div>
         <div class="col-md-3">
             <select name="status" id="adminCampaignStatus" class="form-select">
-                <option value="">All Statuses</option>
+                <option value="">အခြေအနေ အားလုံး</option>
                 @{
                     string[] adminStatuses = { "PENDING", "OPEN", "GOAL_REACHED", "CLOSED", "COMPLETED", "REJECTED" };
-                    string[] adminLabels  = { "Pending", "Open", "Goal Reached", "Closed", "Completed", "Rejected" };
+                    string[] adminLabels  = { "စိစစ်ဆဲ", "ဖွင့်လှစ်ဆဲ", "ပန်းတိုင်ပြည့်", "ပိတ်သိမ်း", "ပြီးမြောက်", "ငြင်းပယ်" };
                     for (int si = 0; si < adminStatuses.Length; si++)
                     {
                         if (statusFilter == adminStatuses[si])
@@ -46,16 +46,16 @@
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Search</button>
+            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>ရှာဖွေမည်</button>
         </div>
         <div class="col-md-2">
             <button type="button" id="clearAdminCampaignsBtn" class="btn btn-outline-secondary w-100 @(string.IsNullOrEmpty(search) && string.IsNullOrEmpty(statusFilter) ? "d-none" : "")">
-                Clear
+                ရှင်းမည်
             </button>
         </div>
     </form>
 
-    <div class="card p-0 overflow-hidden" id="adminCampaignsTableContainer">
+    <div class="card p-0 overflow-hidden shadow-sm border-0" id="adminCampaignsTableContainer">
         <partial name="_AdminCampaignTablePartial" model="Model" />
     </div>
 </div>
@@ -65,27 +65,27 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Extend Campaign End Date</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Campaign ပြီးဆုံးမည့်ရက် တိုးမြှင့်ခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <p class="text-muted small mb-3" id="extendModalTitle"></p>
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">New End Date & Time</label>
+                    <label class="form-label small fw-semibold">ပြီးဆုံးမည့် ရက်စွဲနှင့် အချိန် အသစ်</label>
                     <input type="datetime-local" id="extendNewEndDate" class="form-control" />
-                    <div class="form-text">Must be a future date later than the start date.</div>
+                    <div class="form-text">စတင်သည့်ရက်စွဲထက် နောက်ကျသော အနာဂတ်ရက်စွဲ ဖြစ်ရပါမည်။</div>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="extendReopenCheck" checked>
                     <label class="form-check-label small" for="extendReopenCheck">
-                        Reopen campaign for donations if it is currently closed/expired
+                        လက်ရှိတွင် ပိတ်သိမ်းထားပါက အလှူငွေများ ထပ်မံလက်ခံနိုင်စေရန် ပြန်လည်ဖွင့်လှစ်မည်
                     </label>
                 </div>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-primary" id="confirmExtendBtn">
-                    <i class="bi bi-calendar-check me-1"></i>Confirm Extension
+                    <i class="bi bi-calendar-check me-1"></i>ရက်တိုးမြှင့်ခြင်း အတည်ပြုမည်
                 </button>
             </div>
         </div>
@@ -97,18 +97,18 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Reject Campaign</h5>
+                <h5 class="modal-title fw-bold"><i class="bi bi-x-circle me-2 text-danger"></i>Campaign ငြင်းပယ်ခြင်း</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small mb-3">Provide a reason for rejection. The campaign owner will be notified.</p>
+                <p class="text-muted small mb-3">ငြင်းပယ်ရသည့် အကြောင်းရင်းကို ရေးသားပါ။ Campaign ဖန်တီးသူထံ အသိပေးချက် ပို့ပေးပါမည်။</p>
                 <textarea id="rejectReason" class="form-control" rows="4"
-                          placeholder="Enter rejection reason…" maxlength="1000"></textarea>
+                          placeholder="ငြင်းပယ်ရသည့် အကြောင်းရင်း ရိုက်ထည့်ပါ…" maxlength="1000"></textarea>
             </div>
             <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">မလုပ်တော့ပါ</button>
                 <button type="button" class="btn btn-danger" id="confirmRejectBtn">
-                    <i class="bi bi-x-circle me-1"></i>Reject Campaign
+                    <i class="bi bi-x-circle me-1"></i>Campaign ငြင်းပယ်မည်
                 </button>
             </div>
         </div>
@@ -163,7 +163,7 @@
         $(document).on('click', '.approve-btn', function () {
             var id = $(this).data('id');
             var row = $(this).closest('tr');
-            Danation.confirmPost('Approve this campaign? It will go OPEN for donations.', '/Admin/ApproveCampaign',
+            Danation.confirmPost('ဤ Campaign ကို အတည်ပြုမည်လား? အလှူငွေများ လက်ခံနိုင်ရန် ဖွင့်လှစ်ပေးပါမည်။', '/Admin/ApproveCampaign',
                 { id: id },
                 function (res) {
                     Notiflix.Notify.success(res.message);
@@ -181,7 +181,7 @@
 
         $('#confirmRejectBtn').on('click', function () {
             var reason = $('#rejectReason').val().trim();
-            if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
+            if (!reason) { Notiflix.Notify.warning('ငြင်းပယ်ရသည့် အကြောင်းရင်း ရိုက်ထည့်ပေးပါ။'); return; }
             bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
             Danation.post('/Admin/RejectCampaign', { id: rejectingId, reason: reason },
                 function (res) {
@@ -204,7 +204,7 @@
         $('#confirmExtendBtn').on('click', function () {
             var newEndDate = $('#extendNewEndDate').val();
             if (!newEndDate) {
-                Notiflix.Notify.warning('Please select a new end date and time.');
+                Notiflix.Notify.warning('ပြီးဆုံးမည့် ရက်စွဲနှင့် အချိန် အသစ်ကို ရွေးချယ်ပေးပါ။');
                 return;
             }
             var reopen = $('#extendReopenCheck').is(':checked');
@@ -228,15 +228,15 @@
 
             if (isExpired) {
                 extendingId = id;
-                $('#extendModalTitle').text('Reopen Expired Campaign: ' + title);
+                $('#extendModalTitle').text('သက်တမ်းကုန် Campaign ပြန်ဖွင့်ခြင်း: ' + title);
                 $('#extendNewEndDate').val(currentEnd || '');
                 $('#extendReopenCheck').prop('checked', true);
                 new bootstrap.Modal(document.getElementById('extendModal')).show();
-                Notiflix.Notify.info('This campaign has expired. Please select a new future end date to reopen.');
+                Notiflix.Notify.info('ဤ Campaign သည် သက်တမ်းကုန်ဆုံးသွားပါပြီ။ ပြန်လည်ဖွင့်လှစ်ရန် အနာဂတ် ရက်စွဲအသစ် ရွေးချယ်ပေးပါ။');
                 return;
             }
 
-            Danation.confirmPost('Reopen "' + title + '" for donations?', '/Admin/ReopenCampaign',
+            Danation.confirmPost('"' + title + '" အား အလှူငွေများ လက်ခံနိုင်ရန် ပြန်လည်ဖွင့်လှစ်မည်လား?', '/Admin/ReopenCampaign',
                 { id: id },
                 function (res) {
                     Notiflix.Notify.success(res.message);
@@ -249,7 +249,7 @@
         $(document).on('click', '.close-btn', function () {
             var id = $(this).data('id');
             var row = $(this).closest('tr');
-            Danation.confirmPost('Close this campaign? It will no longer accept donations.', '/Admin/CloseCampaign',
+            Danation.confirmPost('ဤ Campaign ကို ပိတ်သိမ်းမည်လား? အလှူငွေများ ထပ်မံလက်ခံနိုင်တော့မည် မဟုတ်ပါ။', '/Admin/CloseCampaign',
                 { id: id },
                 function (res) {
                     Notiflix.Notify.success(res.message);
@@ -270,18 +270,26 @@
                     'REJECTED': 'badge-rejected',
                     'PENDING': 'badge-pending'
                 };
+                var textMap = {
+                    'OPEN': 'ဖွင့်လှစ်ဆဲ',
+                    'GOAL_REACHED': 'ပန်းတိုင်ပြည့်',
+                    'CLOSED': 'ပိတ်သိမ်း',
+                    'COMPLETED': 'ပြီးမြောက်',
+                    'REJECTED': 'ငြင်းပယ်',
+                    'PENDING': 'စိစစ်ဆဲ'
+                };
                 var cls = badgeMap[data.status] || 'bg-secondary';
-                var text = (data.status === 'CLOSED' && data.closeReason === 'EXPIRED') ? 'EXPIRED' : data.status.replace('_', ' ');
+                var text = (data.status === 'CLOSED' && data.closeReason === 'EXPIRED') ? 'သက်တမ်းကုန်' : (textMap[data.status] || data.status.replace('_', ' '));
                 row.find('.status-badge').attr('class', 'badge ' + cls + ' status-badge').text(text);
 
                 if (data.status === 'OPEN' || data.status === 'REJECTED') {
                     row.find('.approve-btn, .reject-btn').remove();
                 } else if (data.status === 'CLOSED') {
                     row.find('.close-btn').replaceWith(
-                        '<a href="/Admin/CreateCompletion/' + data.campaignId + '" class="btn btn-sm btn-primary" title="Create Completion"><i class="bi bi-trophy"></i></a>'
+                        '<a href="/Admin/CreateCompletion/' + data.campaignId + '" class="btn btn-sm btn-primary" title="ပြီးမြောက်မှု မှတ်တမ်းတင်မည်"><i class="bi bi-trophy"></i></a>'
                     );
                 } else if (data.status === 'COMPLETED') {
-                    row.find('a[title="Create Completion"]').remove();
+                    row.find('a[title="ပြီးမြောက်မှု မှတ်တမ်းတင်မည်"], a[title="Create Completion"]').remove();
                 }
             }
         });
