@@ -1,5 +1,6 @@
 using DatabaseClass.Models;
 using Donation.Hubs;
+using Donation.Common;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -54,7 +55,8 @@ public class CampaignClosureBackgroundService : BackgroundService
         var notificationService = scope.ServiceProvider.GetRequiredService<NotificationService>();
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<AppHub>>();
 
-        var now = DateTime.UtcNow;
+        var localNow = AppTime.Now;
+        var utcNow = DateTime.UtcNow;
 
         // Query active campaigns that might need closure
         var openCampaigns = await context.Campaigns
@@ -73,7 +75,7 @@ public class CampaignClosureBackgroundService : BackgroundService
             string notificationMessage = string.Empty;
 
             // 1. Check if End Date has passed
-            if (campaign.EndDate.HasValue && campaign.EndDate.Value <= now)
+            if (campaign.EndDate.HasValue && campaign.EndDate.Value <= localNow)
             {
                 shouldClose = true;
                 closeReason = "EXPIRED";
@@ -104,8 +106,8 @@ public class CampaignClosureBackgroundService : BackgroundService
             {
                 campaign.Status = "CLOSED";
                 campaign.CloseReason = closeReason;
-                campaign.ClosedAt = now;
-                campaign.UpdatedAt = now;
+                campaign.ClosedAt = utcNow;
+                campaign.UpdatedAt = utcNow;
                 hasChanges = true;
 
                 _logger.LogInformation("Auto-closing campaign {CampaignId} ({Title}). Reason: {Reason}",
@@ -145,6 +147,8 @@ public class CampaignClosureBackgroundService : BackgroundService
         if (hasChanges)
         {
             await context.SaveChangesAsync(cancellationToken);
+            var cache = scope.ServiceProvider.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+            cache?.InvalidateHomeCaches();
         }
     }
 }

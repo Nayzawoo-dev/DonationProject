@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Donation.Common;
 using System.Security.Claims;
 
 namespace Donation.Controllers;
@@ -21,6 +23,7 @@ public class AdminController : Controller
     private readonly FileService _fileService;
     private readonly NotificationService _notificationService;
     private readonly IHubContext<AppHub> _hubContext;
+    private readonly IMemoryCache _cache;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
@@ -30,6 +33,7 @@ public class AdminController : Controller
         FileService fileService,
         NotificationService notificationService,
         IHubContext<AppHub> hubContext,
+        IMemoryCache cache,
         ILogger<AdminController> logger)
     {
         _context = context;
@@ -38,6 +42,7 @@ public class AdminController : Controller
         _fileService = fileService;
         _notificationService = notificationService;
         _hubContext = hubContext;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -292,6 +297,7 @@ public class AdminController : Controller
             await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
+            _cache.InvalidateHomeCaches();
 
             // Notify campaign owner
             await _notificationService.CreateAsync(
@@ -469,10 +475,10 @@ public class AdminController : Controller
     // POST: /Admin/ReopenCampaign (AJAX)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ReopenCampaign(int id)
+    public async Task<IActionResult> ReopenCampaign(int id, [FromForm] DateTime? newEndDate = null)
     {
         var adminId = GetCurrentAdminId();
-        var (success, error) = await _campaignService.AdminReopenCampaignAsync(id, adminId);
+        var (success, error) = await _campaignService.AdminReopenCampaignAsync(id, adminId, newEndDate);
         return Json(new { success, message = success ? "Campaign has been reopened and is now OPEN for donations." : error });
     }
 

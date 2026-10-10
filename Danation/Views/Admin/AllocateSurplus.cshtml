@@ -3,7 +3,7 @@
     ViewData["Title"] = "Surplus Fund Allocation — Admin";
     Layout = "_Layout";
     var sourceCandidates = ViewBag.SourceCandidates as List<AdminCampaignSummaryViewModel> ?? new List<AdminCampaignSummaryViewModel>();
-    var targetCampaigns = ViewBag.TargetCampaigns as List<DatabaseClass.Models.Campaign> ?? new List<DatabaseClass.Models.Campaign>();
+    var targetCampaigns = ViewBag.TargetCampaigns as List<CampaignListItemViewModel> ?? new List<CampaignListItemViewModel>();
 }
 
 <div class="admin-page-header">
@@ -100,7 +100,7 @@
                                 @foreach (var tgt in targetCampaigns)
                                 {
                                     <option value="@tgt.Id">
-                                        @tgt.Title (Goal: @tgt.GoalAmount.ToString("N0") MMK, Township: @(tgt.Township ?? "N/A"))
+                                        @tgt.Title (Goal: @tgt.GoalAmount.ToString("N0") MMK | Raised: @tgt.RaisedAmount.ToString("N0") MMK | Remaining: @tgt.RemainingAmount.ToString("N0") MMK)
                                     </option>
                                 }
                             </select>

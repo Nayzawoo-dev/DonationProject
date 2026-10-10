@@ -358,6 +358,14 @@
 
         // Reopen Campaign
         $('#adminReopenBtn').on('click', function () {
+            var isExpired = @(Model.IsExpired ? "true" : "false");
+            if (isExpired) {
+                $('#extendDetailReopenCheck').prop('checked', true);
+                new bootstrap.Modal(document.getElementById('extendDetailModal')).show();
+                Notiflix.Notify.info('This campaign has expired. Please select a new future end date to reopen.');
+                return;
+            }
+
             Danation.confirmPost('Reopen this campaign for donations?',
                 '/Admin/ReopenCampaign', { id: campaignId },
                 function (res) {

@@ -86,11 +86,11 @@
                     </td>
                     <td>
                         <span class="badge @statusClass status-badge">@c.Status.Replace("_", " ")</span>
-                        @if (c.Status == "OPEN" && c.StartDate.HasValue && c.StartDate.Value > DateTime.UtcNow)
+                        @if (c.Status == "OPEN" && c.IsUpcoming)
                         {
                             <span class="badge bg-info text-dark d-block mt-1" style="font-size:10px;">UPCOMING</span>
                         }
-                        @if (c.Status == "OPEN" && c.EndDate.HasValue && c.EndDate.Value <= DateTime.UtcNow)
+                        @if (c.Status == "OPEN" && c.IsExpired)
                         {
                             <span class="badge bg-danger d-block mt-1" style="font-size:10px;">OVERDUE</span>
                         }
@@ -137,7 +137,10 @@
                             @if (c.Status == "CLOSED" || c.Status == "GOAL_REACHED")
                             {
                                 <button class="btn btn-sm btn-outline-success reopen-btn" data-id="@c.Id"
-                                        data-title="@c.Title" title="Reopen Campaign">
+                                        data-title="@c.Title"
+                                        data-enddate="@(c.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
+                                        data-is-expired="@(c.IsExpired ? "true" : "false")"
+                                        title="Reopen Campaign">
                                     <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             }

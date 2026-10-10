@@ -1,11 +1,13 @@
 using DatabaseClass.Models;
 using Donation.Hubs;
+using Donation.Common;
 using Donation.ViewModels.Admin;
 using Donation.ViewModels.Donation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using DonationEntity = DatabaseClass.Models.Donation;
 
 namespace Donation.Services;
@@ -16,6 +18,7 @@ public class DonationService
     private readonly FileService _fileService;
     private readonly NotificationService _notificationService;
     private readonly IHubContext<AppHub> _hubContext;
+    private readonly IMemoryCache _cache;
     private readonly ILogger<DonationService> _logger;
 
     public DonationService(
@@ -23,12 +26,14 @@ public class DonationService
         FileService fileService,
         NotificationService notificationService,
         IHubContext<AppHub> hubContext,
+        IMemoryCache cache,
         ILogger<DonationService> logger)
     {
         _context = context;
         _fileService = fileService;
         _notificationService = notificationService;
         _hubContext = hubContext;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -44,20 +49,21 @@ public class DonationService
         if (campaign.Status != "OPEN")
             return (false, "This campaign is not currently accepting donations.");
 
-        var now = DateTime.UtcNow;
+        var now = AppTime.Now;
 
         // Check Start Date
         if (campaign.StartDate.HasValue && campaign.StartDate.Value > now)
-            return (false, $"This campaign has not started yet. Donations open on {campaign.StartDate.Value:MMM d, yyyy}.");
+            return (false, $"This campaign has not started yet. Donations open on {campaign.StartDate.Value:MMM d, yyyy HH:mm}.");
 
         // Check End Date — auto-close if expired
         if (campaign.EndDate.HasValue && campaign.EndDate.Value <= now)
         {
             campaign.Status = "CLOSED";
             campaign.CloseReason = "EXPIRED";
-            campaign.ClosedAt = now;
-            campaign.UpdatedAt = now;
+            campaign.ClosedAt = DateTime.UtcNow;
+            campaign.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            _cache.InvalidateHomeCaches();
 
             try
             {
@@ -86,9 +92,10 @@ public class DonationService
         {
             campaign.Status = "CLOSED";
             campaign.CloseReason = "GOAL_REACHED";
-            campaign.ClosedAt = now;
-            campaign.UpdatedAt = now;
+            campaign.ClosedAt = DateTime.UtcNow;
+            campaign.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            _cache.InvalidateHomeCaches();
 
             try
             {
@@ -274,6 +281,7 @@ public class DonationService
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
+            _cache.InvalidateHomeCaches();
 
             // Notify donor
             await _notificationService.CreateAsync(
@@ -377,6 +385,7 @@ public class DonationService
         donation.VerifiedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        _cache.InvalidateHomeCaches();
 
         await _notificationService.CreateAsync(
             donation.DonorId,

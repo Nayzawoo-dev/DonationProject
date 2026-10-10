@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Donation.Common;
 
 namespace Donation.ViewModels.Admin;
 
@@ -41,8 +42,8 @@ public class AdminCampaignSummaryViewModel
     public string Township { get; set; } = string.Empty;
     /// <summary>Admin-only — must never be exposed in public ViewModels or API responses.</summary>
     public string ContactPhone { get; set; } = string.Empty;
-    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > DateTime.UtcNow && Status == "OPEN";
-    public bool IsExpired => EndDate.HasValue && EndDate.Value <= DateTime.UtcNow;
+    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > AppTime.Now && Status == "OPEN";
+    public bool IsExpired => EndDate.HasValue && EndDate.Value <= AppTime.Now;
 }
 
 public class AdminDonationSummaryViewModel

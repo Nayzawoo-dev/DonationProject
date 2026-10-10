@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Donation.Common;
 using System.Diagnostics;
 
 namespace Donation.Controllers;
@@ -28,16 +29,16 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         // Cache public landing page stats for 2 minutes to reduce database queries
-        const string statsCacheKey = "HOME_LANDING_STATS";
-        if (!_cache.TryGetValue(statsCacheKey, out (int total, int open, int completed, int users) stats))
+        var now = AppTime.Now;
+        if (!_cache.TryGetValue(CacheKeys.HomeLandingStats, out (int total, int open, int completed, int users) stats))
         {
             stats = (
                 await _context.Campaigns.AsNoTracking().CountAsync(),
-                await _context.Campaigns.AsNoTracking().CountAsync(c => c.Status == "OPEN"),
+                await _context.Campaigns.AsNoTracking().CountAsync(c => c.Status == "OPEN" && (!c.EndDate.HasValue || c.EndDate.Value > now)),
                 await _context.Campaigns.AsNoTracking().CountAsync(c => c.Status == "COMPLETED"),
                 await _context.Users.AsNoTracking().CountAsync(u => u.Role == "USER" && u.IsActive == true)
             );
-            _cache.Set(statsCacheKey, stats, TimeSpan.FromMinutes(2));
+            _cache.Set(CacheKeys.HomeLandingStats, stats, TimeSpan.FromMinutes(2));
         }
 
         ViewBag.TotalCampaigns     = stats.total;
@@ -46,12 +47,11 @@ public class HomeController : Controller
         ViewBag.TotalUsers         = stats.users;
 
         // Cache recent open campaigns (up to 6) for 1 minute
-        const string recentCacheKey = "HOME_RECENT_CAMPAIGNS";
-        if (!_cache.TryGetValue(recentCacheKey, out List<CampaignListItemViewModel>? recent) || recent == null)
+        if (!_cache.TryGetValue(CacheKeys.HomeRecentCampaigns, out List<CampaignListItemViewModel>? recent) || recent == null)
         {
             recent = await _context.Campaigns
                 .AsNoTracking()
-                .Where(c => c.Status == "OPEN")
+                .Where(c => c.Status == "OPEN" && (!c.EndDate.HasValue || c.EndDate.Value > now))
                 .OrderByDescending(c => c.CreatedAt)
                 .Take(6)
                 .Select(c => new CampaignListItemViewModel
@@ -60,11 +60,17 @@ public class HomeController : Controller
                     Title       = c.Title,
                     Description = c.Description,
                     GoalAmount  = c.GoalAmount,
-                    RaisedAmount = c.Donations
+                    RaisedAmount = (c.Donations
                         .Where(d => d.Status == "APPROVED")
-                        .Sum(d => (decimal?)d.Amount) ?? 0,
+                        .Sum(d => (decimal?)d.Amount) ?? 0)
+                        + (c.CampaignSurplusTransactionTargetCampaigns
+                        .Where(t => t.TransactionType == "ALLOCATION")
+                        .Sum(t => (decimal?)t.Amount) ?? 0),
                     Status           = c.Status,
                     CreatedAt        = c.CreatedAt,
+                    StartDate        = c.StartDate,
+                    EndDate          = c.EndDate,
+                    CloseReason      = c.CloseReason,
                     OwnerId          = c.UserId,
                     OwnerName        = c.User.FullName,
                     OwnerProfileImage = c.User.ProfileImage,
@@ -74,7 +80,7 @@ public class HomeController : Controller
                 })
                 .ToListAsync();
 
-            _cache.Set(recentCacheKey, recent, TimeSpan.FromMinutes(1));
+            _cache.Set(CacheKeys.HomeRecentCampaigns, recent, TimeSpan.FromMinutes(1));
         }
 
         ViewBag.RecentCampaigns = recent;

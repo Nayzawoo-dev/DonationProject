@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Donation.Common;
 
 namespace Donation.ViewModels.Campaign;
 
@@ -22,8 +23,9 @@ public class CampaignListItemViewModel
     public int ImageCount { get; set; }
     public string Township { get; set; } = string.Empty;
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
-    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > DateTime.UtcNow && Status == "OPEN";
-    public bool IsExpired => EndDate.HasValue && EndDate.Value <= DateTime.UtcNow;
+    public decimal RemainingAmount => Math.Max(0, GoalAmount - RaisedAmount);
+    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > AppTime.Now && Status == "OPEN";
+    public bool IsExpired => EndDate.HasValue && EndDate.Value <= AppTime.Now;
 }
 
 public class CampaignListViewModel
@@ -56,8 +58,9 @@ public class CampaignDetailViewModel
     public decimal SurplusAmount { get; set; }
     public decimal AllocatedSurplusReceived { get; set; }
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
-    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > DateTime.UtcNow && Status == "OPEN";
-    public bool IsExpired => EndDate.HasValue && EndDate.Value <= DateTime.UtcNow;
+    public decimal RemainingAmount => Math.Max(0, GoalAmount - RaisedAmount);
+    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > AppTime.Now && Status == "OPEN";
+    public bool IsExpired => EndDate.HasValue && EndDate.Value <= AppTime.Now;
 
     // Location — Township is public-safe, Address is public-safe
     public string Address { get; set; } = string.Empty;
