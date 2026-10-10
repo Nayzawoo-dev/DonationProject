@@ -23,7 +23,7 @@
                 <h1 class="mb-1 fs-4">@Model.Title</h1>
                 <p class="mb-0 opacity-75">
                     Campaign by @Model.OwnerName (@@@Model.OwnerUsername) ·
-                    <span class="badge @statusClass">@Model.Status.Replace("_"," ")</span>
+                    <span class="badge @statusClass">@Model.Status.Replace("_", " ")</span>
                 </p>
             </div>
         </div>
@@ -216,14 +216,23 @@
             <div class="card p-3 border-warning">
                 <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin Management Actions</h6>
                 <div class="d-grid gap-2">
-                    <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@Model.Id" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil me-2"></i>Edit Campaign Details
-                    </a>
 
-                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#extendDetailModal">
-                        <i class="bi bi-calendar-plus me-2"></i>Extend End Date
-                    </button>
+                    @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
+                    {
+                        <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-2"></i>Edit Campaign Details
+                        </a>
+                    }
 
+
+                    @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
+                    {
+                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#extendDetailModal">
+                            <i class="bi bi-calendar-plus me-2"></i>Extend End Date
+                        </button>
+                    }
+
+                  
                     @if (Model.Status == "PENDING")
                     {
                         <button class="btn btn-success" id="adminApproveBtn" data-id="@Model.Id">
@@ -247,7 +256,7 @@
                         </button>
                     }
 
-                    @if (Model.Status == "CLOSED")
+                    @if (Model.Status == "GOAL_REACHED" || Model.Status == "CLOSED")
                     {
                         <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@Model.Id"
                            class="btn btn-primary">
@@ -338,7 +347,7 @@
         }
 
         // Extend End Date
-        $('#confirmExtendDetailBtn').on('click', function () {
+        $('#confirmExtendDetailBtn').on('click', function() {
             var newEndDate = $('#extendDetailEndDate').val();
             if (!newEndDate) {
                 Notiflix.Notify.warning('Please select a valid new end date.');
@@ -349,15 +358,15 @@
 
             Danation.post('/Admin/ExtendCampaignDate',
                 { id: campaignId, newEndDate: newEndDate, reopen: reopen },
-                function (res) {
+                function(res) {
                     Notiflix.Notify.success(res.message);
-                    setTimeout(function () { window.location.reload(); }, 1200);
+                    setTimeout(function() { window.location.reload(); }, 1200);
                 }
             );
         });
 
         // Reopen Campaign
-        $('#adminReopenBtn').on('click', function () {
+        $('#adminReopenBtn').on('click', function() {
             var isExpired = @(Model.IsExpired ? "true" : "false");
             if (isExpired) {
                 $('#extendDetailReopenCheck').prop('checked', true);
@@ -368,49 +377,49 @@
 
             Danation.confirmPost('Reopen this campaign for donations?',
                 '/Admin/ReopenCampaign', { id: campaignId },
-                function (res) {
+                function(res) {
                     Notiflix.Notify.success(res.message);
-                    setTimeout(function () { window.location.reload(); }, 1200);
+                    setTimeout(function() { window.location.reload(); }, 1200);
                 }
             );
         });
 
         // Close Campaign
-        $('#adminCloseBtn').on('click', function () {
+        $('#adminCloseBtn').on('click', function() {
             Danation.confirmPost('Close this campaign? It will stop accepting donations.',
                 '/Admin/CloseCampaign', { id: campaignId },
-                function (res) {
+                function(res) {
                     Notiflix.Notify.success(res.message);
-                    setTimeout(function () { window.location.reload(); }, 1200);
+                    setTimeout(function() { window.location.reload(); }, 1200);
                 }
             );
         });
 
         @if (Model.Status == "PENDING")
-        {
-            <text>
-            $('#adminApproveBtn').on('click', function () {
-                Danation.confirmPost('Approve this campaign? It will go OPEN for donations.',
-                    '/Admin/ApproveCampaign', { id: campaignId },
-                    function (res) {
-                        Notiflix.Notify.success(res.message);
-                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
-                    }
-                );
-            });
+            {
+                <text>
+                        $('#adminApproveBtn').on('click', function () {
+                            Danation.confirmPost('Approve this campaign? It will go OPEN for donations.',
+                                '/Admin/ApproveCampaign', { id: campaignId },
+                                function(res) {
+                                    Notiflix.Notify.success(res.message);
+                                    setTimeout(function() { window.location.href = '/Admin/Campaigns'; }, 1200);
+                                }
+                            );
+                                            });
 
-            document.getElementById('confirmRejectBtn').addEventListener('click', function () {
-                var reason = document.getElementById('rejectReason').value.trim();
-                if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
-                bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
-                Danation.post('/Admin/RejectCampaign', { id: campaignId, reason: reason },
-                    function (res) {
-                        Notiflix.Notify.success(res.message);
-                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
-                    }
-                );
-            });
-            </text>
+                        document.getElementById('confirmRejectBtn').addEventListener('click', function () {
+                                                var reason = document.getElementById('rejectReason').value.trim();
+                        if (!reason) {Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
+                        bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+                        Danation.post('/Admin/RejectCampaign', {id: campaignId, reason: reason },
+                        function (res) {
+                            Notiflix.Notify.success(res.message);
+                        setTimeout(function () {window.location.href = '/Admin/Campaigns'; }, 1200);
+                                                    }
+                        );
+                                            });
+                </text>
         }
     </script>
 }

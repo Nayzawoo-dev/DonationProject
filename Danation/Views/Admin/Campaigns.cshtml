@@ -271,7 +271,8 @@
                     'PENDING': 'badge-pending'
                 };
                 var cls = badgeMap[data.status] || 'bg-secondary';
-                row.find('.status-badge').attr('class', 'badge ' + cls + ' status-badge').text(data.status.replace('_', ' '));
+                var text = (data.status === 'CLOSED' && data.closeReason === 'EXPIRED') ? 'EXPIRED' : data.status.replace('_', ' ');
+                row.find('.status-badge').attr('class', 'badge ' + cls + ' status-badge').text(text);
 
                 if (data.status === 'OPEN' || data.status === 'REJECTED') {
                     row.find('.approve-btn, .reject-btn').remove();

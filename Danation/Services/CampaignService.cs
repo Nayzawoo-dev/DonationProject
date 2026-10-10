@@ -60,44 +60,68 @@ public class CampaignService
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / PageSize);
 
-        var campaigns = await query
+        var rawCampaigns = await query
             .OrderByDescending(c => c.CreatedAt)
             .Skip((page - 1) * PageSize)
             .Take(PageSize)
-            .Select(c => new CampaignListItemViewModel
+            .Select(c => new
             {
-                Id = c.Id,
-                Title = c.Title,
-                Description = c.Description,
-                GoalAmount = c.GoalAmount,
-                RaisedAmount = (c.Donations
+                c.Id,
+                c.Title,
+                c.Description,
+                c.GoalAmount,
+                DirectApproved = c.Donations
                     .Where(d => d.Status == "APPROVED")
-                    .Sum(d => (decimal?)d.Amount) ?? 0)
-                    + (c.CampaignSurplusTransactionTargetCampaigns
+                    .Sum(d => (decimal?)d.Amount) ?? 0,
+                AllocatedIn = c.CampaignSurplusTransactionTargetCampaigns
                     .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
-                    .Sum(t => (decimal?)t.Amount) ?? 0),
-                Status = c.Status,
-                CreatedAt = c.CreatedAt,
-                StartDate = c.StartDate,
-                EndDate = c.EndDate,
-                SurplusAmount = ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                    : 0)
-                    - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0) > 0
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                        ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                        : 0)
-                        - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0)
-                    : 0,
+                    .Sum(t => (decimal?)t.Amount) ?? 0,
+                AllocatedOut = c.CampaignSurplusTransactionSourceCampaigns
+                    .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                    .Sum(t => (decimal?)t.Amount) ?? 0,
+                c.Status,
+                c.CreatedAt,
+                c.StartDate,
+                c.EndDate,
                 OwnerId = c.UserId,
                 OwnerName = c.User.FullName,
                 OwnerProfileImage = c.User.ProfileImage,
                 ThumbnailImage = c.CampaignImages.OrderBy(i => i.CreatedAt).Select(i => i.ImageUrl).FirstOrDefault(),
                 ImageCount = c.CampaignImages.Count,
-                Township = c.Township
-                // ContactPhone intentionally excluded from public projection
+                c.Township
             })
             .ToListAsync();
+
+        var campaigns = rawCampaigns.Select(c =>
+        {
+            var totalRaised = c.DirectApproved + c.AllocatedIn;
+            decimal surplusAmount = 0;
+            if (c.Status == "COMPLETED")
+            {
+                var grossSurplus = Math.Max(0, totalRaised - c.GoalAmount);
+                surplusAmount = Math.Max(0, grossSurplus - c.AllocatedOut);
+            }
+
+            return new CampaignListItemViewModel
+            {
+                Id = c.Id,
+                Title = c.Title,
+                Description = c.Description,
+                GoalAmount = c.GoalAmount,
+                RaisedAmount = totalRaised,
+                Status = c.Status,
+                CreatedAt = c.CreatedAt,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                SurplusAmount = surplusAmount,
+                OwnerId = c.OwnerId,
+                OwnerName = c.OwnerName,
+                OwnerProfileImage = c.OwnerProfileImage,
+                ThumbnailImage = c.ThumbnailImage,
+                ImageCount = c.ImageCount,
+                Township = c.Township
+            };
+        }).ToList();
 
         return new CampaignListViewModel
         {
@@ -136,15 +160,7 @@ public class CampaignService
                 AllocatedSurplusReceived = c.CampaignSurplusTransactionTargetCampaigns
                     .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
                     .Sum(t => (decimal?)t.Amount) ?? 0,
-                SurplusAmount = ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                    : 0)
-                    - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0) > 0
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                        ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                        : 0)
-                        - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0)
-                    : 0,
+                SurplusAmount = 0,
                 Status = c.Status,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
@@ -187,6 +203,19 @@ public class CampaignService
             .FirstOrDefaultAsync();
 
         if (campaign == null) return null;
+
+        if (campaign.Status == "COMPLETED")
+        {
+            var allocatedOut = await _context.CampaignSurplusTransactions
+                .Where(t => t.SourceCampaignId == id && (t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION"))
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            var grossSurplus = Math.Max(0, campaign.RaisedAmount - campaign.GoalAmount);
+            campaign.SurplusAmount = Math.Max(0, grossSurplus - allocatedOut);
+        }
+        else
+        {
+            campaign.SurplusAmount = 0;
+        }
 
         var now = AppTime.Now;
         bool isUpcoming = campaign.StartDate.HasValue && campaign.StartDate.Value > now;
@@ -507,9 +536,7 @@ public class CampaignService
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 CloseReason = c.CloseReason,
-                SurplusAmount = (c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                    : 0,
+                SurplusAmount = 0, // Computed post-query per-campaign only for COMPLETED campaigns
                 OwnerId = c.UserId,
                 OwnerName = c.User.FullName,
                 ThumbnailImage = c.CampaignImages.OrderBy(i => i.CreatedAt).Select(i => i.ImageUrl).FirstOrDefault(),
@@ -651,40 +678,66 @@ public class CampaignService
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Title.Contains(search) || c.User.FullName.Contains(search));
 
-        return await query
+        var rawList = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new AdminCampaignSummaryViewModel
+            .Select(c => new
+            {
+                c.Id,
+                c.Title,
+                c.Status,
+                c.CloseReason,
+                c.GoalAmount,
+                DirectApproved = c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0,
+                AllocatedIn = c.CampaignSurplusTransactionTargetCampaigns
+                    .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                    .Sum(t => (decimal?)t.Amount) ?? 0,
+                AllocatedOut = c.CampaignSurplusTransactionSourceCampaigns
+                    .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                    .Sum(t => (decimal?)t.Amount) ?? 0,
+                c.StartDate,
+                c.EndDate,
+                OwnerName = c.User.FullName,
+                OwnerUsername = c.User.Username,
+                c.CreatedAt,
+                DocumentCount = c.CampaignDocuments.Count,
+                ImageCount = c.CampaignImages.Count,
+                c.Township,
+                c.ContactPhone
+            })
+            .ToListAsync();
+
+        return rawList.Select(c =>
+        {
+            var totalRaised = c.DirectApproved + c.AllocatedIn;
+            decimal surplusAmount = 0;
+            decimal availableSurplus = 0;
+            if (c.Status == "COMPLETED")
+            {
+                var grossSurplus = Math.Max(0, totalRaised - c.GoalAmount);
+                surplusAmount = grossSurplus;
+                availableSurplus = Math.Max(0, grossSurplus - c.AllocatedOut);
+            }
+            return new AdminCampaignSummaryViewModel
             {
                 Id = c.Id,
                 Title = c.Title,
                 Status = c.Status,
                 CloseReason = c.CloseReason,
                 GoalAmount = c.GoalAmount,
-                RaisedAmount = (c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0)
-                    + (c.CampaignSurplusTransactionTargetCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0),
-                SurplusAmount = (c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                    : 0,
-                AvailableSurplus = ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                    : 0)
-                    - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0) > 0
-                    ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) > c.GoalAmount
-                        ? ((c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0) - c.GoalAmount)
-                        : 0)
-                        - (c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0)
-                    : 0,
+                RaisedAmount = totalRaised,
+                SurplusAmount = surplusAmount,
+                AvailableSurplus = availableSurplus,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
-                OwnerName = c.User.FullName,
-                OwnerUsername = c.User.Username,
+                OwnerName = c.OwnerName,
+                OwnerUsername = c.OwnerUsername,
                 CreatedAt = c.CreatedAt,
-                DocumentCount = c.CampaignDocuments.Count,
-                ImageCount = c.CampaignImages.Count,
+                DocumentCount = c.DocumentCount,
+                ImageCount = c.ImageCount,
                 Township = c.Township,
                 ContactPhone = c.ContactPhone // Admin-only field
-            })
-            .ToListAsync();
+            };
+        }).ToList();
     }
 
     /// <summary>
@@ -734,6 +787,10 @@ public class CampaignService
             .FirstOrDefaultAsync(c => c.Id == model.Id);
 
         if (campaign == null) return (false, "Campaign not found.");
+
+        // COMPLETED campaigns are permanently locked — no edits or reopening allowed
+        if (campaign.Status == "COMPLETED")
+            return (false, "Completed campaigns cannot be modified or reopened.");
 
         if (!model.StartDate.HasValue || !model.EndDate.HasValue)
             return (false, "Both start date and end date are required.");
@@ -811,6 +868,10 @@ public class CampaignService
 
         if (campaign == null) return (false, "Campaign not found.");
 
+        // COMPLETED campaigns are permanently locked
+        if (campaign.Status == "COMPLETED")
+            return (false, "Completed campaigns cannot be extended or reopened.");
+
         if (campaign.StartDate.HasValue && newEndDate <= campaign.StartDate.Value)
             return (false, "New end date must be later than the campaign start date.");
 
@@ -873,6 +934,8 @@ public class CampaignService
             .FirstOrDefaultAsync(c => c.Id == campaignId);
 
         if (campaign == null) return (false, "Campaign not found.");
+        // COMPLETED campaigns are permanently locked — reopening is prohibited
+        if (campaign.Status == "COMPLETED") return (false, "Completed campaigns cannot be reopened.");
         if (campaign.Status == "OPEN") return (false, "Campaign is already OPEN.");
 
         if (newEndDate.HasValue)
@@ -946,7 +1009,10 @@ public class CampaignService
             .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => t.Amount);
         var totalRaised = directApproved + allocatedIn;
 
-        var surplusGenerated = Math.Max(0, directApproved - campaign.GoalAmount);
+        // Surplus base is total eligible funding (direct + incoming allocations), not direct-only
+        var surplusGenerated = (campaign.Status == "COMPLETED")
+            ? Math.Max(0, totalRaised - campaign.GoalAmount)
+            : 0;
         var allocatedOut = campaign.CampaignSurplusTransactionSourceCampaigns
             .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => t.Amount);
         var availableSurplus = Math.Max(0, surplusGenerated - allocatedOut);
@@ -967,14 +1033,21 @@ public class CampaignService
     /// </summary>
     public async Task<(decimal TotalAvailableSurplus, decimal TotalSurplusAllocated)> GetAdminTotalSurplusStatsAsync()
     {
+        // Only COMPLETED campaigns contribute to surplus pool
         var campaigns = await _context.Campaigns
             .AsNoTracking()
+            .Where(c => c.Status == "COMPLETED")
             .Select(c => new
             {
                 c.Id,
                 c.GoalAmount,
                 DirectApproved = c.Donations.Where(d => d.Status == "APPROVED").Sum(d => (decimal?)d.Amount) ?? 0,
-                AllocatedOut = c.CampaignSurplusTransactionSourceCampaigns.Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION").Sum(t => (decimal?)t.Amount) ?? 0
+                AllocatedIn = c.CampaignSurplusTransactionTargetCampaigns
+                    .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                    .Sum(t => (decimal?)t.Amount) ?? 0,
+                AllocatedOut = c.CampaignSurplusTransactionSourceCampaigns
+                    .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                    .Sum(t => (decimal?)t.Amount) ?? 0
             })
             .ToListAsync();
 
@@ -983,7 +1056,8 @@ public class CampaignService
 
         foreach (var c in campaigns)
         {
-            var surplusGenerated = Math.Max(0, c.DirectApproved - c.GoalAmount);
+            var totalRaised = c.DirectApproved + c.AllocatedIn;
+            var surplusGenerated = Math.Max(0, totalRaised - c.GoalAmount);
             var available = Math.Max(0, surplusGenerated - c.AllocatedOut);
             totalAvailable += available;
             totalAllocated += c.AllocatedOut;
@@ -1041,10 +1115,15 @@ public class CampaignService
             var sourceCampaign = await _context.Campaigns
                 .Include(c => c.Donations)
                 .Include(c => c.CampaignSurplusTransactionSourceCampaigns)
+                .Include(c => c.CampaignSurplusTransactionTargetCampaigns)
                 .FirstOrDefaultAsync(c => c.Id == sourceCampaignId);
 
             if (sourceCampaign == null)
                 return (false, "Source campaign not found.");
+
+            // Only COMPLETED campaigns may distribute surplus
+            if (sourceCampaign.Status != "COMPLETED")
+                return (false, $"Only COMPLETED campaigns can distribute surplus (current status: {sourceCampaign.Status}).");
 
             var targetCampaign = await _context.Campaigns
                 .Include(c => c.Donations)
@@ -1060,11 +1139,15 @@ public class CampaignService
             if (targetCampaign.EndDate.HasValue && targetCampaign.EndDate.Value <= AppTime.Now)
                 return (false, "Target campaign has expired and cannot receive funding.");
 
-            // Calculate source available surplus atomically
+            // Calculate source available surplus atomically (includes incoming allocations)
             var sourceDirect = sourceCampaign.Donations
                 .Where(d => d.Status == "APPROVED")
                 .Sum(d => d.Amount) ?? 0;
-            var sourceSurplusGenerated = Math.Max(0, sourceDirect - sourceCampaign.GoalAmount);
+            var sourceAllocatedIn = sourceCampaign.CampaignSurplusTransactionTargetCampaigns
+                .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
+                .Sum(t => t.Amount);
+            var sourceTotalRaised = sourceDirect + sourceAllocatedIn;
+            var sourceSurplusGenerated = Math.Max(0, sourceTotalRaised - sourceCampaign.GoalAmount);
             var sourceAllocatedOut = sourceCampaign.CampaignSurplusTransactionSourceCampaigns
                 .Where(t => t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION")
                 .Sum(t => t.Amount);

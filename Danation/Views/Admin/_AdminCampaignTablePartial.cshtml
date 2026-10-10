@@ -106,10 +106,15 @@
                                class="btn btn-sm btn-outline-secondary" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@c.Id"
-                               class="btn btn-sm btn-outline-primary" title="Admin Edit Campaign">
-                                <i class="bi bi-pencil"></i>
-                            </a>
+
+                            @if (c.Status == "CLOSED" || c.Status == "GOAL_REACHED")
+                            {
+                                <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@c.Id"
+                                   class="btn btn-sm btn-outline-primary" title="Admin Edit Campaign">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            }
+
                             @if (c.Status == "PENDING")
                             {
                                 <button class="btn btn-sm btn-success approve-btn" data-id="@c.Id" title="Approve">
@@ -119,7 +124,7 @@
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             }
-                            @if (c.Status == "OPEN" || c.Status == "GOAL_REACHED" || c.Status == "CLOSED")
+                            @if (c.Status == "GOAL_REACHED" || c.Status == "CLOSED")
                             {
                                 <button class="btn btn-sm btn-outline-info extend-btn" data-id="@c.Id"
                                         data-title="@c.Title"
@@ -144,7 +149,7 @@
                                     <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             }
-                            @if (c.Status == "CLOSED")
+                            @if (c.Status == "GOAL_REACHED" || c.Status == "CLOSED")
                             {
                                 <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@c.Id"
                                    class="btn btn-sm btn-primary" title="Create Completion">

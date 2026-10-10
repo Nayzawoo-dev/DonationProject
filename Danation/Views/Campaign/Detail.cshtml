@@ -162,8 +162,10 @@
                     }
                     else if (Model.Status == "GOAL_REACHED" || Model.Status == "CLOSED" || Model.Status == "COMPLETED")
                     {
-                        <div class="alert alert-success border-0 mb-0 text-center">
-                            <i class="bi bi-check-circle-fill me-2"></i>
+                        var alertCls = Model.CloseReason == "EXPIRED" ? "alert-warning" : "alert-success";
+                        var alertIcon = Model.CloseReason == "EXPIRED" ? "bi-clock-history" : "bi-check-circle-fill";
+                        <div class="alert @alertCls border-0 mb-0 text-center">
+                            <i class="bi @alertIcon me-2"></i>
                             @(Model.Status == "COMPLETED" ? "Campaign Completed!" : (Model.CloseReason == "EXPIRED" ? "Campaign Expired" : "Goal Reached!"))
                         </div>
                     }
@@ -340,7 +342,19 @@
                     'PENDING': 'badge-pending'
                 };
                 var cls = badgeMap[data.status] || 'bg-secondary';
-                $('#campaignStatusBadge').attr('class', 'badge ' + cls + ' fs-6').text(data.status.replace('_', ' '));
+                var statusText = data.status.replace('_', ' ');
+
+                if (data.status === 'CLOSED') {
+                    if (data.closeReason === 'EXPIRED') {
+                        statusText = 'EXPIRED';
+                        cls = 'badge-closed';
+                    } else if (data.closeReason === 'GOAL_REACHED') {
+                        statusText = 'GOAL REACHED (CLOSED)';
+                        cls = 'badge-goal';
+                    }
+                }
+
+                $('#campaignStatusBadge').attr('class', 'badge ' + cls + ' fs-6').text(statusText);
 
                 if (data.status === 'OPEN') {
                     @if (User.Identity?.IsAuthenticated == true)
@@ -359,10 +373,21 @@
                         );
                         </text>
                     }
-                } else if (data.status === 'CLOSED' || data.status === 'COMPLETED' || data.status === 'GOAL_REACHED') {
+                } else if (data.status === 'COMPLETED') {
                     $('#campaignDonateActionContainer').html(
-                        '<div class="alert alert-success border-0 mb-0 text-center"><i class="bi bi-check-circle-fill me-2"></i>' +
-                        (data.status === 'COMPLETED' ? 'Campaign Completed!' : 'Goal Reached!') + '</div>'
+                        '<div class="alert alert-success border-0 mb-0 text-center"><i class="bi bi-check-circle-fill me-2"></i>Campaign Completed!</div>'
+                    );
+                } else if (data.status === 'CLOSED' && data.closeReason === 'EXPIRED') {
+                    $('#campaignDonateActionContainer').html(
+                        '<div class="alert alert-warning border-0 mb-0 text-center"><i class="bi bi-clock-history me-2"></i>Campaign Expired</div>'
+                    );
+                } else if (data.status === 'GOAL_REACHED' || (data.status === 'CLOSED' && data.closeReason === 'GOAL_REACHED')) {
+                    $('#campaignDonateActionContainer').html(
+                        '<div class="alert alert-success border-0 mb-0 text-center"><i class="bi bi-check-circle-fill me-2"></i>Goal Reached!</div>'
+                    );
+                } else if (data.status === 'CLOSED') {
+                    $('#campaignDonateActionContainer').html(
+                        '<div class="alert alert-secondary border-0 mb-0 text-center"><i class="bi bi-lock-fill me-2"></i>Campaign Closed</div>'
                     );
                 }
             }

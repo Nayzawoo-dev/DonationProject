@@ -132,7 +132,17 @@
                     'PENDING': 'badge-pending'
                 };
                 var cls = badgeMap[data.status] || 'bg-secondary';
-                col.find('.my-campaign-status').attr('class', 'badge ' + cls + ' my-campaign-status').text(data.status.replace('_', ' '));
+                var text = data.status.replace('_', ' ');
+                if (data.status === 'CLOSED') {
+                    if (data.closeReason === 'EXPIRED') {
+                        text = 'EXPIRED';
+                        cls = 'badge-closed';
+                    } else if (data.closeReason === 'GOAL_REACHED') {
+                        text = 'GOAL REACHED';
+                        cls = 'badge-goal';
+                    }
+                }
+                col.find('.my-campaign-status').attr('class', 'badge ' + cls + ' my-campaign-status').text(text);
 
                 if (data.status !== 'PENDING') {
                     col.find('.my-campaign-actions').html(

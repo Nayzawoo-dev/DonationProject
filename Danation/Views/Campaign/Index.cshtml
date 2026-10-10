@@ -193,9 +193,19 @@
             var card = $('.campaign-card[data-campaign-id="' + data.campaignId + '"]');
             if (card.length) {
                 var badgeCls = 'badge-' + data.status.toLowerCase().replace('_', '-');
+                var text = data.status.replace('_', ' ');
+                if (data.status === 'CLOSED') {
+                    if (data.closeReason === 'EXPIRED') {
+                        text = 'EXPIRED';
+                        badgeCls = 'badge-closed';
+                    } else if (data.closeReason === 'GOAL_REACHED') {
+                        text = 'GOAL REACHED';
+                        badgeCls = 'badge-goal';
+                    }
+                }
                 card.find('.campaign-card-status')
                     .attr('class', 'badge ' + badgeCls + ' campaign-card-status')
-                    .text(data.status.replace('_', ' '));
+                    .text(text);
             }
         });
     </script>

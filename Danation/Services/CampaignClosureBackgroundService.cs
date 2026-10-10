@@ -74,32 +74,29 @@ public class CampaignClosureBackgroundService : BackgroundService
             string closeReason = string.Empty;
             string notificationMessage = string.Empty;
 
-            // 1. Check if End Date has passed
-            if (campaign.EndDate.HasValue && campaign.EndDate.Value <= localNow)
+            var directRaised = campaign.Donations
+                .Where(d => d.Status == "APPROVED")
+                .Sum(d => d.Amount) ?? 0;
+
+            var allocatedSurplus = await context.CampaignSurplusTransactions
+                .Where(t => t.TargetCampaignId == campaign.Id && (t.TransactionType == "FundAllocated" || t.TransactionType == "ALLOCATION"))
+                .SumAsync(t => (decimal?)t.Amount, cancellationToken) ?? 0;
+
+            var totalRaised = directRaised + allocatedSurplus;
+
+            // 1. If Goal has been reached before or at expiry -> GOAL_REACHED
+            if (campaign.GoalAmount > 0 && totalRaised >= campaign.GoalAmount)
+            {
+                shouldClose = true;
+                closeReason = "GOAL_REACHED";
+                notificationMessage = $"Your campaign \"{campaign.Title}\" has automatically closed after reaching its goal of {campaign.GoalAmount:N0} MMK!";
+            }
+            // 2. If End Date has passed and Goal was NOT reached -> EXPIRED
+            else if (campaign.EndDate.HasValue && campaign.EndDate.Value <= localNow)
             {
                 shouldClose = true;
                 closeReason = "EXPIRED";
                 notificationMessage = $"Your campaign \"{campaign.Title}\" has automatically closed because its scheduled end date was reached.";
-            }
-            else
-            {
-                // 2. Check if Goal Amount has been reached
-                var directRaised = campaign.Donations
-                    .Where(d => d.Status == "APPROVED")
-                    .Sum(d => d.Amount) ?? 0;
-
-                var allocatedSurplus = await context.CampaignSurplusTransactions
-                    .Where(t => t.TargetCampaignId == campaign.Id && t.TransactionType == "ALLOCATION")
-                    .SumAsync(t => (decimal?)t.Amount, cancellationToken) ?? 0;
-
-                var totalRaised = directRaised + allocatedSurplus;
-
-                if (campaign.GoalAmount > 0 && totalRaised >= campaign.GoalAmount)
-                {
-                    shouldClose = true;
-                    closeReason = "GOAL_REACHED";
-                    notificationMessage = $"Your campaign \"{campaign.Title}\" has automatically closed after reaching its goal of {campaign.GoalAmount:N0} MMK!";
-                }
             }
 
             if (shouldClose)
