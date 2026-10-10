@@ -23,6 +23,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<CampaignImage> CampaignImages { get; set; }
 
+    public virtual DbSet<CampaignSurplusTransaction> CampaignSurplusTransactions { get; set; }
+
     public virtual DbSet<CompletionImage> CompletionImages { get; set; }
 
     public virtual DbSet<Donation> Donations { get; set; }
@@ -31,7 +33,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-
+   
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +42,7 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Campaign__3214EC0792861D59");
 
             entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.CloseReason).HasMaxLength(30);
             entity.Property(e => e.ContactPhone)
                 .HasMaxLength(20)
                 .IsUnicode(false);
@@ -103,6 +106,25 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.CampaignId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CampaignImages_Campaigns");
+        });
+
+        modelBuilder.Entity<CampaignSurplusTransaction>(entity =>
+        {
+            entity.HasKey(e => e.SurplusTransactionId).HasName("PK__Campaign__187390D1B11A92DE");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.TransactionDate).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.TransactionType).HasMaxLength(30);
+
+            entity.HasOne(d => d.SourceCampaign).WithMany(p => p.CampaignSurplusTransactionSourceCampaigns)
+                .HasForeignKey(d => d.SourceCampaignId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Surplus_SourceCampaign");
+
+            entity.HasOne(d => d.TargetCampaign).WithMany(p => p.CampaignSurplusTransactionTargetCampaigns)
+                .HasForeignKey(d => d.TargetCampaignId)
+                .HasConstraintName("FK_Surplus_TargetCampaign");
         });
 
         modelBuilder.Entity<CompletionImage>(entity =>

@@ -31,11 +31,21 @@ public partial class Campaign
 
     public string ContactPhone { get; set; } = null!;
 
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public string? CloseReason { get; set; }
+
     public virtual CampaignCompletion? CampaignCompletion { get; set; }
 
     public virtual ICollection<CampaignDocument> CampaignDocuments { get; set; } = new List<CampaignDocument>();
 
     public virtual ICollection<CampaignImage> CampaignImages { get; set; } = new List<CampaignImage>();
+
+    public virtual ICollection<CampaignSurplusTransaction> CampaignSurplusTransactionSourceCampaigns { get; set; } = new List<CampaignSurplusTransaction>();
+
+    public virtual ICollection<CampaignSurplusTransaction> CampaignSurplusTransactionTargetCampaigns { get; set; } = new List<CampaignSurplusTransaction>();
 
     public virtual ICollection<Donation> Donations { get; set; } = new List<Donation>();
 
