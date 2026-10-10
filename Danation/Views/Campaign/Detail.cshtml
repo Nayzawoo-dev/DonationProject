@@ -2,15 +2,18 @@
 @{
     ViewData["Title"] = Model.Title + " — Danation";
     Layout = "_Layout";
-    var statusClass = Model.Status switch
+    var isUpcoming = Model.IsUpcoming;
+    var isExpired = Model.IsExpired && Model.Status == "CLOSED" && Model.CloseReason == "EXPIRED";
+    var displayStatus = isUpcoming ? "UPCOMING" : (Model.Status == "CLOSED" && Model.CloseReason == "GOAL_REACHED" ? "GOAL REACHED (CLOSED)" : (isExpired ? "EXPIRED" : Model.Status.Replace("_", " ")));
+    var statusClass = isUpcoming ? "badge-pending" : (Model.Status switch
     {
         "OPEN" => "badge-open",
         "GOAL_REACHED" => "badge-goal",
-        "CLOSED" => "badge-closed",
+        "CLOSED" => Model.CloseReason == "GOAL_REACHED" ? "badge-goal" : "badge-closed",
         "COMPLETED" => "badge-completed",
         "REJECTED" => "badge-rejected",
         _ => "badge-pending"
-    };
+    });
 }
 
 <div class="container py-5">
@@ -48,7 +51,13 @@
 
             <!-- Title & Status -->
             <div class="d-flex align-items-start gap-2 mb-3 flex-wrap">
-                <span id="campaignStatusBadge" class="badge @statusClass fs-6">@Model.Status.Replace("_", " ")</span>
+                <span id="campaignStatusBadge" class="badge @statusClass fs-6">@displayStatus</span>
+                @if (Model.SurplusAmount > 0)
+                {
+                    <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">
+                        <i class="bi bi-gift me-1"></i>Surplus: @Model.SurplusAmount.ToString("N0") MMK
+                    </span>
+                }
             </div>
             <h1 class="fw-bold mb-3" style="font-size:2rem;">@Model.Title</h1>
 
@@ -116,17 +125,34 @@
                     <div id="campaignProgressBar" class="progress-bar @(Model.ProgressPercent >= 100 ? "goal-reached" : "")"
                          style="width:@Model.ProgressPercent%"></div>
                 </div>
-                <div class="d-flex justify-content-between text-muted small mb-4">
+                <div class="d-flex justify-content-between text-muted small mb-3">
                     <span id="campaignProgressText">@Model.ProgressPercent% funded</span>
                 </div>
 
+                @if (Model.SurplusAmount > 0)
+                {
+                    <div class="alert alert-success border-0 py-2 px-3 small mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-gift-fill me-1 text-success"></i><strong>Community Surplus:</strong></span>
+                            <span class="fw-bold text-success">@Model.SurplusAmount.ToString("N0") MMK</span>
+                        </div>
+                        <div class="text-muted mt-1" style="font-size:11px;">Surplus funds can be reallocated by admins to support other vital causes.</div>
+                    </div>
+                }
+
                 <div id="campaignDonateActionContainer">
-                    @if (Model.CanDonate && Model.Status == "OPEN")
+                    @if (Model.CanDonate)
                     {
                         <a asp-controller="Donation" asp-action="Submit" asp-route-id="@Model.Id"
                            class="btn btn-primary w-100 btn-lg">
                             <i class="bi bi-heart-fill me-2 text-danger"></i>Donate Now
                         </a>
+                    }
+                    else if (isUpcoming)
+                    {
+                        <div class="alert alert-warning border-0 mb-0 text-center small">
+                            <i class="bi bi-clock me-1"></i>This campaign starts on <strong>@(Model.StartDate?.ToString("MMM d, yyyy HH:mm"))</strong>.<br />Donations will open then.
+                        </div>
                     }
                     else if (Model.Status == "OPEN" && !User.Identity!.IsAuthenticated)
                     {
@@ -134,17 +160,11 @@
                             <i class="bi bi-box-arrow-in-right me-2"></i>Login to Donate
                         </a>
                     }
-                    else if (Model.Status == "OPEN" && Model.IsOwner)
-                    {
-                        <div class="alert alert-info border-0 mb-0 text-center small">
-                            <i class="bi bi-info-circle me-1"></i>You cannot donate to your own campaign.
-                        </div>
-                    }
                     else if (Model.Status == "GOAL_REACHED" || Model.Status == "CLOSED" || Model.Status == "COMPLETED")
                     {
                         <div class="alert alert-success border-0 mb-0 text-center">
                             <i class="bi bi-check-circle-fill me-2"></i>
-                            @(Model.Status == "COMPLETED" ? "Campaign Completed!" : "Goal Reached!")
+                            @(Model.Status == "COMPLETED" ? "Campaign Completed!" : (Model.CloseReason == "EXPIRED" ? "Campaign Expired" : "Goal Reached!"))
                         </div>
                     }
                 </div>
@@ -201,9 +221,23 @@
                         </li>
                     }
                     <li class="mb-1"><span class="text-muted">Created:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
+                    @if (Model.StartDate.HasValue)
+                    {
+                        <li class="mb-1"><span class="text-muted">Start Date:</span> <span class="fw-medium">@Model.StartDate.Value.ToString("MMM d, yyyy HH:mm")</span></li>
+                    }
+                    @if (Model.EndDate.HasValue)
+                    {
+                        <li class="mb-1"><span class="text-muted">End Date:</span> <span class="fw-medium">@Model.EndDate.Value.ToString("MMM d, yyyy HH:mm")</span></li>
+                    }
                     @if (Model.ClosedAt.HasValue)
                     {
-                        <li class="mb-1"><span class="text-muted">Closed:</span> <span class="fw-medium">@Model.ClosedAt.Value.ToString("MMM d, yyyy")</span></li>
+                        <li class="mb-1">
+                            <span class="text-muted">Closed:</span> <span class="fw-medium">@Model.ClosedAt.Value.ToString("MMM d, yyyy")</span>
+                            @if (!string.IsNullOrEmpty(Model.CloseReason))
+                            {
+                                <span class="badge bg-secondary-subtle text-dark ms-1">@Model.CloseReason</span>
+                            }
+                        </li>
                     }
                     @if (Model.CompletedAt.HasValue)
                     {
@@ -309,7 +343,7 @@
                 $('#campaignStatusBadge').attr('class', 'badge ' + cls + ' fs-6').text(data.status.replace('_', ' '));
 
                 if (data.status === 'OPEN') {
-                    @if (!Model.IsOwner && User.Identity?.IsAuthenticated == true)
+                    @if (User.Identity?.IsAuthenticated == true)
                     {
                         <text>
                         $('#campaignDonateActionContainer').html(
@@ -317,7 +351,7 @@
                         );
                         </text>
                     }
-                    else if (User.Identity?.IsAuthenticated != true)
+                    else
                     {
                         <text>
                         $('#campaignDonateActionContainer').html(

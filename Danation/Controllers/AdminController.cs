@@ -68,6 +68,10 @@ public class AdminController : Controller
                 .SumAsync(d => (decimal?)d.Amount) ?? 0
         };
 
+        var (totalAvailableSurplus, totalSurplusAllocated) = await _campaignService.GetAdminTotalSurplusStatsAsync();
+        vm.TotalAvailableSurplus = totalAvailableSurplus;
+        vm.TotalSurplusAllocated = totalSurplusAllocated;
+
         // Recent pending campaigns (top 5)
         vm.RecentPendingCampaigns = await _context.Campaigns
             .AsNoTracking()
@@ -397,6 +401,161 @@ public class AdminController : Controller
         var raw = await _context.Campaigns.AsNoTracking().Where(c => c.Id == id).Select(c => new { c.ContactPhone }).FirstOrDefaultAsync();
         ViewBag.ContactPhone = raw?.ContactPhone;
 
+        var surplus = await _campaignService.GetCampaignSurplusDetailsAsync(id);
+        ViewBag.SurplusDetails = surplus;
+
         return View(campaign);
+    }
+
+    // GET: /Admin/EditCampaign/5 — Admin campaign editing (all permitted properties)
+    [HttpGet]
+    public async Task<IActionResult> EditCampaign(int id)
+    {
+        var model = await _campaignService.GetAdminEditCampaignViewModelAsync(id);
+        if (model == null) return NotFound();
+
+        return View(model);
+    }
+
+    // POST: /Admin/EditCampaign
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditCampaign(AdminEditCampaignViewModel model)
+    {
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+        if (!ModelState.IsValid)
+        {
+            var firstErr = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "Invalid input.";
+            if (isAjax) return Json(new { success = false, message = firstErr });
+            return View(model);
+        }
+
+        var adminId = GetCurrentAdminId();
+        var (success, error) = await _campaignService.AdminUpdateCampaignAsync(model, adminId);
+
+        if (!success)
+        {
+            if (isAjax) return Json(new { success = false, message = error });
+            ModelState.AddModelError(string.Empty, error);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = "Campaign updated successfully.";
+
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                message = "Campaign updated successfully.",
+                redirectUrl = Url.Action(nameof(Campaigns))
+            });
+        }
+
+        return RedirectToAction(nameof(Campaigns));
+    }
+
+    // POST: /Admin/ExtendCampaignDate (AJAX)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExtendCampaignDate(int id, [FromForm] DateTime newEndDate, [FromForm] bool reopen)
+    {
+        var adminId = GetCurrentAdminId();
+        var (success, error) = await _campaignService.AdminExtendEndDateAsync(id, newEndDate, reopen, adminId);
+        return Json(new { success, message = success ? (reopen ? "Campaign extended and reopened successfully." : "Campaign end date extended.") : error });
+    }
+
+    // POST: /Admin/ReopenCampaign (AJAX)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReopenCampaign(int id)
+    {
+        var adminId = GetCurrentAdminId();
+        var (success, error) = await _campaignService.AdminReopenCampaignAsync(id, adminId);
+        return Json(new { success, message = success ? "Campaign has been reopened and is now OPEN for donations." : error });
+    }
+
+    // GET: /Admin/AllocateSurplus?sourceCampaignId=5
+    [HttpGet]
+    public async Task<IActionResult> AllocateSurplus(int? sourceCampaignId)
+    {
+        var adminCampaigns = await _campaignService.GetAdminCampaignsAsync(null, null);
+        var sourceCandidates = adminCampaigns.Where(c => c.AvailableSurplus > 0).ToList();
+
+        if (sourceCandidates.Count == 0 && (!sourceCampaignId.HasValue || sourceCampaignId <= 0))
+        {
+            TempData["ErrorMessage"] = "No campaigns currently have surplus funds available for allocation.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        int selectedSourceId = sourceCampaignId.HasValue && sourceCampaignId.Value > 0
+            ? sourceCampaignId.Value
+            : sourceCandidates.First().Id;
+
+        var sourceDetails = await _campaignService.GetCampaignSurplusDetailsAsync(selectedSourceId);
+        var sourceCampaign = await _context.Campaigns.FindAsync(selectedSourceId);
+
+        var targetCampaigns = await _campaignService.GetEligibleTargetCampaignsAsync(selectedSourceId);
+
+        var model = new AdminSurplusAllocationViewModel
+        {
+            SourceCampaignId = selectedSourceId,
+            SourceCampaignTitle = sourceCampaign?.Title ?? "Source Campaign",
+            SourceAvailableSurplus = sourceDetails.AvailableSurplus
+        };
+
+        ViewBag.SourceCandidates = sourceCandidates;
+        ViewBag.TargetCampaigns = targetCampaigns;
+
+        return View(model);
+    }
+
+    // POST: /Admin/AllocateSurplus
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AllocateSurplus(AdminSurplusAllocationViewModel model)
+    {
+        bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+        if (!ModelState.IsValid)
+        {
+            var firstErr = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "Invalid input.";
+            if (isAjax) return Json(new { success = false, message = firstErr });
+
+            var adminCampaigns = await _campaignService.GetAdminCampaignsAsync(null, null);
+            ViewBag.SourceCandidates = adminCampaigns.Where(c => c.AvailableSurplus > 0).ToList();
+            ViewBag.TargetCampaigns = await _campaignService.GetEligibleTargetCampaignsAsync(model.SourceCampaignId);
+            return View(model);
+        }
+
+        var adminId = GetCurrentAdminId();
+        var (success, error) = await _campaignService.AllocateSurplusAsync(
+            model.SourceCampaignId, model.TargetCampaignId, model.Amount, model.Notes, adminId);
+
+        if (!success)
+        {
+            if (isAjax) return Json(new { success = false, message = error });
+            ModelState.AddModelError(string.Empty, error);
+
+            var adminCampaigns = await _campaignService.GetAdminCampaignsAsync(null, null);
+            ViewBag.SourceCandidates = adminCampaigns.Where(c => c.AvailableSurplus > 0).ToList();
+            ViewBag.TargetCampaigns = await _campaignService.GetEligibleTargetCampaignsAsync(model.SourceCampaignId);
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] = $"Successfully allocated {model.Amount:N0} MMK from community surplus funds.";
+
+        if (isAjax)
+        {
+            return Json(new
+            {
+                success = true,
+                message = $"Successfully allocated {model.Amount:N0} MMK from community surplus funds.",
+                redirectUrl = Url.Action(nameof(Dashboard))
+            });
+        }
+
+        return RedirectToAction(nameof(Dashboard));
     }
 }

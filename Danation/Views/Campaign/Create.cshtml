@@ -54,6 +54,25 @@
                         </div>
                     </div>
 
+                    <!-- Campaign Schedule (Start and End Dates) -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                            <i class="bi bi-calendar-range me-1 text-primary"></i>Campaign Schedule
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="startDateInput">Start Date & Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" id="startDateInput" name="StartDate" class="form-control" required />
+                                <div class="form-text">When donations will begin</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="endDateInput">End Date & Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" id="endDateInput" name="EndDate" class="form-control" required />
+                                <div class="form-text">Must be later than start date</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Location Section -->
                     <div class="mb-3">
                         <h6 class="fw-bold text-muted text-uppercase small mb-3">
@@ -119,6 +138,17 @@
         // AJAX submit
         $('#createCampaignForm').on('submit', function (e) {
             e.preventDefault();
+            var start = $('#startDateInput').val();
+            var end = $('#endDateInput').val();
+            if (!start || !end) {
+                Notiflix.Notify.warning('Please specify both start date and end date.');
+                return;
+            }
+            if (new Date(end) <= new Date(start)) {
+                Notiflix.Notify.warning('End date must be later than start date.');
+                return;
+            }
+
             var btn = $('#createBtn');
             if (btn.prop('disabled')) return;
             btn.prop('disabled', true);

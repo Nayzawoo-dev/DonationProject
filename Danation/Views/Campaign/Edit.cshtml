@@ -48,6 +48,25 @@
                             <textarea name="Description" class="form-control" rows="7" maxlength="5000" required>@Model.Description</textarea>
                         </div>
 
+                        <!-- Campaign Schedule -->
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                                <i class="bi bi-calendar-range me-1 text-primary"></i>Campaign Schedule
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="editStartDate">Start Date & Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="editStartDate" name="StartDate"
+                                           value="@(Model.StartDate?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="editEndDate">End Date & Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" id="editEndDate" name="EndDate"
+                                           value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm"))" class="form-control" required />
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Location -->
                         <div class="mb-3">
                             <h6 class="fw-bold text-muted text-uppercase small mb-3">
@@ -186,6 +205,17 @@
         // Save details AJAX
         $('#editCampaignForm').on('submit', function (e) {
             e.preventDefault();
+            var start = $('#editStartDate').val();
+            var end = $('#editEndDate').val();
+            if (!start || !end) {
+                Notiflix.Notify.warning('Please specify both start date and end date.');
+                return;
+            }
+            if (new Date(end) <= new Date(start)) {
+                Notiflix.Notify.warning('End date must be later than start date.');
+                return;
+            }
+
             var btn = $('#saveDetailsBtn');
             if (btn.prop('disabled')) return;
             btn.prop('disabled', true);

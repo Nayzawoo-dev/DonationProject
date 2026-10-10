@@ -60,6 +60,38 @@
     </div>
 </div>
 
+<!-- Extend End Date Modal -->
+<div class="modal fade" id="extendModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Extend Campaign End Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3" id="extendModalTitle"></p>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">New End Date & Time</label>
+                    <input type="datetime-local" id="extendNewEndDate" class="form-control" />
+                    <div class="form-text">Must be a future date later than the start date.</div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="extendReopenCheck" checked>
+                    <label class="form-check-label small" for="extendReopenCheck">
+                        Reopen campaign for donations if it is currently closed/expired
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExtendBtn">
+                    <i class="bi bi-calendar-check me-1"></i>Confirm Extension
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Reject Reason Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -86,6 +118,7 @@
 @section Scripts {
     <script>
         var rejectingId = null;
+        var extendingId = null;
         var adminSearchTimer = null;
 
         function fetchAdminCampaigns() {
@@ -134,8 +167,7 @@
                 { id: id },
                 function (res) {
                     Notiflix.Notify.success(res.message);
-                    row.find('.status-badge').attr('class', 'badge badge-open status-badge').text('OPEN');
-                    row.find('.approve-btn, .reject-btn').remove();
+                    fetchAdminCampaigns();
                 }
             );
         });
@@ -150,13 +182,52 @@
         $('#confirmRejectBtn').on('click', function () {
             var reason = $('#rejectReason').val().trim();
             if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
-            var row = $('tr[data-id="' + rejectingId + '"]');
             bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
             Danation.post('/Admin/RejectCampaign', { id: rejectingId, reason: reason },
                 function (res) {
                     Notiflix.Notify.success(res.message);
-                    row.find('.status-badge').attr('class', 'badge badge-rejected status-badge').text('REJECTED');
-                    row.find('.approve-btn, .reject-btn').remove();
+                    fetchAdminCampaigns();
+                }
+            );
+        });
+
+        // Extend End Date — open modal
+        $(document).on('click', '.extend-btn', function () {
+            extendingId = $(this).data('id');
+            var title = $(this).data('title');
+            var currentEnd = $(this).data('enddate');
+            $('#extendModalTitle').text('Campaign: ' + title);
+            $('#extendNewEndDate').val(currentEnd || '');
+            new bootstrap.Modal(document.getElementById('extendModal')).show();
+        });
+
+        $('#confirmExtendBtn').on('click', function () {
+            var newEndDate = $('#extendNewEndDate').val();
+            if (!newEndDate) {
+                Notiflix.Notify.warning('Please select a new end date and time.');
+                return;
+            }
+            var reopen = $('#extendReopenCheck').is(':checked');
+            bootstrap.Modal.getInstance(document.getElementById('extendModal')).hide();
+
+            Danation.post('/Admin/ExtendCampaignDate',
+                { id: extendingId, newEndDate: newEndDate, reopen: reopen },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    fetchAdminCampaigns();
+                }
+            );
+        });
+
+        // Reopen campaign
+        $(document).on('click', '.reopen-btn', function () {
+            var id = $(this).data('id');
+            var title = $(this).data('title');
+            Danation.confirmPost('Reopen "' + title + '" for donations?', '/Admin/ReopenCampaign',
+                { id: id },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    fetchAdminCampaigns();
                 }
             );
         });
@@ -169,10 +240,7 @@
                 { id: id },
                 function (res) {
                     Notiflix.Notify.success(res.message);
-                    row.find('.status-badge').attr('class', 'badge badge-closed status-badge').text('CLOSED');
-                    row.find('.close-btn').replaceWith(
-                        '<a href="/Admin/CreateCompletion/' + id + '" class="btn btn-sm btn-primary" title="Create Completion"><i class="bi bi-trophy"></i></a>'
-                    );
+                    fetchAdminCampaigns();
                 }
             );
         });

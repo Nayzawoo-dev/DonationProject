@@ -35,16 +35,75 @@ public class DonationService
     public async Task<(bool Success, string ErrorMessage)> SubmitDonationAsync(
         int campaignId, int donorId, IFormFile screenshot)
     {
-        // Server-side: cannot donate to own campaign
         var campaign = await _context.Campaigns.FindAsync(campaignId);
         if (campaign == null)
             return (false, "Campaign not found.");
 
-        if (campaign.UserId == donorId)
-            return (false, "You cannot donate to your own campaign.");
+        // Rule change: Campaign owners ARE allowed to donate to their own campaigns
 
         if (campaign.Status != "OPEN")
             return (false, "This campaign is not currently accepting donations.");
+
+        var now = DateTime.UtcNow;
+
+        // Check Start Date
+        if (campaign.StartDate.HasValue && campaign.StartDate.Value > now)
+            return (false, $"This campaign has not started yet. Donations open on {campaign.StartDate.Value:MMM d, yyyy}.");
+
+        // Check End Date — auto-close if expired
+        if (campaign.EndDate.HasValue && campaign.EndDate.Value <= now)
+        {
+            campaign.Status = "CLOSED";
+            campaign.CloseReason = "EXPIRED";
+            campaign.ClosedAt = now;
+            campaign.UpdatedAt = now;
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+                {
+                    campaignId = campaign.Id,
+                    status = "CLOSED",
+                    closeReason = "EXPIRED",
+                    title = campaign.Title
+                });
+            }
+            catch { }
+
+            return (false, "This campaign has ended and is now closed for donations.");
+        }
+
+        // Check if goal already reached
+        var currentRaised = (await _context.Donations
+            .Where(d => d.CampaignId == campaignId && d.Status == "APPROVED")
+            .SumAsync(d => (decimal?)d.Amount) ?? 0)
+            + (await _context.CampaignSurplusTransactions
+            .Where(t => t.TargetCampaignId == campaignId && t.TransactionType == "ALLOCATION")
+            .SumAsync(t => (decimal?)t.Amount) ?? 0);
+
+        if (campaign.GoalAmount > 0 && currentRaised >= campaign.GoalAmount)
+        {
+            campaign.Status = "CLOSED";
+            campaign.CloseReason = "GOAL_REACHED";
+            campaign.ClosedAt = now;
+            campaign.UpdatedAt = now;
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
+                {
+                    campaignId = campaign.Id,
+                    status = "CLOSED",
+                    closeReason = "GOAL_REACHED",
+                    title = campaign.Title
+                });
+            }
+            catch { }
+
+            return (false, "This campaign has reached its fundraising goal and is closed for donations.");
+        }
 
         // Validate screenshot
         var (valid, error) = _fileService.ValidateImageFile(screenshot);
@@ -145,7 +204,7 @@ public class DonationService
 
     public async Task<(bool Success, string ErrorMessage)> ApproveDonationAsync(int donationId, decimal verifiedAmount, int adminId)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
         try
         {
             var donation = await _context.Donations
@@ -163,26 +222,56 @@ public class DonationService
             donation.VerifiedBy = adminId;
             donation.VerifiedAt = DateTime.UtcNow;
 
-            // Check if campaign goal is reached
-            var currentRaised = await _context.Donations
+            var campaign = donation.Campaign;
+
+            // Direct approved donations excluding this one
+            var currentDirectRaised = await _context.Donations
                 .Where(d => d.CampaignId == donation.CampaignId && d.Status == "APPROVED" && d.Id != donationId)
                 .SumAsync(d => (decimal?)d.Amount) ?? 0;
 
-            var newTotal = currentRaised + verifiedAmount;
-            var campaign = donation.Campaign;
+            // Allocated surplus in
+            var allocatedIn = await _context.CampaignSurplusTransactions
+                .Where(t => t.TargetCampaignId == donation.CampaignId && t.TransactionType == "ALLOCATION")
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
-            if (newTotal >= campaign.GoalAmount && campaign.Status == "OPEN")
+            var previousTotal = currentDirectRaised + allocatedIn;
+            var newTotal = previousTotal + verifiedAmount;
+
+            bool goalReached = false;
+            if (campaign.GoalAmount > 0 && newTotal >= campaign.GoalAmount && campaign.Status == "OPEN")
             {
-                campaign.Status = "GOAL_REACHED";
+                campaign.Status = "CLOSED";
+                campaign.CloseReason = "GOAL_REACHED";
+                campaign.ClosedAt = DateTime.UtcNow;
                 campaign.UpdatedAt = DateTime.UtcNow;
+                goalReached = true;
 
                 await _notificationService.CreateAsync(
                     campaign.UserId,
-                    "🎯 Goal Reached!",
-                    $"Your campaign \"{campaign.Title}\" has reached its fundraising goal of {campaign.GoalAmount:N0} MMK!");
+                    "🎯 Goal Reached & Campaign Closed!",
+                    $"Your campaign \"{campaign.Title}\" has reached its fundraising goal of {campaign.GoalAmount:N0} MMK and is now closed!");
             }
 
-            
+            // Calculate surplus addition for excess money
+            var newDirectTotal = currentDirectRaised + verifiedAmount;
+            var newSurplus = Math.Max(0, newDirectTotal - campaign.GoalAmount);
+            var oldSurplus = Math.Max(0, currentDirectRaised - campaign.GoalAmount);
+            var deltaSurplus = newSurplus - oldSurplus;
+
+            if (deltaSurplus > 0)
+            {
+                var surplusRecord = new CampaignSurplusTransaction
+                {
+                    SourceCampaignId = campaign.Id,
+                    TargetCampaignId = null,
+                    TransactionType = "SURPLUS_IN",
+                    Amount = deltaSurplus,
+                    TransactionDate = DateTime.UtcNow,
+                    Notes = $"Surplus generated upon approving donation #{donation.Id} (excess over goal)."
+                };
+                _context.CampaignSurplusTransactions.Add(surplusRecord);
+            }
+
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
@@ -209,12 +298,13 @@ public class DonationService
                     status = campaign.Status
                 });
 
-                if (campaign.Status == "GOAL_REACHED")
+                if (goalReached)
                 {
                     await _hubContext.Clients.All.SendAsync("CampaignStatusChanged", new
                     {
                         campaignId = campaign.Id,
-                        status = "GOAL_REACHED",
+                        status = "CLOSED",
+                        closeReason = "GOAL_REACHED",
                         title = campaign.Title
                     });
                 }

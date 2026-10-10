@@ -1,0 +1,157 @@
+@model AdminEditCampaignViewModel
+@{
+    ViewData["Title"] = "Admin Edit Campaign — " + Model.Title;
+    Layout = "_Layout";
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="mb-1 fs-4"><i class="bi bi-pencil-square me-2"></i>Admin Campaign Editor</h1>
+                <p class="mb-0 opacity-75">Modify campaign properties, schedule, contact info, or re-open status</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 shadow-sm border-0">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+                    <div>
+                        <span class="badge bg-secondary mb-1">Status: @Model.Status</span>
+                        <div class="small text-muted">Owner: <strong>@Model.OwnerName</strong> · Raised: <strong>@Model.RaisedAmount.ToString("N0") MMK</strong></div>
+                    </div>
+                    <span class="badge bg-warning text-dark px-3 py-2">
+                        <i class="bi bi-shield-lock me-1"></i>Admin Authorized
+                    </span>
+                </div>
+
+                <form id="adminEditCampaignForm" asp-action="EditCampaign" asp-controller="Admin" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="Status" />
+                    <input type="hidden" asp-for="OwnerName" />
+                    <input type="hidden" asp-for="RaisedAmount" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-4"></div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold">Campaign Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" placeholder="Enter campaign title…" maxlength="200" required />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                        <textarea asp-for="Description" class="form-control" rows="6" placeholder="Full campaign details…" required></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Goal Amount -->
+                    <div class="mb-3">
+                        <label asp-for="GoalAmount" class="form-label fw-semibold">Goal Amount (MMK) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input asp-for="GoalAmount" type="number" step="1000" min="10000" max="1000000000" class="form-control" required />
+                            <span class="input-group-text">MMK</span>
+                        </div>
+                        <div class="form-text">Current raised total: @Model.RaisedAmount.ToString("N0") MMK</div>
+                        <span asp-validation-for="GoalAmount" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Schedule -->
+                    <div class="card bg-light border-0 p-3 mb-3">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i>Campaign Scheduling</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="StartDate" class="form-label small fw-semibold">Start Date & Time</label>
+                                <input asp-for="StartDate" type="datetime-local" class="form-control" id="adminStartDateInput" />
+                                <span asp-validation-for="StartDate" class="text-danger small"></span>
+                                <div class="form-text">Donations will not be accepted before this date.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EndDate" class="form-label small fw-semibold">End Date & Time</label>
+                                <input asp-for="EndDate" type="datetime-local" class="form-control" id="adminEndDateInput" />
+                                <span asp-validation-for="EndDate" class="text-danger small"></span>
+                                <div class="form-text">Campaign will auto-close when this date is reached.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location & Contact -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Township" class="form-label fw-semibold">Township</label>
+                            <input asp-for="Township" class="form-control" placeholder="e.g. Hlaing, Kamayut…" maxlength="100" />
+                            <span asp-validation-for="Township" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ContactPhone" class="form-label fw-semibold">
+                                Contact Phone <span class="badge bg-warning text-dark ms-1" style="font-size:9px;">Admin Only</span>
+                            </label>
+                            <input asp-for="ContactPhone" class="form-control" placeholder="e.g. 09123456789" maxlength="20" />
+                            <span asp-validation-for="ContactPhone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label fw-semibold">Specific Address</label>
+                            <input asp-for="Address" class="form-control" placeholder="Detailed address or location…" maxlength="255" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Reopen checkbox if campaign is closed or goal reached -->
+                    @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
+                    {
+                        <div class="card border-warning bg-warning bg-opacity-10 p-3 mb-4">
+                            <div class="form-check">
+                                <input asp-for="ReopenCampaign" class="form-check-input" type="checkbox" id="reopenCampaignCheck" />
+                                <label asp-for="ReopenCampaign" class="form-check-label fw-bold" for="reopenCampaignCheck">
+                                    Reopen this campaign for donations
+                                </label>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                Checking this will set the campaign status back to <strong>OPEN</strong> so it can accept new donations.
+                                Please ensure the End Date is set in the future.
+                            </div>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $('#adminEditCampaignForm').on('submit', function (e) {
+            var start = $('#adminStartDateInput').val();
+            var end = $('#adminEndDateInput').val();
+            if (start && end) {
+                var sDate = new Date(start);
+                var eDate = new Date(end);
+                if (eDate <= sDate) {
+                    e.preventDefault();
+                    Notiflix.Notify.warning('Campaign end date must be later than start date.');
+                    return false;
+                }
+            }
+        });
+    </script>
+}

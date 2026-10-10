@@ -135,7 +135,33 @@
                             <span class="fw-medium ms-1"><i class="bi bi-pin-map me-1 text-muted"></i>@Model.Address</span>
                         </li>
                     }
-                    <li class="mb-2"><span class="text-muted">Status:</span> <span class="badge @statusClass ms-1">@Model.Status</span></li>
+                    <li class="mb-2">
+                        <span class="text-muted">Start Date:</span>
+                        <span class="fw-medium ms-1">@(Model.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "Immediate")</span>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">End Date:</span>
+                        <span class="fw-medium ms-1">@(Model.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "Open-ended")</span>
+                    </li>
+                    <li class="mb-2">
+                        <span class="text-muted">Status:</span>
+                        <span class="badge @statusClass ms-1">@Model.Status</span>
+                        @if (Model.IsUpcoming)
+                        {
+                            <span class="badge bg-info text-dark ms-1">UPCOMING</span>
+                        }
+                        @if (Model.IsExpired)
+                        {
+                            <span class="badge bg-danger ms-1">EXPIRED</span>
+                        }
+                    </li>
+                    @if (!string.IsNullOrEmpty(Model.CloseReason))
+                    {
+                        <li class="mb-2">
+                            <span class="text-muted">Close Reason:</span>
+                            <span class="badge bg-secondary ms-1">@Model.CloseReason</span>
+                        </li>
+                    }
                     <li class="mb-2"><span class="text-muted">Created:</span> <span class="fw-medium">@Model.CreatedAt.ToString("MMM d, yyyy")</span></li>
                     @if (Model.ClosedAt.HasValue)
                     {
@@ -148,10 +174,56 @@
                 </ul>
             </div>
 
+            @{
+                var surplusDetails = ViewBag.SurplusDetails as CampaignSurplusDetailsViewModel;
+            }
+            @if (surplusDetails != null && (surplusDetails.SurplusGenerated > 0 || surplusDetails.AllocatedReceived > 0))
+            {
+                <div class="card p-3 mb-3 border-success bg-light">
+                    <h6 class="fw-bold mb-2 text-success"><i class="bi bi-piggy-bank me-1"></i>Surplus & Allocation Ledger</h6>
+                    <ul class="list-unstyled small mb-2">
+                        <li class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Surplus Generated:</span>
+                            <span class="fw-bold text-success">@surplusDetails.SurplusGenerated.ToString("N0") MMK</span>
+                        </li>
+                        <li class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Allocated to Others:</span>
+                            <span class="text-danger">-@surplusDetails.AllocatedOut.ToString("N0") MMK</span>
+                        </li>
+                        <li class="d-flex justify-content-between border-top pt-1 mb-1">
+                            <span class="fw-semibold">Remaining Available:</span>
+                            <span class="fw-bold text-primary">@surplusDetails.AvailableSurplus.ToString("N0") MMK</span>
+                        </li>
+                        @if (surplusDetails.AllocatedReceived > 0)
+                        {
+                            <li class="d-flex justify-content-between text-info border-top pt-1 mt-1">
+                                <span>Surplus Received as Target:</span>
+                                <span class="fw-bold">+@surplusDetails.AllocatedReceived.ToString("N0") MMK</span>
+                            </li>
+                        }
+                    </ul>
+                    @if (surplusDetails.AvailableSurplus > 0)
+                    {
+                        <a asp-controller="Admin" asp-action="AllocateSurplus" asp-route-sourceCampaignId="@Model.Id"
+                           class="btn btn-sm btn-success w-100 mt-2">
+                            <i class="bi bi-cash-stack me-1"></i>Allocate This Surplus
+                        </a>
+                    }
+                </div>
+            }
+
             <!-- Admin Actions -->
             <div class="card p-3 border-warning">
-                <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin Actions</h6>
+                <h6 class="fw-bold mb-3 text-warning"><i class="bi bi-shield-check me-1"></i>Admin Management Actions</h6>
                 <div class="d-grid gap-2">
+                    <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="bi bi-pencil me-2"></i>Edit Campaign Details
+                    </a>
+
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#extendDetailModal">
+                        <i class="bi bi-calendar-plus me-2"></i>Extend End Date
+                    </button>
+
                     @if (Model.Status == "PENDING")
                     {
                         <button class="btn btn-success" id="adminApproveBtn" data-id="@Model.Id">
@@ -161,22 +233,26 @@
                             <i class="bi bi-x-circle me-2"></i>Reject Campaign
                         </button>
                     }
-                    else if (Model.Status == "GOAL_REACHED")
+                    else if (Model.Status == "GOAL_REACHED" || Model.Status == "OPEN")
                     {
                         <button class="btn btn-warning" id="adminCloseBtn" data-id="@Model.Id">
                             <i class="bi bi-lock me-2"></i>Close Campaign
                         </button>
                     }
-                    else if (Model.Status == "CLOSED")
+
+                    @if (Model.Status == "CLOSED" || Model.Status == "GOAL_REACHED")
+                    {
+                        <button class="btn btn-outline-success" id="adminReopenBtn" data-id="@Model.Id">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Reopen Campaign
+                        </button>
+                    }
+
+                    @if (Model.Status == "CLOSED")
                     {
                         <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@Model.Id"
                            class="btn btn-primary">
                             <i class="bi bi-trophy me-2"></i>Create Completion
                         </a>
-                    }
-                    else
-                    {
-                        <div class="text-muted small text-center">No actions available for <strong>@Model.Status</strong>.</div>
                     }
                 </div>
             </div>
@@ -207,6 +283,38 @@
     </div>
 </div>
 
+<!-- Extend Detail Modal -->
+<div class="modal fade" id="extendDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2 text-primary"></i>Extend Campaign End Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">Update the campaign end date. You can also reopen the campaign if it was previously closed or expired.</p>
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">New End Date & Time</label>
+                    <input type="datetime-local" id="extendDetailEndDate" class="form-control"
+                           value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")" />
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="extendDetailReopenCheck" checked>
+                    <label class="form-check-label small" for="extendDetailReopenCheck">
+                        Reopen campaign for donations if currently closed or expired
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmExtendDetailBtn">
+                    <i class="bi bi-save me-1"></i>Confirm Extension
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Lightbox -->
 <div class="modal fade" id="lightboxModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -229,6 +337,47 @@
             new bootstrap.Modal(document.getElementById('lightboxModal')).show();
         }
 
+        // Extend End Date
+        $('#confirmExtendDetailBtn').on('click', function () {
+            var newEndDate = $('#extendDetailEndDate').val();
+            if (!newEndDate) {
+                Notiflix.Notify.warning('Please select a valid new end date.');
+                return;
+            }
+            var reopen = $('#extendDetailReopenCheck').is(':checked');
+            bootstrap.Modal.getInstance(document.getElementById('extendDetailModal')).hide();
+
+            Danation.post('/Admin/ExtendCampaignDate',
+                { id: campaignId, newEndDate: newEndDate, reopen: reopen },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    setTimeout(function () { window.location.reload(); }, 1200);
+                }
+            );
+        });
+
+        // Reopen Campaign
+        $('#adminReopenBtn').on('click', function () {
+            Danation.confirmPost('Reopen this campaign for donations?',
+                '/Admin/ReopenCampaign', { id: campaignId },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    setTimeout(function () { window.location.reload(); }, 1200);
+                }
+            );
+        });
+
+        // Close Campaign
+        $('#adminCloseBtn').on('click', function () {
+            Danation.confirmPost('Close this campaign? It will stop accepting donations.',
+                '/Admin/CloseCampaign', { id: campaignId },
+                function (res) {
+                    Notiflix.Notify.success(res.message);
+                    setTimeout(function () { window.location.reload(); }, 1200);
+                }
+            );
+        });
+
         @if (Model.Status == "PENDING")
         {
             <text>
@@ -247,21 +396,6 @@
                 if (!reason) { Notiflix.Notify.warning('Please enter a rejection reason.'); return; }
                 bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
                 Danation.post('/Admin/RejectCampaign', { id: campaignId, reason: reason },
-                    function (res) {
-                        Notiflix.Notify.success(res.message);
-                        setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);
-                    }
-                );
-            });
-            </text>
-        }
-
-        @if (Model.Status == "GOAL_REACHED")
-        {
-            <text>
-            $('#adminCloseBtn').on('click', function () {
-                Danation.confirmPost('Close this campaign? It will stop accepting donations.',
-                    '/Admin/CloseCampaign', { id: campaignId },
                     function (res) {
                         Notiflix.Notify.success(res.message);
                         setTimeout(function () { window.location.href = '/Admin/Campaigns'; }, 1200);

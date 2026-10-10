@@ -37,6 +37,7 @@ public static class ServiceCollectionExtension
         services.AddScoped<NotificationService>();
         services.AddScoped<CampaignService>();
         services.AddScoped<DonationService>();
+        services.AddHostedService<CampaignClosureBackgroundService>();
 
         // FluentEmail Configuration
         var emailFrom = configuration["EmailSettings:From"] ?? "noreply@danation.com";

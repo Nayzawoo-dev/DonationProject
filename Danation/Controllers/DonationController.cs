@@ -43,12 +43,7 @@ public class DonationController : Controller
         var campaign = await _campaignService.GetDetailAsync(id, userId);
 
         if (campaign == null) return NotFound();
-        if (campaign.OwnerId == userId)
-        {
-            TempData["ErrorMessage"] = "You cannot donate to your own campaign.";
-            return RedirectToAction("Detail", "Campaign", new { id });
-        }
-        if (campaign.Status != "OPEN")
+        if (!campaign.CanDonate)
         {
             TempData["ErrorMessage"] = "This campaign is not currently accepting donations.";
             return RedirectToAction("Detail", "Campaign", new { id });

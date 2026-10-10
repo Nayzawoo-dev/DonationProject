@@ -6,7 +6,8 @@
             <tr>
                 <th>Campaign</th>
                 <th>Owner</th>
-                <th>Goal</th>
+                <th>Goal & Surplus</th>
+                <th>Schedule</th>
                 <th>Status</th>
                 <th>Created</th>
                 <th>Files</th>
@@ -17,7 +18,7 @@
             @if (Model.Count == 0)
             {
                 <tr>
-                    <td colspan="7" class="text-center text-muted py-4">No campaigns found.</td>
+                    <td colspan="8" class="text-center text-muted py-4">No campaigns found.</td>
                 </tr>
             }
             @foreach (var c in Model)
@@ -37,6 +38,12 @@
                             <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
                                class="text-dark text-decoration-none">@c.Title</a>
                         </div>
+                        @if (!string.IsNullOrEmpty(c.CloseReason))
+                        {
+                            <span class="badge bg-light text-secondary border mt-1" style="font-size:10px;">
+                                Reason: @c.CloseReason
+                            </span>
+                        }
                     </td>
                     <td class="small">
                         <span class="fw-medium">@c.OwnerName</span><br />
@@ -54,8 +61,40 @@
                             </div>
                         }
                     </td>
-                    <td class="small">@c.GoalAmount.ToString("N0") MMK</td>
-                    <td><span class="badge @statusClass status-badge">@c.Status.Replace("_", " ")</span></td>
+                    <td class="small">
+                        <div><strong>Goal:</strong> @c.GoalAmount.ToString("N0") MMK</div>
+                        @if (c.SurplusAmount > 0)
+                        {
+                            <div class="text-success mt-1">
+                                <i class="bi bi-cash me-1"></i>Surplus: @c.SurplusAmount.ToString("N0") MMK
+                            </div>
+                            <div class="text-muted" style="font-size:11px;">
+                                Avail: @c.AvailableSurplus.ToString("N0") MMK
+                            </div>
+                        }
+                    </td>
+                    <td class="small">
+                        @if (c.StartDate.HasValue || c.EndDate.HasValue)
+                        {
+                            <div><i class="bi bi-calendar-event me-1 text-muted"></i>@(c.StartDate?.ToString("MMM d, yyyy HH:mm") ?? "Immediate")</div>
+                            <div class="text-muted"><i class="bi bi-calendar-check me-1"></i>@(c.EndDate?.ToString("MMM d, yyyy HH:mm") ?? "No End Date")</div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No schedule set</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="badge @statusClass status-badge">@c.Status.Replace("_", " ")</span>
+                        @if (c.Status == "OPEN" && c.StartDate.HasValue && c.StartDate.Value > DateTime.UtcNow)
+                        {
+                            <span class="badge bg-info text-dark d-block mt-1" style="font-size:10px;">UPCOMING</span>
+                        }
+                        @if (c.Status == "OPEN" && c.EndDate.HasValue && c.EndDate.Value <= DateTime.UtcNow)
+                        {
+                            <span class="badge bg-danger d-block mt-1" style="font-size:10px;">OVERDUE</span>
+                        }
+                    </td>
                     <td class="small text-muted">@c.CreatedAt.ToString("MMM d, yyyy")</td>
                     <td class="small">
                         <span title="Images"><i class="bi bi-images me-1"></i>@c.ImageCount</span>
@@ -64,8 +103,12 @@
                     <td class="text-end">
                         <div class="d-flex justify-content-end gap-1 flex-wrap">
                             <a asp-controller="Admin" asp-action="CampaignDetail" asp-route-id="@c.Id"
-                               class="btn btn-sm btn-outline-secondary" title="View">
+                               class="btn btn-sm btn-outline-secondary" title="View Details">
                                 <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-controller="Admin" asp-action="EditCampaign" asp-route-id="@c.Id"
+                               class="btn btn-sm btn-outline-primary" title="Admin Edit Campaign">
+                                <i class="bi bi-pencil"></i>
                             </a>
                             @if (c.Status == "PENDING")
                             {
@@ -76,10 +119,26 @@
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             }
-                            @if (c.Status == "GOAL_REACHED")
+                            @if (c.Status == "OPEN" || c.Status == "GOAL_REACHED" || c.Status == "CLOSED")
+                            {
+                                <button class="btn btn-sm btn-outline-info extend-btn" data-id="@c.Id"
+                                        data-title="@c.Title"
+                                        data-enddate="@(c.EndDate?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
+                                        title="Extend End Date">
+                                    <i class="bi bi-calendar-plus"></i>
+                                </button>
+                            }
+                            @if (c.Status == "GOAL_REACHED" || c.Status == "OPEN")
                             {
                                 <button class="btn btn-sm btn-warning close-btn" data-id="@c.Id" title="Close Campaign">
                                     <i class="bi bi-lock"></i>
+                                </button>
+                            }
+                            @if (c.Status == "CLOSED" || c.Status == "GOAL_REACHED")
+                            {
+                                <button class="btn btn-sm btn-outline-success reopen-btn" data-id="@c.Id"
+                                        data-title="@c.Title" title="Reopen Campaign">
+                                    <i class="bi bi-arrow-clockwise"></i>
                                 </button>
                             }
                             @if (c.Status == "CLOSED")
@@ -87,6 +146,13 @@
                                 <a asp-controller="Admin" asp-action="CreateCompletion" asp-route-id="@c.Id"
                                    class="btn btn-sm btn-primary" title="Create Completion">
                                     <i class="bi bi-trophy"></i>
+                                </a>
+                            }
+                            @if (c.AvailableSurplus > 0)
+                            {
+                                <a asp-controller="Admin" asp-action="AllocateSurplus" asp-route-sourceCampaignId="@c.Id"
+                                   class="btn btn-sm btn-success" title="Allocate Available Surplus (@c.AvailableSurplus.ToString("N0") MMK)">
+                                    <i class="bi bi-cash-stack"></i>
                                 </a>
                             }
                         </div>

@@ -1,0 +1,192 @@
+@model AdminSurplusAllocationViewModel
+@{
+    ViewData["Title"] = "Surplus Fund Allocation — Admin";
+    Layout = "_Layout";
+    var sourceCandidates = ViewBag.SourceCandidates as List<AdminCampaignSummaryViewModel> ?? new List<AdminCampaignSummaryViewModel>();
+    var targetCampaigns = ViewBag.TargetCampaigns as List<DatabaseClass.Models.Campaign> ?? new List<DatabaseClass.Models.Campaign>();
+}
+
+<div class="admin-page-header">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-light">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="mb-1 fs-4"><i class="bi bi-cash-stack me-2"></i>Allocate Surplus Funds</h1>
+                <p class="mb-0 opacity-75">Transfer excess campaign donations to other open campaigns in need</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="alert alert-info border-0 mb-4 shadow-sm">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill fs-5 me-3 text-primary mt-1"></i>
+                    <div>
+                        <div class="fw-bold">Surplus Accounting Rules</div>
+                        <div class="small">
+                            Surplus funds represent money received above a completed or goal-reached campaign's target.
+                            Allocating surplus transfers funding directly to another eligible campaign towards its goal.
+                            All allocations are atomic, auditable, and cannot exceed the source campaign's available surplus.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-4 shadow-sm border-0">
+                <form id="allocateSurplusForm" asp-action="AllocateSurplus" asp-controller="Admin" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger border-0 mb-4"></div>
+
+                    <!-- Source Campaign Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-box-arrow-up-right me-1 text-primary"></i>Source Campaign (Funds Provider)
+                        </label>
+                        <select id="sourceCampaignSelect" class="form-select form-select-lg mb-2" onchange="changeSourceCampaign(this.value)">
+                            @foreach (var src in sourceCandidates)
+                            {
+                                if (src.Id == Model.SourceCampaignId)
+                                {
+                                    <option value="@src.Id" selected="selected">
+                                        @src.Title — Available: @src.AvailableSurplus.ToString("N0") MMK
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@src.Id">
+                                        @src.Title — Available: @src.AvailableSurplus.ToString("N0") MMK
+                                    </option>
+                                }
+                            }
+                        </select>
+                        <input type="hidden" asp-for="SourceCampaignId" />
+                        <input type="hidden" asp-for="SourceCampaignTitle" />
+                        <input type="hidden" asp-for="SourceAvailableSurplus" id="sourceMaxSurplus" />
+
+                        <div class="p-3 bg-light rounded-xl border d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small">Available Surplus for Allocation:</span>
+                                <div class="fs-4 fw-bold text-success" id="availableSurplusDisplay">
+                                    @Model.SourceAvailableSurplus.ToString("N0") MMK
+                                </div>
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
+                                <i class="bi bi-check2-circle me-1"></i>Verified Funds
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Target Campaign Selection -->
+                    <div class="mb-4">
+                        <label asp-for="TargetCampaignId" class="form-label fw-bold">
+                            <i class="bi bi-box-arrow-in-down-left me-1 text-success"></i>Target Campaign (Recipient) <span class="text-danger">*</span>
+                        </label>
+                        @if (targetCampaigns.Count == 0)
+                        {
+                            <div class="alert alert-warning border-0 mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>No open target campaigns available to receive funds.
+                            </div>
+                        }
+                        else
+                        {
+                            <select asp-for="TargetCampaignId" class="form-select" required>
+                                <option value="">-- Select Target Campaign --</option>
+                                @foreach (var tgt in targetCampaigns)
+                                {
+                                    <option value="@tgt.Id">
+                                        @tgt.Title (Goal: @tgt.GoalAmount.ToString("N0") MMK, Township: @(tgt.Township ?? "N/A"))
+                                    </option>
+                                }
+                            </select>
+                        }
+                        <span asp-validation-for="TargetCampaignId" class="text-danger small"></span>
+                        <div class="form-text">Only approved, active OPEN campaigns can receive surplus allocations.</div>
+                    </div>
+
+                    <!-- Allocation Amount -->
+                    <div class="mb-4">
+                        <label asp-for="Amount" class="form-label fw-bold">
+                            <i class="bi bi-cash me-1 text-primary"></i>Allocation Amount (MMK) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <input asp-for="Amount" type="number" step="1000" min="1" max="@Model.SourceAvailableSurplus"
+                                   id="allocationAmountInput" class="form-control fw-bold" placeholder="0" required />
+                            <span class="input-group-text">MMK</span>
+                        </div>
+                        <span asp-validation-for="Amount" class="text-danger small"></span>
+
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.25)">25%</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.50)">50%</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setAllocationPercent(0.75)">75%</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="setAllocationPercent(1.0)">100% (Max)</button>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold">
+                            Administrative Notes & Justification (Optional)
+                        </label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"
+                                  placeholder="Document why this allocation was approved (e.g., urgent community emergency, medical need)…"
+                                  maxlength="500"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger small"></span>
+                        <div class="form-text">This will be preserved in the financial transaction audit ledger.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 py-2" id="submitAllocationBtn" @(targetCampaigns.Count == 0 || Model.SourceAvailableSurplus <= 0 ? "disabled" : "")>
+                            <i class="bi bi-arrow-left-right me-2"></i>Execute Surplus Allocation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var maxSurplus = parseFloat('@Model.SourceAvailableSurplus');
+
+        function changeSourceCampaign(id) {
+            window.location.href = '/Admin/AllocateSurplus?sourceCampaignId=' + id;
+        }
+
+        function setAllocationPercent(percent) {
+            var val = Math.floor(maxSurplus * percent);
+            $('#allocationAmountInput').val(val);
+        }
+
+        $('#allocateSurplusForm').on('submit', function (e) {
+            var amt = parseFloat($('#allocationAmountInput').val());
+            if (isNaN(amt) || amt <= 0) {
+                e.preventDefault();
+                Notiflix.Notify.warning('Please enter a valid allocation amount greater than zero.');
+                return false;
+            }
+            if (amt > maxSurplus) {
+                e.preventDefault();
+                Notiflix.Notify.failure('Allocation amount cannot exceed the available surplus balance of ' + maxSurplus.toLocaleString() + ' MMK.');
+                return false;
+            }
+            var targetId = $('#TargetCampaignId').val();
+            if (!targetId) {
+                e.preventDefault();
+                Notiflix.Notify.warning('Please select a target campaign.');
+                return false;
+            }
+        });
+    </script>
+}

@@ -11,6 +11,10 @@ public class CampaignListItemViewModel
     public decimal RaisedAmount { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? CloseReason { get; set; }
+    public decimal SurplusAmount { get; set; }
     public string OwnerName { get; set; } = string.Empty;
     public int OwnerId { get; set; }
     public string? OwnerProfileImage { get; set; }
@@ -18,6 +22,8 @@ public class CampaignListItemViewModel
     public int ImageCount { get; set; }
     public string Township { get; set; } = string.Empty;
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
+    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > DateTime.UtcNow && Status == "OPEN";
+    public bool IsExpired => EndDate.HasValue && EndDate.Value <= DateTime.UtcNow;
 }
 
 public class CampaignListViewModel
@@ -44,7 +50,14 @@ public class CampaignDetailViewModel
     public DateTime? UpdatedAt { get; set; }
     public DateTime? ClosedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? CloseReason { get; set; }
+    public decimal SurplusAmount { get; set; }
+    public decimal AllocatedSurplusReceived { get; set; }
     public decimal ProgressPercent => GoalAmount > 0 ? Math.Min(100, Math.Round((RaisedAmount / GoalAmount) * 100, 1)) : 0;
+    public bool IsUpcoming => StartDate.HasValue && StartDate.Value > DateTime.UtcNow && Status == "OPEN";
+    public bool IsExpired => EndDate.HasValue && EndDate.Value <= DateTime.UtcNow;
 
     // Location — Township is public-safe, Address is public-safe
     public string Address { get; set; } = string.Empty;
@@ -127,6 +140,14 @@ public class CreateCampaignViewModel
     [StringLength(30, ErrorMessage = "Contact phone cannot exceed 30 characters.")]
     [Display(Name = "Contact Phone")]
     public string ContactPhone { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Start date and time is required.")]
+    [Display(Name = "Start Date & Time")]
+    public DateTime? StartDate { get; set; }
+
+    [Required(ErrorMessage = "End date and time is required.")]
+    [Display(Name = "End Date & Time")]
+    public DateTime? EndDate { get; set; }
 }
 
 public class EditCampaignViewModel
@@ -159,7 +180,16 @@ public class EditCampaignViewModel
     [Display(Name = "Contact Phone")]
     public string ContactPhone { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Start date and time is required.")]
+    [Display(Name = "Start Date & Time")]
+    public DateTime? StartDate { get; set; }
+
+    [Required(ErrorMessage = "End date and time is required.")]
+    [Display(Name = "End Date & Time")]
+    public DateTime? EndDate { get; set; }
+
     public string Status { get; set; } = string.Empty;
+    public string? CloseReason { get; set; }
 
     // For image management display
     public List<CampaignImageViewModel> Images { get; set; } = new();
